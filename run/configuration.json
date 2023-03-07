@@ -1,0 +1,94 @@
+{
+    "internal-dpl-clock": "",
+    "internal-dpl-aod-reader": {
+        "time-limit": "180",
+        "orbit-offset-enumeration": "0",
+        "orbit-multiplier-enumeration": "0",
+        "start-value-enumeration": "0",
+        "end-value-enumeration": "-1",
+        "step-value-enumeration": "1",
+        "aod-file": "/data/fmazzasc/its_data/sim/hyp_2_body/AO2D.root"
+    },
+
+    "internal-dpl-injected-dummy-sink": "",
+    "internal-dpl-aod-spawner": "",
+    "internal-dpl-aod-index-builder": "",
+    "timestamp-task": {
+        "verbose": "false",
+        "rct-path": "RCT\/Info\/RunInformation",
+        "orbit-reset-path": "CTP\/Calib\/OrbitReset",
+        "ccdb-url": "http:\/\/alice-ccdb.cern.ch",
+        "isRun2MC": "false"
+    },
+
+    "bc-selection-task": {
+        "processRun2": "false",
+        "processRun3": "true"
+    },
+    "event-selection-task": {
+        "syst": "pp",
+        "muonSelection": "0",
+        "customDeltaBC": "-1",
+        "isMC": "false",
+        "processRun2": "false",
+        "processRun3": "true"
+    },
+
+    "track-propagation": {
+        "ccdb-url": "http:\/\/alice-ccdb.cern.ch",
+        "lutPath": "GLO\/Param\/MatLUT",
+        "geoPath": "GLO\/Config\/GeometryAligned",
+        "grpmagPath": "GLO\/Config\/GRPMagField",
+        "mVtxPath": "GLO\/Calib\/MeanVertex",
+        "minPropagationDistance": "5",
+        "processStandard": "false",
+        "processCovariance": "true"
+    },
+
+    "hyper-reco-task": {
+        "hypcospa": "0.94999999999999996",
+        "hypdcaDau": "1",
+        "hedcatopv": "-1",
+        "pidcatopv": "0.100000001",
+        "hypradius": "1",
+        "eta": "1.",
+        "heliumNsigmaMax": "3",
+        "mcSignalOnly": "true",
+        "cfgBetheBlochParams": {
+            "labels_rows": [
+                "He3"
+            ],
+            "labels_cols": [
+                "p0",
+                "p1",
+                "p2",
+                "p3",
+                "p4",
+                "resolution"
+            ],
+            "values": [
+                [
+                    "-170.929",
+                    "-0.02554",
+                    "1.58698",
+                    "0.97078",
+                    "2.91625",
+                    "0.09"
+                ]
+            ]
+        },
+        "cfgMaterialCorrection": "0",
+        "d_bz": "-999",
+        "ccdb-url": "http:\/\/alice-ccdb.cern.ch",
+        "grpPath": "GLO\/GRP\/GRP",
+        "grpmagPath": "GLO\/Config\/GRPMagField",
+        "lutPath": "GLO\/Param\/MatLUT",
+        "geoPath": "GLO\/Config\/GeometryAligned",
+        "heDauDPG": "1000020030",
+        "processData": "false",
+        "processMC": "true"
+    },
+
+    "internal-dpl-aod-global-analysis-file-sink": "",
+    "internal-dpl-aod-writer": ""
+}
