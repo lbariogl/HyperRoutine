@@ -1,5 +1,8 @@
 #include <TFile.h>
 #include <TTree.h>
+#include <TKey.h>
+
+#include <iostream>
 
 // loop over AO2D directories and merge the trees into a single one
 
