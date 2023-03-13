@@ -1,7 +1,41 @@
 import ROOT
 import uproot
 import pandas as pd
+import argparse
+import yaml
 
+parser = argparse.ArgumentParser(description='Configure the parameters of the script.')
+parser.add_argument('--mc', dest='mc', action='store_true', help="if True MC information is stored.")
+parser.set_defaults(mc=False)
+parser.add_argument('--input-file', dest='input_file', help="path to the input file.")
+parser.set_defaults(input_file='../data/AO2D_merged.root')
+parser.add_argument('--output-dir', dest='output_dir', help="path to the directory in which the output is stored.")
+parser.set_defaults(output_dir='../results/')
+parser.add_argument('--output-file', dest='output_file', help="name of the output file.")
+parser.set_defaults(output_file='HypertritonResults.root')
+parser.add_argument('--selection', dest='selection', help="selections to be bassed as query.")
+parser.set_defaults(selection='fCosPA > 0.998 & fNTPCclusHe > 110 & abs(fDcaHe) < 0.1')
+parser.add_argument('--config-file', dest='config_file', help="path to the YAML file with configuration.")
+parser.set_defaults(config_file='')
+args = parser.parse_args()
+
+# initialise parameters from parser (can be overwritten by external yaml file)
+mc = args.mc
+input_file_name = args.input_file
+output_dir_name = args.output_dir
+output_file_name = args.output_file
+selections = args.selection
+
+if  args.config_file != "":
+    config_file = open(args.config_file, 'r')
+    config = yaml.full_load(config_file)
+    mc = config['mc']
+    input_file_name = config['input_file']
+    output_dir_name = config['output_dir']
+    output_file_name = config['output_file']
+    selections = config['selection']
+
+# utils
 def fill_th1_hist(h, df, var):
     for var_val in df[var]:
         h.Fill(var_val)
@@ -10,17 +44,15 @@ def fill_th2_hist(h, df, var1, var2):
     for i in range(df.shape[0]):
         h.Fill(df[var1][i], df[var2][i])
 
-input_file_name = '../data/AO2D_merged.root'
-output_dir_name = '../results/'
-tree_name_data = "O2datahypcands"
-tree_name_mc = "O2mchypcands"
-mc = False
+# tree names
+tree_name_data = 'O2datahypcands'
+tree_name_mc = 'O2mchypcands'
 
 ## create histograms
 hCosPA = ROOT.TH1F("hCosPA", ";cos(#theta_{PA})", 50, 0.95, 1)
 hNTPCclus = ROOT.TH1F("hNTPCclus", ";n TPC clusters", 50, 60, 200)
 hMass3LH = ROOT.TH1F("h_3lh_mass", "; m({}^{3}_{#Lambda}H) (GeV/#it{c})", 50, 2.96, 3.04)
-hMass4LH = ROOT.TH1F("h_4lh_mass", "; 4LH mass", 50, 3.96, 4.04)
+hMass4LH = ROOT.TH1F("h_4lh_mass", "; m({}^{4}_{#Lambda}H) (GeV/#it{c})", 50, 3.96, 4.04)
 hPtRec = ROOT.TH1F("hPtRec", ";#it{p}_{T} (GeV/#it{c})", 50, 0, 10)
 
 ## for MC only
@@ -53,7 +85,7 @@ if mc:
     df.eval('ResDecZ = (fZDecVtx - fGenZDecVtx)/fGenZDecVtx', inplace=True)
 
 # filtering
-df_filtered = df.query("fCosPA > 0.998 & fNTPCclusHe > 110 & abs(fDcaHe) < 0.1")
+df_filtered = df.query(selections)
 
 ## fill histograms
 fill_th1_hist(hPtRec, df_filtered, 'pt')
@@ -72,7 +104,7 @@ if mc:
     fill_th1_hist(hResolutionDecVtxZ, df_filtered, 'ResDecZ')
 
 ## save to file root
-f = ROOT.TFile(f"{output_dir_name}/HypertritonResults.root", "RECREATE")
+f = ROOT.TFile(f"{output_dir_name}/{output_file_name}", "RECREATE")
 
 hCosPA.Write()
 hNTPCclus.Write()
