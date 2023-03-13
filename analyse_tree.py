@@ -12,6 +12,8 @@ def fill_th2_hist(h, df, var1, var2):
 
 input_file_name = '../data/AO2D_merged.root'
 output_dir_name = '../results/'
+tree_name_data = "O2datahypcands"
+tree_name_mc = "O2mchypcands"
 mc = False
 
 ## create histograms
@@ -30,17 +32,13 @@ hResolutionDecVtxX = ROOT.TH1F("hResolutionDecVtxX", "; Resolution Dec X", 50, -
 hResolutionDecVtxY = ROOT.TH1F("hResolutionDecVtxY", "; Resolution Dec Y", 50, -0.2, 0.2)
 hResolutionDecVtxZ = ROOT.TH1F("hResolutionDecVtxZ", "; Resolution Dec Z", 50, -0.2, 0.2)
 
-tree_name = ""
-
-if mc :
-    tree_name = "O2mchypcands"
-else:
-    tree_name = "O2datahypcands"
-
-events = uproot.open(f'{input_file_name}:{tree_name}')
-
+# creating the dataframe
 pd_arr = []
-pd_arr.append(events.arrays(library='pd'))
+data_events = uproot.open(f'{input_file_name}:{tree_name_data}')
+pd_arr.append(data_events.arrays(library='pd'))
+mc_events = None
+if mc:
+    pd_arr.append(mc_events.arrays(library='pd'))
 
 df = pd.concat(pd_arr, ignore_index=True)
 df.eval('pt = sqrt(fPx**2 + fPy**2)', inplace=True)
