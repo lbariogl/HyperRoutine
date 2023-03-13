@@ -10,41 +10,42 @@ def fill_th2_hist(h, df, var1, var2):
     for i in range(df.shape[0]):
         h.Fill(df[var1][i], df[var2][i])
 
+input_file_name = '../data/AO2D_merged.root'
+output_dir_name = '../results/'
+mc = False
 
 ## create histograms
-h_px = ROOT.TH1F("h_px", ";Resolution Px", 50, -0.2, 0.2)
-h_py = ROOT.TH1F("h_py", ";Resolution Py", 50, -0.2, 0.2)
-h_pz = ROOT.TH1F("h_pz", ";Resolution Pz", 50, -0.2, 0.2)
+hCosPA = ROOT.TH1F("hCosPA", ";cos(#theta_{PA})", 50, 0.95, 1)
+hNTPCclus = ROOT.TH1F("hNTPCclus", ";n TPC clusters", 50, 60, 200)
+hMass3LH = ROOT.TH1F("h_3lh_mass", "; m({}^{3}_{#Lambda}H) (GeV/#it{c})", 50, 2.96, 3.04)
+hMass4LH = ROOT.TH1F("h_4lh_mass", "; 4LH mass", 50, 3.96, 4.04)
+hPtRec = ROOT.TH1F("hPtRec", ";#it{p}_{T} (GeV/#it{c})", 50, 0, 10)
 
-h_x = ROOT.TH1F("h_x", "; Resolution Dec X", 50, -0.2, 0.2)
-h_y = ROOT.TH1F("h_y", "; Resolution Dec Y", 50, -0.2, 0.2)
-h_z = ROOT.TH1F("h_z", "; Resolution Dec Z", 50, -0.2, 0.2)
+## for MC only
+hPtGen = ROOT.TH1F("hPtGen", "; Pt gen", 50, 0, 10)
+hResolutionPx = ROOT.TH1F("hResolutionPx", ";Resolution #it{p_{x}}", 50, -0.2, 0.2)
+hResolutionPy = ROOT.TH1F("hResolutionPy", ";Resolution #it{p_{y}}", 50, -0.2, 0.2)
+hResolutionPz = ROOT.TH1F("hResolutionPz", ";Resolution #it{p_{z}}", 50, -0.2, 0.2)
+hResolutionDecVtxX = ROOT.TH1F("hResolutionDecVtxX", "; Resolution Dec X", 50, -0.2, 0.2)
+hResolutionDecVtxY = ROOT.TH1F("hResolutionDecVtxY", "; Resolution Dec Y", 50, -0.2, 0.2)
+hResolutionDecVtxZ = ROOT.TH1F("hResolutionDecVtxZ", "; Resolution Dec Z", 50, -0.2, 0.2)
 
-h_cosPA = ROOT.TH1F("h_cosPA", "; cosPA", 50, 0.95, 1)
-h_nTPCClus = ROOT.TH1F("h_nTPCClus", "; nTPCClus", 50, 60, 200)
-h_mass_3lh = ROOT.TH1F("h_3lh_mass", "; 3LH mass", 50, 2.96, 3.04)
-h_mass_4lh = ROOT.TH1F("h_4lh_mass", "; 4LH mass", 50, 3.96, 4.04)
+tree_name = ""
 
-h_pt_gen = ROOT.TH1F("h_pt_gen", "; Pt gen", 50, 0, 10)
-h_pt_rec = ROOT.TH1F("h_pt_rec", "; Pt rec", 50, 0, 10)
+if mc :
+    tree_name = "O2mchypcands"
+else:
+    tree_name = "O2datahypcands"
 
-file = uproot.open("AnalysisResults_trees.root")
-dfs = file.keys()
-
-mc = True
-tree_name = "O2datahypcands" if not mc else "O2mchypcands"
+events = uproot.open(f'{input_file_name}:{tree_name}')
 
 pd_arr = []
-
-for df in dfs:
-    if tree_name in df:
-        pd_arr.append(file[df].arrays(library='pd'))
+pd_arr.append(events.arrays(library='pd'))
 
 df = pd.concat(pd_arr, ignore_index=True)
 df.eval('pt = sqrt(fPx**2 + fPy**2)', inplace=True)
 if mc:
     df.eval('pt_gen = sqrt(fGenPx**2 + fGenPy**2)', inplace=True)
-    fill_th1_hist(h_pt_gen, df, 'pt_gen')
     df.query('fIsReco==True', inplace=True)
     df.eval('resPx = (fPx - fGenPx)/fGenPx', inplace=True)
     df.eval('resPy = (fPy - fGenPy)/fGenPy', inplace=True)
@@ -52,44 +53,47 @@ if mc:
     df.eval('ResDecX = (fXDecVtx - fGenXDecVtx)/fGenXDecVtx', inplace=True)
     df.eval('ResDecY = (fYDecVtx - fGenYDecVtx)/fGenYDecVtx', inplace=True)
     df.eval('ResDecZ = (fZDecVtx - fGenZDecVtx)/fGenZDecVtx', inplace=True)
-    ## fill histograms
-    fill_th1_hist(h_px, df, 'resPx')
-    fill_th1_hist(h_py, df, 'resPy')
-    fill_th1_hist(h_pz, df, 'resPz')
-    fill_th1_hist(h_x, df, 'ResDecX')
-    fill_th1_hist(h_y, df, 'ResDecY')
-    fill_th1_hist(h_z, df, 'ResDecZ')
 
+# filtering
+df_filtered = df.query("fCosPA > 0.998 & fNTPCclusHe > 110 & abs(fDcaHe) < 0.1")
 
-
-fill_th1_hist(h_pt_rec, df, 'pt')
-fill_th1_hist(h_cosPA, df, 'fCosPA')
-fill_th1_hist(h_nTPCClus, df, 'fNTPCclusHe')
-fill_th1_hist(h_mass_3lh, df, 'fMassH3L')
-fill_th1_hist(h_mass_4lh, df, 'fMassH4L')
-
-
-## save to file root
-f = ROOT.TFile("histos.root", "RECREATE")
+## fill histograms
+fill_th1_hist(hPtRec, df_filtered, 'pt')
+fill_th1_hist(hCosPA, df_filtered, 'fCosPA')
+fill_th1_hist(hNTPCclus, df_filtered, 'fNTPCclusHe')
+fill_th1_hist(hMass3LH, df_filtered, 'fMassH3L')
+fill_th1_hist(hMass4LH, df_filtered, 'fMassH4L')
 
 if mc:
-    h_px.Write()
-    h_py.Write()
-    h_pz.Write()
-    h_x.Write()
-    h_y.Write()
-    h_z.Write()
-    h_pt_gen.Write()
-    h_eff_pt = h_pt_rec.Clone("h_eff_pt")
-    h_eff_pt.Divide(h_pt_gen)
-    h_eff_pt.SetTitle("; #it{p}_T (GeV/#it{c}); Efficiency")
-    h_eff_pt.Write()
+    fill_th1_hist(hPtGen, df_filtered, 'pt_gen')
+    fill_th1_hist(hResolutionPx, df_filtered, 'resPx')
+    fill_th1_hist(hResolutionPy, df_filtered, 'resPy')
+    fill_th1_hist(hResolutionPz, df_filtered, 'resPz')
+    fill_th1_hist(hResolutionDecVtxX, df_filtered, 'ResDecX')
+    fill_th1_hist(hResolutionDecVtxY, df_filtered, 'ResDecY')
+    fill_th1_hist(hResolutionDecVtxZ, df_filtered, 'ResDecZ')
 
-h_cosPA.Write()
-h_nTPCClus.Write()
-h_pt_rec.Write()
-h_mass_3lh.Write()
-h_mass_4lh.Write()
+## save to file root
+f = ROOT.TFile(f"{output_dir_name}/HypertritonResults.root", "RECREATE")
 
+hCosPA.Write()
+hNTPCclus.Write()
+hPtRec.Write()
+hMass3LH.Write()
+hMass4LH.Write()
+
+if mc:
+    hResolutionPx.Write()
+    hResolutionPy.Write()
+    hResolutionPz.Write()
+    hResolutionDecVtxX.Write()
+    hResolutionDecVtxY.Write()
+    hResolutionDecVtxZ.Write()
+    hPtGen.Write()
+    # compute efficiencies
+    hEffPt = hPtRec.Clone("hEffPt")
+    hEffPt.Divide(hPtGen)
+    hEffPt.SetTitle("; #it{p}_T (GeV/#it{c}); Efficiency")
+    hEffPt.Write()
 
 
