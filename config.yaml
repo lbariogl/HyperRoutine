@@ -2,4 +2,4 @@ mc : False
 input_file : '../data/AO2D_merged.root'
 output_dir : '../results/'
 output_file : 'HypertritonResults.root'
-selection : 'fCosPA > 0.99995 & fNTPCclusHe > 110 & abs(fDcaHe) > 0.2'
+selection : 'fCosPA > 0.99 & fNTPCclusHe > 110 & fIsMatter == False'
