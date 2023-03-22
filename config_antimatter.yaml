@@ -1,0 +1,5 @@
+mc : False
+input_file : '../data/AO2D_pass2_merged.root'
+output_dir : '../results/'
+output_file : 'HypertritonResults_antimatter.root'
+selection : 'fCosPA > 0.9999 & fNSigmaHe > -3 & fNTPCclusHe > 110 & fIsMatter == False'
