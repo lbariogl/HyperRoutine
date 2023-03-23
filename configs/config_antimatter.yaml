@@ -1,0 +1,5 @@
+mc : False
+input_file : '/home/fmazzasc/AO2D_22r.root'
+output_dir : '../results/'
+output_file : 'HypertritonResults_antimatter.root'
+selection : 'fCosPA > 0.999  & fNTPCclusHe > 120 & fIsMatter == False & fDcaV0Daug<0.05'
