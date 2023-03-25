@@ -1,5 +1,5 @@
 mc : False
-input_files : ['/home/fmazzasc/train_out/LHC_22r/AO2D_LHC_22r.root', '/home/fmazzasc/train_out/LHC_22t/AO2D_LHC_22t.root']
+input_files : ['/data/shared/hyp_run_3/apass3/LHC_22r/AO2D_LHC_22r.root', '/data/shared/hyp_run_3/apass3/LHC_22t/AO2D_LHC_22t.root', '/data/shared/hyp_run_3/apass3/LHC_22o/AO2D_LHC_22o.root', '/data/shared/hyp_run_3/apass3/LHC_22p/AO2D_LHC_22p.root']
 output_dir : '../results/'
 output_file : 'HypertritonResults_pass3.root'
-selection : 'fCosPA > 0.999  & fNTPCclusHe > 120 & fDcaV0Daug<0.01 & fNSigmaHe > -1. and pt>1 and fDecRad>3'
+selection : 'fDcaV0Daug<0.05 & fNTPCclusHe > 130 & fCosPA > 0.999 & fNSigmaHe > -0.5 and fDecLen > 4 and pt>1'

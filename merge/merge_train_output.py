@@ -2,6 +2,7 @@
 import os
 import yaml
 
+<<<<<<< HEAD
 import argparse
 
 parser = argparse.ArgumentParser(
@@ -26,6 +27,11 @@ args = parser.parse_args()
 download_or_merge = args.download_or_merge
 if download_or_merge != 'download' and download_or_merge != 'merge':
     raise ValueError('Choose between `download` and `merge`. Tertium non datur.')
+=======
+run_period = "LHC_22o"
+hyperloop_path = '/alice/cern.ch/user/a/alihyperloop/outputs/70920/7456/Stage_1/'
+files_to_download = ['AO2D.root', 'AnalysisResults.root']
+>>>>>>> Add MC config
 
 hyperloop_path = args.hyperloop_path
 local_path = args.local_path
