@@ -1,4 +1,3 @@
-
 mc : False
 input_file : 'AO2D_22t.root'
 output_dir : '../results/'
