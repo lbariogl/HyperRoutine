@@ -2,4 +2,5 @@ mc : False
 input_files : ['/data/shared/hyp_run_3/apass3/LHC_22r/AO2D_LHC_22r.root', '/data/shared/hyp_run_3/apass3/LHC_22t/AO2D_LHC_22t.root', '/data/shared/hyp_run_3/apass3/LHC_22o/AO2D_LHC_22o.root', '/data/shared/hyp_run_3/apass3/LHC_22p/AO2D_LHC_22p.root']
 output_dir : '../results/'
 output_file : 'HypertritonResults_pass3.root'
-selection : 'fDcaV0Daug<0.05 & fNTPCclusHe > 130 & fCosPA > 0.999 & fNSigmaHe > -0.5 and fDecLen > 4 and pt>1'
+selection : 'fNSigmaHe > -1 and fCosPA > 0.996 and fIsMatter==False'
+
