@@ -42,12 +42,8 @@ def fill_th1_hist(h, df, var):
         h.Fill(var_val)
 
 def fill_th2_hist(h, df, var1, var2):
-    for i in range(df.shape[0]):
-        h.Fill(df[var1][i], df[var2][i])
-
-# tree names
-tree_name_data = 'O2datahypcands'
-tree_name_mc = 'O2mchypcands'
+    for var1_val, var2_val in zip(df[var1], df[var2]):
+        h.Fill(var1_val, var2_val)
 
 ## create histograms
 hCosPA = ROOT.TH1F("hCosPA", ";cos(#theta_{PA})", 50, 0.95, 1)
@@ -56,7 +52,14 @@ hMass3LH = ROOT.TH1F("h_3lh_mass", "; m({}^{3}_{#Lambda}H) (GeV/#it{c})", 50, 2.
 hMass4LH = ROOT.TH1F("h_4lh_mass", "; m({}^{4}_{#Lambda}H) (GeV/#it{c})", 50, 3.96, 4.04)
 hPtRec = ROOT.TH1F("hPtRec", ";#it{p}_{T} (GeV/#it{c})", 50, 0, 10)
 hRadius = ROOT.TH1F("hRadius", ";Radius (cm)", 100, 0, 40)
+hDecLen = ROOT.TH1F("hDecLen", ";Decay length (cm)", 100, 0, 40)
 hNSigHe = ROOT.TH1F("hNSigmaHe", ";n #sigma He3", 50, -3, 3)
+
+h2MassCosPA = ROOT.TH2F("h2MassCosPA", ";cos(#theta_{PA}); m({}^{3}_{#Lambda}H) (GeV/#it{c})", 100, 0.99, 1, 50, 2.96, 3.04)
+h2MassDecLen = ROOT.TH2F("h2MassDecLen", ";Decay length (cm); m({}^{3}_{#Lambda}H) (GeV/#it{c})", 100, 0, 40, 50, 2.96, 3.04)
+h2MassDCADaughters = ROOT.TH2F("h2MassDCADaughters", ";DCA daughters (cm); m({}^{3}_{#Lambda}H) (GeV/#it{c})", 200, 0, 0.3, 50, 2.96, 3.04)
+h2MassDCAHePv = ROOT.TH2F("h2MassDCAHe", ";DCA He3 PVs (cm); m({}^{3}_{#Lambda}H) (GeV/#it{c})", 100, 0, 2, 50, 2.96, 3.04)
+h2MassPt = ROOT.TH2F("h2MassPt", ";#it{p}_{T} (GeV/#it{c}); m({}^{3}_{#Lambda}H) (GeV/#it{c})", 50, 0, 7, 50, 2.96, 3.04)
 
 ## for MC only
 hPtGen = ROOT.TH1F("hPtGen", "; Pt gen", 50, 0, 10)
@@ -68,38 +71,51 @@ hResolutionDecVtxY = ROOT.TH1F("hResolutionDecVtxY", "; Resolution Dec Y", 50, -
 hResolutionDecVtxZ = ROOT.TH1F("hResolutionDecVtxZ", "; Resolution Dec Z", 50, -0.2, 0.2)
 
 # creating the dataframe
-tree_hdl = TreeHandler(input_files_name, tree_name_data)
+tree_name = 'O2datahypcands' if not mc else 'O2mchypcands'
+tree_hdl = TreeHandler(input_files_name, tree_name)
 df = tree_hdl.get_data_frame()
 
-
+## add new columns
 df.eval('pt = sqrt(fPx**2 + fPy**2)', inplace=True)
 df.eval('fDecRad = sqrt(fXDecVtx**2 + fYDecVtx**2)', inplace=True)
+df.eval('fDecLen = sqrt(fXDecVtx**2 + fYDecVtx**2 + fZDecVtx**2)', inplace=True)
+
+## for MC only
 if mc:
     df.eval('pt_gen = sqrt(fGenPx**2 + fGenPy**2)', inplace=True)
-    df.query('fIsReco==True', inplace=True)
-    df.eval('resPx = (fPx - fGenPx)/fGenPx', inplace=True)
-    df.eval('resPy = (fPy - fGenPy)/fGenPy', inplace=True)
-    df.eval('resPz = (fPz - fGenPz)/fGenPz', inplace=True)
-    df.eval('ResDecX = (fXDecVtx - fGenXDecVtx)/fGenXDecVtx', inplace=True)
-    df.eval('ResDecY = (fYDecVtx - fGenYDecVtx)/fGenYDecVtx', inplace=True)
-    df.eval('ResDecZ = (fZDecVtx - fGenZDecVtx)/fGenZDecVtx', inplace=True)
+    fill_th1_hist(hPtGen, df, 'pt_gen')
+    df.query('fIsReco==True', inplace=True) # select only reconstructed candidates
+
 
 # filtering
 df_filtered = df.query(selections)
-
+# print(df_filtered.columns)
+print(df_filtered['fNSigmaHe'])
 
 ## fill histograms
 fill_th1_hist(hPtRec, df_filtered, 'pt')
 fill_th1_hist(hCosPA, df_filtered, 'fCosPA')
 fill_th1_hist(hRadius, df_filtered, 'fDecRad')
+fill_th1_hist(hDecLen, df_filtered, 'fDecLen')
 fill_th1_hist(hNTPCclus, df_filtered, 'fNTPCclusHe')
 fill_th1_hist(hNSigHe, df_filtered, 'fNSigmaHe')
 fill_th1_hist(hMass3LH, df_filtered, 'fMassH3L')
 fill_th1_hist(hMass4LH, df_filtered, 'fMassH4L')
 
+fill_th2_hist(h2MassCosPA, df_filtered, 'fCosPA', 'fMassH3L')
+fill_th2_hist(h2MassDecLen, df_filtered, 'fDecLen', 'fMassH3L')
+fill_th2_hist(h2MassDCADaughters, df_filtered, 'fDcaV0Daug', 'fMassH3L')
+fill_th2_hist(h2MassDCAHePv, df_filtered, 'fDcaHe', 'fMassH3L')
+fill_th2_hist(h2MassPt, df_filtered, 'pt', 'fMassH3L')
 
+## for MC only 
 if mc:
-    fill_th1_hist(hPtGen, df_filtered, 'pt_gen')
+    df_filtered.eval('resPx = (fPx - fGenPx)/fGenPx', inplace=True)
+    df_filtered.eval('resPy = (fPy - fGenPy)/fGenPy', inplace=True)
+    df_filtered.eval('resPz = (fPz - fGenPz)/fGenPz', inplace=True)
+    df_filtered.eval('ResDecX = (fXDecVtx - fGenXDecVtx)/fGenXDecVtx', inplace=True)
+    df_filtered.eval('ResDecY = (fYDecVtx - fGenYDecVtx)/fGenYDecVtx', inplace=True)
+    df_filtered.eval('ResDecZ = (fZDecVtx - fGenZDecVtx)/fGenZDecVtx', inplace=True)
     fill_th1_hist(hResolutionPx, df_filtered, 'resPx')
     fill_th1_hist(hResolutionPy, df_filtered, 'resPy')
     fill_th1_hist(hResolutionPz, df_filtered, 'resPz')
@@ -107,18 +123,29 @@ if mc:
     fill_th1_hist(hResolutionDecVtxY, df_filtered, 'ResDecY')
     fill_th1_hist(hResolutionDecVtxZ, df_filtered, 'ResDecZ')
 
+
+
 ## save to file root
 f = ROOT.TFile(f"{output_dir_name}/{output_file_name}", "RECREATE")
 
 hCosPA.Write()
 hRadius.Write()
+hDecLen.Write()
 hNTPCclus.Write()
 hNSigHe.Write()
 hPtRec.Write()
 hMass3LH.Write()
 hMass4LH.Write()
 
+h2MassCosPA.Write()
+h2MassDecLen.Write()
+h2MassDCADaughters.Write()
+h2MassDCAHePv.Write()
+h2MassPt.Write()
+
 if mc:
+    f.mkdir("MC")
+    f.cd("MC")
     hResolutionPx.Write()
     hResolutionPy.Write()
     hResolutionPz.Write()
