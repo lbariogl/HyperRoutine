@@ -1,0 +1,5 @@
+mc : True
+input_files : ['~/hyp3/mc/AO2D_merged.root']
+output_dir : '~/hyp3/results/'
+output_file : 'HypertritonResults_inj_gap_antimatter.root'
+selection : 'fCosPA > 0.999  & fNTPCclusHe > 120 & fIsMatter == False & fDcaV0Daug<0.05'

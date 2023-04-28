@@ -11,3 +11,6 @@
 core*
 .model
 *__pycache__
+*.d
+*.so
+*.pcm
