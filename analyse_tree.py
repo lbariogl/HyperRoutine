@@ -63,8 +63,8 @@ h2MassPt = ROOT.TH2F("h2MassPt", ";#it{p}_{T} (GeV/#it{c}); m({}^{3}_{#Lambda}H)
 
 ## for MC only
 hPtGen = ROOT.TH1F("hPtGen", "; Pt gen", 50, 0, 10)
-hResolutionPt = ROOT.TH1F("hResolutionPx", ";Resolution #it{p}_{T}", 100, 0., 10)
-hResolutionP = ROOT.TH1F("hResolutionP", ";Resolution #it{p}", 100, 0., 10)
+hResolutionPt = ROOT.TH1F("hResolutionPT", ";Resolution #it{p}_{T}", 50, -0.2, 0.2)
+hResolutionP = ROOT.TH1F("hResolutionP", ";Resolution #it{p}", 50, -0.2, 0.2)
 hResolutionDecVtxX = ROOT.TH1F("hResolutionDecVtxX", "; Resolution Dec X", 50, -0.2, 0.2)
 hResolutionDecVtxY = ROOT.TH1F("hResolutionDecVtxY", "; Resolution Dec Y", 50, -0.2, 0.2)
 hResolutionDecVtxZ = ROOT.TH1F("hResolutionDecVtxZ", "; Resolution Dec Z", 50, -0.2, 0.2)
