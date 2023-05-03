@@ -4,6 +4,7 @@ import pandas as pd
 import argparse
 import yaml
 from hipe4ml.tree_handler import TreeHandler
+import utils
 
 parser = argparse.ArgumentParser(description='Configure the parameters of the script.')
 parser.add_argument('--mc', dest='mc', action='store_true', help="if True MC information is stored.")
@@ -150,9 +151,7 @@ if mc:
     hResolutionDecVtxZ.Write()
     hPtGen.Write()
     # compute efficiencies
-    hEffPt = hPtRec.Clone("hEffPt")
-    hEffPt.Divide(hPtGen)
-    hEffPt.SetTitle("; #it{p}_T (GeV/#it{c}); Efficiency")
+    hEffPt = utils.computeEfficiency(hPtGen, hPtRec, "hEffPt")
     hEffPt.Write()
 
 

@@ -39,14 +39,13 @@ void MergeTrees(const std::string &inputFileName, const std::string &outputFileN
         }
     }
 
-    //   std::cout << "Loop ended" << std::endl;
-
     //   // Merge the trees into a single output file
     TFile outputFile(outputFileName.c_str(), "RECREATE");
+    if(outlist->GetSize() == 0){
+        std::cerr << "Error: nothing was found" << std::endl;
+        return;
+    }
     TTree *newtree = TTree::MergeTrees(outlist);
     newtree->SetName(treeName.c_str());
     newtree->Write();
-
-    //   outputTree->Write();
-    //   outputFile.Close();
 }
