@@ -6,6 +6,8 @@
 #include "SimulationDataFormat/MCCompLabel.h"
 #include "SimulationDataFormat/MCTrack.h"
 #include "ReconstructionDataFormats/TrackTPCITS.h"
+#include "DataFormatsITS/TrackITS.h"
+#include "DataFormatsTPC/TrackTPC.h"
 
 #include "DataFormatsITSMFT/TopologyDictionary.h"
 #include "DetectorsCommonDataFormats/DetectorNameConf.h"
@@ -26,6 +28,9 @@
 #include "TTree.h"
 #include "TLegend.h"
 #include "CommonDataFormat/RangeReference.h"
+
+#include "GlobalTracking/MatchTPCITS.h"
+
 #endif
 
 using GIndex = o2::dataformats::VtxTrackIndex;
@@ -36,50 +41,55 @@ using RRef = o2::dataformats::RangeReference<int, int>;
 using VBracket = o2::math_utils::Bracket<int>;
 using namespace o2::itsmft;
 using Vec3 = ROOT::Math::SVector<double, 3>;
+using TrackLocTPC = o2::globaltracking::TrackLocTPC;
+using TrackLocITS = o2::globaltracking::TrackLocITS;
+using rejMap = o2::globaltracking::TrackRejFlag;
 
-const int hypPDG = 1010010030;
-const int he3PDG = 1000020030;
-const int piPDG = 211;
+struct GPart
+{
+    float genRad = -1, genPt = -1, genRap = -5, genEta = -5;
+    int detectorBMap = 0;
+    int itsRef = -1;
+    int tpcRef = -1;
+    float itsPt = -1;
+    float tpcPt = -1;
+    float chi2Match = -1;
+    bool isSecDau = false;
+    bool isReco = false;
+    bool isAB = false;
+    bool isITSfake = false;
+    bool isTPCfake = false;
+    bool isITSTPCfake = false;
+    int rejFlag = -1;
+    int tfNum = -1;
+    int pdg = -1;
+    int nRefs = 0;
+};
 
 double calcRadius(std::vector<MCTrack> *MCTracks, const MCTrack &motherTrack, int dauPDG);
 
-void checkDauEff(bool checkPi=false)
+void DauTreeBuilder(int dau0PDG = 211, int dau1PDG = 1000020030, int mothPDG = 1010010030,
+                 bool debug = true, std::string path = "/data/fmazzasc/its_data/sim/hyp_gap_trig/")
 {
-    int dauPDG = checkPi ? piPDG : he3PDG;
-
-
-    struct GPart
-    {
-        float genRad = -1, genPt = -1;
-        int detectorBMap = 0;
-        bool isSecDau = false;
-        bool isReco = false;
-        bool isAB = false;
-    };
 
     // write the output tree
-    std::string outFileName = checkPi ? "PiTreeMC.root" : "He3TreeMC.root";
-    std::string treeName = checkPi ? "PiTreeMC" : "He3TreeMC";
+    std::string outFileName = "DauTreeMC.root";
+    std::string treeName = "DauTreeMC";
     TFile outFile = TFile(outFileName.data(), "recreate");
-    TTree *He3Tree = new TTree(treeName.data(), treeName.data());
-    float genRad, genPt;
+    TTree *DauTree = new TTree(treeName.data(), treeName.data());
+    GPart outPart;
+
+    // write the struct to the tree
+    DauTree->Branch("DauTree", &outPart);
+
     // source bitmap
     // 0: ITS, 1: TPC, 2: ITS-TPC, 3: TPC-TOF, 4: TPC-TRD, 5: ITS-TPC-TOF, 6: ITS-TPC-TRD, 7: TPC-TRD-TOF, 8: ITS-TPC-TRD-TOF
-    int detBMap = 0;
-    bool isReco = false;
-    bool isAB = false;
-
-    He3Tree->Branch("genRad", &genRad);
-    He3Tree->Branch("genPt", &genPt);
-    He3Tree->Branch("isReco", &isReco);
-    He3Tree->Branch("detBMap", &detBMap);
-    He3Tree->Branch("isAB", &isAB);
 
     // Path to the directory with the files
-    std::string path = "/data/fmazzasc/its_data/sim/hyp_2_body/";
     TSystemDirectory dir("MyDir", path.data());
     auto files = dir.GetListOfFiles();
     std::vector<std::string> dirs;
+    std::vector<int> dirnums;
     std::vector<TString> kine_files;
 
     for (auto fileObj : *files)
@@ -88,9 +98,10 @@ void checkDauEff(bool checkPi=false)
         if (file.substr(0, 2) == "tf")
         {
             int dirnum = stoi(file.substr(2, file.size()));
-            // if (dirnum > 3)
+            // if (dirnum != 20)
             //     continue;
             dirs.push_back(path + file);
+            dirnums.push_back(dirnum);
             auto innerdir = (TSystemDirectory *)fileObj;
             auto innerfiles = innerdir->GetListOfFiles();
             for (auto innerfileObj : *innerfiles)
@@ -109,6 +120,7 @@ void checkDauEff(bool checkPi=false)
         counter++;
 
         auto &dir = dirs[i];
+        auto &dirnum = dirnums[i];
         auto &kine_file = kine_files[i];
         LOG(info) << "Processing " << dir;
         LOG(info) << "File # " << counter << " of " << dirs.size();
@@ -142,6 +154,8 @@ void checkDauEff(bool checkPi=false)
         // MC Tracks
         std::vector<o2::MCTrack> *MCtracks = nullptr;
         std::vector<o2::dataformats::TrackTPCITS> *TPCITStracks = nullptr;
+        std::vector<o2::its::TrackITS> *ITStracks = nullptr;
+        std::vector<o2::tpc::TrackTPC> *TPCtracks = nullptr;
 
         // Labels
         std::vector<o2::MCCompLabel> *labITSvec = nullptr;
@@ -156,6 +170,8 @@ void checkDauEff(bool checkPi=false)
 
         treeMCTracks->SetBranchAddress("MCTrack", &MCtracks);
         treeITSTPC->SetBranchAddress("TPCITS", &TPCITStracks);
+        treeITS->SetBranchAddress("ITSTrack", &ITStracks);
+        treeTPC->SetBranchAddress("TPCTracks", &TPCtracks);
 
         treeITS->SetBranchAddress("ITSTrackMCTruth", &labITSvec);
         treeTPC->SetBranchAddress("TPCTracksMCTruth", &labTPCvec);
@@ -182,24 +198,32 @@ void checkDauEff(bool checkPi=false)
             GPartMatrix[n].resize(MCtracks->size());
             for (unsigned int mcI{0}; mcI < MCtracks->size(); ++mcI)
             {
-                GPart he3Part;
+                GPart dauPart;
                 auto &mcTrack = MCtracks->at(mcI);
-                auto pdg = mcTrack.GetPdgCode();
-                if (abs(pdg) == dauPDG)
+                auto mcPdg = mcTrack.GetPdgCode();
+                // LOG(info) << "Found " << pdg << " with mother " << mcTrack.getMotherTrackId();
+
+                if (abs(mcPdg) == dau0PDG || abs(mcPdg) == dau1PDG)
                 {
                     auto motherID = mcTrack.getMotherTrackId();
                     if (motherID < 0)
                         continue;
                     auto motherPDG = MCtracks->at(motherID).GetPdgCode();
-                    if (abs(motherPDG) != hypPDG)
+                    if (abs(motherPDG) != mothPDG)
                         continue;
-                    auto &hypTrack = MCtracks->at(motherID);
-                    he3Part.isSecDau = true;
-                    he3Part.genRad = calcRadius(MCtracks, hypTrack, dauPDG);
-                    he3Part.genPt = mcTrack.GetPt();
+                    
+                    
+                    auto &mothTrack = MCtracks->at(motherID);
+                    dauPart.isSecDau = true;
+                    dauPart.genRad = calcRadius(MCtracks, mothTrack, mcPdg);
+                    dauPart.genPt = mcTrack.GetPt();
+                    dauPart.genRap = mcTrack.GetRapidity();
+                    dauPart.genEta = mcTrack.GetEta();
+                    dauPart.tfNum = dirnum;
+                    dauPart.pdg = mcPdg;
                 }
 
-                GPartMatrix[n][mcI] = he3Part;
+                GPartMatrix[n][mcI] = dauPart;
             }
         }
 
@@ -227,14 +251,70 @@ void checkDauEff(bool checkPi=false)
                     gPart.isReco = true;
                     // update the bit map
                     gPart.detectorBMap |= (1 << bmap[detector]);
+                    if (detector == "ITS")
+                    {
+                        gPart.itsRef = i;
+                        gPart.isITSfake = label.isFake();
+                        gPart.itsPt = ITStracks->at(i).getPt();
+                    }
+
+                    if (detector == "TPC")
+                    {
+                        gPart.tpcRef = i;
+                        gPart.isTPCfake = label.isFake();
+                        gPart.tpcPt = TPCtracks->at(i).getPt();
+                    }
+
                     if (detector == "ITS-TPC")
                     {
+                        gPart.nRefs += 1;
                         auto &track = TPCITStracks->at(i);
-                        // LOG(info) << "ITS Ref: " << track.getRefITS().getIndex() << " TPC Ref: " << track.getRefTPC().getIndex();
+
                         if (track.getRefITS().getSource() == 24)
                             gPart.isAB = true;
+                        gPart.isITSTPCfake = label.isFake();
                     }
+
                 }
+            }
+        }
+
+        if (debug)
+        {
+            LOG(info) << "Start to access debug info";
+            // loop over debug file
+            auto fDebug = TFile::Open((dir + "/dbg_TPCITSmatch.root").data());
+            auto fTreeDebug = (TTree *)fDebug->Get("match");
+            LOG(info) << "Found " << fTreeDebug->GetEntriesFast() << " entries in the debug tree";
+            TrackLocITS *trackLocITS = nullptr;
+            TrackLocTPC *trackLocTPC = nullptr;
+            o2::MCCompLabel *itsLab = nullptr;
+            o2::MCCompLabel *tpcLab = nullptr;
+            float chi2match = -1;
+            int rejflag = -1;
+
+            fTreeDebug->SetBranchAddress("its", &trackLocITS);
+            fTreeDebug->SetBranchAddress("tpc", &trackLocTPC);
+            fTreeDebug->SetBranchAddress("itsLbl", &itsLab);
+            fTreeDebug->SetBranchAddress("tpcLbl", &tpcLab);
+            fTreeDebug->SetBranchAddress("chi2Match", &chi2match);
+            fTreeDebug->SetBranchAddress("rejFlag", &rejflag);
+
+            for (int frame = 0; frame < fTreeDebug->GetEntriesFast(); frame++)
+            {
+
+                fTreeDebug->GetEntry(frame);
+                if (!itsLab->isValid() || !tpcLab->isValid())
+                    continue;
+                if (itsLab->getEventID() != tpcLab->getEventID() || itsLab->getTrackID() != tpcLab->getTrackID())
+                    continue;
+
+                auto &gPart = GPartMatrix[itsLab->getEventID()][itsLab->getTrackID()];
+                if (!gPart.isSecDau)
+                    continue;
+
+                gPart.chi2Match = chi2match;
+                gPart.rejFlag = rejflag;
             }
         }
 
@@ -246,17 +326,13 @@ void checkDauEff(bool checkPi=false)
                 if (!gPart.isSecDau)
                     continue;
 
-                genRad = gPart.genRad;
-                genPt = gPart.genPt;
-                detBMap = gPart.detectorBMap;
-                isReco = gPart.isReco;
-                isAB = gPart.isAB;
-                He3Tree->Fill();
+                outPart = gPart;
+                DauTree->Fill();
             }
         }
     }
     outFile.cd();
-    He3Tree->Write();
+    DauTree->Write();
     outFile.Close();
 }
 
@@ -264,11 +340,12 @@ double calcRadius(std::vector<MCTrack> *MCTracks, const MCTrack &motherTrack, in
 {
     auto idStart = motherTrack.getFirstDaughterTrackId();
     auto idStop = motherTrack.getLastDaughterTrackId();
-    for (auto iD{idStart}; iD < idStop; ++iD)
+    for (auto iD{idStart}; iD <= idStop; ++iD)
     {
         auto dauTrack = MCTracks->at(iD);
-        if (std::abs(dauTrack.GetPdgCode()) == dauPDG)
+        if (std::abs(dauTrack.GetPdgCode()) == abs(dauPDG))
         {
+
             auto decLength = (dauTrack.GetStartVertexCoordinatesX() - motherTrack.GetStartVertexCoordinatesX()) *
                                  (dauTrack.GetStartVertexCoordinatesX() - motherTrack.GetStartVertexCoordinatesX()) +
                              (dauTrack.GetStartVertexCoordinatesY() - motherTrack.GetStartVertexCoordinatesY()) *
