@@ -11,4 +11,4 @@ input_files : [
   ]
 output_dir : '~/hyp3/results'
 output_file : 'HypertritonResults_inj_gap_matter.root'
-selection : 'fCosPA > 0.9995 & fNSigmaHe > -2 & fNTPCclusHe > 120 & fDcaV0Daug<0.05'
+selection : 'fCosPA > 0.9995 & fNSigmaHe > -2 & fNTPCclusHe > 120 & fDcaV0Daug<0.05 & fIsMatter == True'

@@ -108,7 +108,10 @@ if mc:
 
 
 # filtering
-df_filtered = df.query(selections)
+if selections != '':
+    df_filtered = df.query(selections)
+else:
+    df_filtered = df
 # print(df_filtered.columns)
 # print(df_filtered['fNSigmaHe'])
 
