@@ -31,6 +31,10 @@ if args.config_file != '':
     output_dir_name = config['output_dir']
     output_file_name = config['output_file']
 
+print('**********************************')
+print('    Running efficiency.py')
+print('**********************************')
+
 # matter
 input_file_matter = ROOT.TFile(input_file_matter_name)
 hPtRecMatter = input_file_matter.Get('hPtRec')

@@ -50,6 +50,9 @@ def fill_th2_hist(h, df, var1, var2):
     for var1_val, var2_val in zip(df[var1], df[var2]):
         h.Fill(var1_val, var2_val)
 
+print('**********************************')
+print('    Running analyse_tree.py')
+print('**********************************')
 
 # create histograms
 hCosPA = ROOT.TH1F("hCosPA", ";cos(#theta_{PA})", 50, 0.95, 1)
@@ -107,7 +110,7 @@ if mc:
 # filtering
 df_filtered = df.query(selections)
 # print(df_filtered.columns)
-print(df_filtered['fNSigmaHe'])
+# print(df_filtered['fNSigmaHe'])
 
 # fill histograms
 fill_th1_hist(hPtRec, df_filtered, 'fPt')
