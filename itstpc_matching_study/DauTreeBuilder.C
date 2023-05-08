@@ -45,10 +45,14 @@ using TrackLocTPC = o2::globaltracking::TrackLocTPC;
 using TrackLocITS = o2::globaltracking::TrackLocITS;
 using rejMap = o2::globaltracking::TrackRejFlag;
 
+// source detBMap
+// 0: ITS, 1: TPC, 2: ITS-TPC, 3: TPC-TOF, 4: TPC-TRD, 5: ITS-TPC-TOF, 6: ITS-TPC-TRD, 7: TPC-TRD-TOF, 8: ITS-TPC-TRD-TOF
+
 struct GPart
 {
     float genRad = -1, genPt = -1, genRap = -5, genEta = -5;
     int detectorBMap = 0;
+    int clusLayerMap = 0;
     int itsRef = -1;
     int tpcRef = -1;
     float itsPt = -1;
@@ -64,16 +68,21 @@ struct GPart
     int tfNum = -1;
     int pdg = -1;
     int nRefs = 0;
+    int nClus = 0;
+    int clRefL5 = -1;
+    int clRefL6 = -1;
+    bool clL5tracked = false;
+    bool clL6tracked = false;
 };
 
 double calcRadius(std::vector<MCTrack> *MCTracks, const MCTrack &motherTrack, int dauPDG);
 
 void DauTreeBuilder(int dau0PDG = 211, int dau1PDG = 1000020030, int mothPDG = 1010010030,
-                 bool debug = true, std::string path = "/data/fmazzasc/its_data/sim/hyp_gap_trig/")
+                    bool debug = true, std::string path = "/data/fmazzasc/its_data/sim/hyp_gap_trig/")
 {
 
     // write the output tree
-    std::string outFileName = "DauTreeMC.root";
+    std::string outFileName = "../../match_res/DauTreeMC.root";
     std::string treeName = "DauTreeMC";
     TFile outFile = TFile(outFileName.data(), "recreate");
     TTree *DauTree = new TTree(treeName.data(), treeName.data());
@@ -81,9 +90,6 @@ void DauTreeBuilder(int dau0PDG = 211, int dau1PDG = 1000020030, int mothPDG = 1
 
     // write the struct to the tree
     DauTree->Branch("DauTree", &outPart);
-
-    // source bitmap
-    // 0: ITS, 1: TPC, 2: ITS-TPC, 3: TPC-TOF, 4: TPC-TRD, 5: ITS-TPC-TOF, 6: ITS-TPC-TRD, 7: TPC-TRD-TOF, 8: ITS-TPC-TRD-TOF
 
     // Path to the directory with the files
     TSystemDirectory dir("MyDir", path.data());
@@ -98,8 +104,8 @@ void DauTreeBuilder(int dau0PDG = 211, int dau1PDG = 1000020030, int mothPDG = 1
         if (file.substr(0, 2) == "tf")
         {
             int dirnum = stoi(file.substr(2, file.size()));
-            // if (dirnum != 20)
-            //     continue;
+            if (dirnum != 36)
+                continue;
             dirs.push_back(path + file);
             dirnums.push_back(dirnum);
             auto innerdir = (TSystemDirectory *)fileObj;
@@ -115,6 +121,11 @@ void DauTreeBuilder(int dau0PDG = 211, int dau1PDG = 1000020030, int mothPDG = 1
         }
     }
     int counter = 0;
+    // first we load the geometry
+    o2::base::GeometryManager::loadGeometry(dirs[0] + "/o2sim_geometry.root");
+    auto gman = o2::its::GeometryTGeo::Instance();
+    gman->fillMatrixCache(o2::math_utils::bit2Mask(o2::math_utils::TransformType::T2L, o2::math_utils::TransformType::L2G));
+
     for (unsigned int i = 0; i < dirs.size(); i++)
     {
         counter++;
@@ -155,6 +166,8 @@ void DauTreeBuilder(int dau0PDG = 211, int dau1PDG = 1000020030, int mothPDG = 1
         std::vector<o2::MCTrack> *MCtracks = nullptr;
         std::vector<o2::dataformats::TrackTPCITS> *TPCITStracks = nullptr;
         std::vector<o2::its::TrackITS> *ITStracks = nullptr;
+        std::vector<int> *ITSTrackClusIdx = nullptr;
+
         std::vector<o2::tpc::TrackTPC> *TPCtracks = nullptr;
 
         // Labels
@@ -168,9 +181,13 @@ void DauTreeBuilder(int dau0PDG = 211, int dau1PDG = 1000020030, int mothPDG = 1
         std::vector<o2::MCCompLabel> *labTPCTRDTOFvec = nullptr;
         std::vector<o2::MCCompLabel> *labITSTPCTRDTOFvec = nullptr;
 
+        o2::dataformats::MCTruthContainer<o2::MCCompLabel> *clusLabArr = nullptr;
+        std::vector<CompClusterExt> *ITSclus = nullptr;
+
         treeMCTracks->SetBranchAddress("MCTrack", &MCtracks);
         treeITSTPC->SetBranchAddress("TPCITS", &TPCITStracks);
         treeITS->SetBranchAddress("ITSTrack", &ITStracks);
+        treeITS->SetBranchAddress("ITSTrackClusIdx", &ITSTrackClusIdx);
         treeTPC->SetBranchAddress("TPCTracks", &TPCtracks);
 
         treeITS->SetBranchAddress("ITSTrackMCTruth", &labITSvec);
@@ -182,6 +199,9 @@ void DauTreeBuilder(int dau0PDG = 211, int dau1PDG = 1000020030, int mothPDG = 1
         treeTPCTRDTOF->SetBranchAddress("MatchTOFMCTruth", &labTPCTRDTOFvec);
         treeITSTPCTOF->SetBranchAddress("MatchTOFMCTruth", &labITSTPCTOFvec);
         treeITSTPCTRDTOF->SetBranchAddress("MatchTOFMCTruth", &labITSTPCTRDTOFvec);
+
+        treeITSclus->SetBranchAddress("ITSClusterMCTruth", &clusLabArr);
+        treeITSclus->SetBranchAddress("ITSClusterComp", &ITSclus);
 
         // define detector map
         std::map<std::string, std::vector<o2::MCCompLabel> *> map{{"ITS", labITSvec}, {"TPC", labTPCvec}, {"ITS-TPC", labITSTPCvec}, {"TPC-TOF", labTPCTOFvec}, {"TPC-TRD", labTPCTRDvec}, {"ITS-TPC-TOF", labITSTPCTOFvec}, {"ITS-TPC-TRD", labITSTPCTRDvec}, {"TPC-TRD-TOF", labTPCTRDTOFvec}, {"ITS-TPC-TRD-TOF", labITSTPCTRDTOFvec}};
@@ -211,8 +231,7 @@ void DauTreeBuilder(int dau0PDG = 211, int dau1PDG = 1000020030, int mothPDG = 1
                     auto motherPDG = MCtracks->at(motherID).GetPdgCode();
                     if (abs(motherPDG) != mothPDG)
                         continue;
-                    
-                    
+
                     auto &mothTrack = MCtracks->at(motherID);
                     dauPart.isSecDau = true;
                     dauPart.genRad = calcRadius(MCtracks, mothTrack, mcPdg);
@@ -233,6 +252,8 @@ void DauTreeBuilder(int dau0PDG = 211, int dau1PDG = 1000020030, int mothPDG = 1
                 !treeITSTPCTOF->GetEvent(frame) || !treeTPCTOF->GetEvent(frame) || !treeITSclus->GetEvent(frame) || !treeTPCTRD->GetEvent(frame) ||
                 !treeITSTPCTRD->GetEvent(frame) || !treeTPCTRDTOF->GetEvent(frame) || !treeITSTPCTRDTOF->GetEvent(frame))
                 continue;
+
+            std::vector<bool> isClusTracked(ITSclus->size(), false);
 
             // loop over all the map entries
             for (auto const &[detector, labelVector] : map)
@@ -255,7 +276,18 @@ void DauTreeBuilder(int dau0PDG = 211, int dau1PDG = 1000020030, int mothPDG = 1
                     {
                         gPart.itsRef = i;
                         gPart.isITSfake = label.isFake();
-                        gPart.itsPt = ITStracks->at(i).getPt();
+                        
+                        auto &ITStrack = ITStracks->at(i);
+                        gPart.itsPt = ITStrack.getPt();
+                        
+                        // flag tracked clusters
+                        auto firstClus = ITStrack.getFirstClusterEntry();
+                        auto ncl = ITStrack.getNumberOfClusters();
+                        for (unsigned int icl = 0; icl < ncl; icl++)
+                        {
+                            int clInd = ITSTrackClusIdx->at(firstClus + icl);
+                            isClusTracked[clInd] = true;
+                        }
                     }
 
                     if (detector == "TPC")
@@ -274,8 +306,37 @@ void DauTreeBuilder(int dau0PDG = 211, int dau1PDG = 1000020030, int mothPDG = 1
                             gPart.isAB = true;
                         gPart.isITSTPCfake = label.isFake();
                     }
-
                 }
+            }
+
+            for (unsigned int iClus{0}; iClus < ITSclus->size(); iClus++)
+            {
+                auto &clus = ITSclus->at(iClus);
+                auto &clusLab = (clusLabArr->getLabels(iClus))[0];
+                int layer = gman->getLayer(clus.getSensorID());
+
+                if (!clusLab.isValid())
+                    continue;
+                auto &gPart = GPartMatrix[clusLab.getEventID()][clusLab.getTrackID()];
+                if (!gPart.isSecDau)
+                    continue;
+                gPart.clusLayerMap |= (1 << layer);
+
+                gPart.nClus += 1;
+                if (layer == 5)
+                {
+                    gPart.clRefL5 = iClus;
+                    gPart.clL5tracked = isClusTracked[iClus];
+                }
+                if (layer == 6)
+                {
+                    gPart.clRefL6 = iClus;
+                    gPart.clL6tracked = isClusTracked[iClus];
+                }
+
+                // LOG(info) << "TPC ref: " << gPart.tpcRef;
+                // LOG(info) << "Found cluster in layer " << layer;
+                // LOG(info) << "Cluster layer map: " << gPart.clusLayerMap;
             }
         }
 
