@@ -7,7 +7,7 @@
         "start-value-enumeration": "0",
         "end-value-enumeration": "-1",
         "step-value-enumeration": "1",
-        "aod-file": "/home/lbariogl/hyp3/mc/AO2D_merged2.root"
+        "aod-file": "/data/lbariogl/hyp_mc/round_1/AO2D.root"
     },
 
     "internal-dpl-injected-dummy-sink": "",
