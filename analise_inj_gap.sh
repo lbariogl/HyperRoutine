@@ -1,4 +1,4 @@
-GENERAL_FILE="../results/AnalysysResults.root"
+GENERAL_FILE="../results/AnalysisResults.root"
 if [ -f "$GENERAL_FILE" ]; then
   echo "Removing $GENERAL_FILE"
   rm $GENERAL_FILE

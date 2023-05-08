@@ -14,3 +14,4 @@ core*
 *.d
 *.so
 *.pcm
+*/dpl-config.json

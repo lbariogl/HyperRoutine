@@ -1,7 +1,11 @@
 import ROOT
 import numpy as np
 
-def computeEfficiency(gen_hist, rec_hist, name):
+
+def computeEfficiency(gen_hist, rec_hist, name, rebin=0):
+    if rebin > 1:
+        gen_hist.Rebin(rebin)
+        rec_hist.Rebin(rebin)
     eff_hist = gen_hist.Clone(name)
     eff_hist.Reset()
     eff_hist.GetYaxis().SetTitle(r'#epsilon #times Acc')
@@ -17,3 +21,11 @@ def computeEfficiency(gen_hist, rec_hist, name):
         eff_hist.SetBinContent(iPt, eff_val)
         eff_hist.SetBinError(iPt, eff_err)
     return eff_hist
+
+
+def setHistStyle(hist, colour, marker=20, fillstyle=0, linewidth=1):
+    hist.SetMarkerColor(colour)
+    hist.SetLineColor(colour)
+    hist.SetMarkerStyle(marker)
+    hist.SetFillStyle(fillstyle)
+    hist.SetLineWidth(linewidth)
