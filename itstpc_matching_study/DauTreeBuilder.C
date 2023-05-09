@@ -248,7 +248,7 @@ void DauTreeBuilder(int dau0PDG = 211, int dau1PDG = 1000020030, int mothPDG = 1
 
         for (int frame = 0; frame < treeITS->GetEntriesFast(); frame++)
         {
-            if (!treeITS->GetEvent(frame) || !treeITS->GetEvent(frame) || !treeITSTPC->GetEvent(frame) || !treeTPC->GetEvent(frame) ||
+            if (!treeITS->GetEvent(frame) || !treeITSTPC->GetEvent(frame) || !treeTPC->GetEvent(frame) ||
                 !treeITSTPCTOF->GetEvent(frame) || !treeTPCTOF->GetEvent(frame) || !treeITSclus->GetEvent(frame) || !treeTPCTRD->GetEvent(frame) ||
                 !treeITSTPCTRD->GetEvent(frame) || !treeTPCTRDTOF->GetEvent(frame) || !treeITSTPCTRDTOF->GetEvent(frame))
                 continue;
@@ -276,10 +276,10 @@ void DauTreeBuilder(int dau0PDG = 211, int dau1PDG = 1000020030, int mothPDG = 1
                     {
                         gPart.itsRef = i;
                         gPart.isITSfake = label.isFake();
-                        
+
                         auto &ITStrack = ITStracks->at(i);
                         gPart.itsPt = ITStrack.getPt();
-                        
+
                         // flag tracked clusters
                         auto firstClus = ITStrack.getFirstClusterEntry();
                         auto ncl = ITStrack.getNumberOfClusters();

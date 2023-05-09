@@ -125,10 +125,16 @@ if mc:
     # select only reconstructed candidates
     df.query('fIsReco==True', inplace=True)
 
-if is_matter == 'matter':
-    selections = selections + ' & fIsMatter == True'
-elif is_matter == 'antimatter':
-    selections = selections + ' & fIsMatter == False'
+if selections == '':
+    if is_matter == 'matter':
+        selections = 'fIsMatter == True'
+    elif is_matter == 'antimatter':
+        selections = 'fIsMatter == False'
+else:
+    if is_matter == 'matter':
+        selections = selections + ' & fIsMatter == True'
+    elif is_matter == 'antimatter':
+        selections = selections + ' & fIsMatter == False'
 
 # filtering
 if selections != '':
