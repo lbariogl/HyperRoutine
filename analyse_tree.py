@@ -18,6 +18,8 @@ parser.add_argument('--output-file', dest='output_file',
                     help="name of the output file.", default='HypertritonResults.root')
 parser.add_argument('--selection', dest='selection', help="selections to be bassed as query.",
                     default='fCosPA > 0.998 & fNTPCclusHe > 110 & abs(fDcaHe) > 0.1')
+parser.add_argument('--is-matter', dest='is_matter',
+                    help="path to the YAML file with configuration.", default='matter')
 parser.add_argument('--config-file', dest='config_file',
                     help="path to the YAML file with configuration.", default='')
 args = parser.parse_args()
@@ -28,6 +30,7 @@ input_file_name = args.input_files
 output_dir_name = args.output_dir
 output_file_name = args.output_file
 selections = args.selection
+is_matter = args.is_matter
 
 if args.config_file != "":
     config_file = open(args.config_file, 'r')
@@ -37,6 +40,12 @@ if args.config_file != "":
     output_dir_name = config['output_dir']
     output_file_name = config['output_file']
     selections = config['selection']
+    is_matter = config['is_matter']
+
+matter_options = ['matter', 'antimatter', 'both']
+if is_matter not in matter_options:
+    raise ValueError(
+        f'Invalid is-matter option. Expected one of: {matter_options}')
 
 # utils
 
@@ -45,10 +54,15 @@ def fill_th1_hist(h, df, var):
     for var_val in df[var]:
         h.Fill(var_val)
 
+def fill_th1_hist_abs(h, df, var):
+    for var_val in df[var]:
+        h.Fill(abs(var_val))
+
 
 def fill_th2_hist(h, df, var1, var2):
     for var1_val, var2_val in zip(df[var1], df[var2]):
         h.Fill(var1_val, var2_val)
+
 
 print('**********************************')
 print('    Running analyse_tree.py')
@@ -102,10 +116,19 @@ df.eval('fDecLen = sqrt(fXDecVtx**2 + fYDecVtx**2 + fZDecVtx**2)', inplace=True)
 # for MC only
 if mc:
     df.eval('fGenP = fGenPt * cosh(fGenEta)', inplace=True)
-    fill_th1_hist(hPtGen, df, 'fGenPt')
+    if is_matter == 'matter':
+        fill_th1_hist_abs(hPtGen, df.query('fGenPt>0', inplace=False), 'fGenPt')
+    elif is_matter == 'antimatter':
+        fill_th1_hist_abs(hPtGen, df.query('fGenPt<0', inplace=False), 'fGenPt')
+    else:
+        fill_th1_hist_abs(hPtGen, df, 'fGenPt')
     # select only reconstructed candidates
     df.query('fIsReco==True', inplace=True)
 
+if is_matter == 'matter':
+    selections = selections + ' & fIsMatter == True'
+elif is_matter == 'antimatter':
+    selections = selections + ' & fIsMatter == False'
 
 # filtering
 if selections != '':
@@ -133,8 +156,8 @@ fill_th2_hist(h2MassPt, df_filtered, 'fPt', 'fMassH3L')
 
 # for MC only
 if mc:
-    df_filtered.eval('resPt = (fPt - fGenPt)/fGenPt', inplace=True)
-    df_filtered.eval('resP = (fP - fGenP)/fGenP', inplace=True)
+    df_filtered.eval('resPt = (fPt - abs(fGenPt))/abs(fGenPt)', inplace=True)
+    df_filtered.eval('resP = (fP - abs(fGenP))/abs(fGenP)', inplace=True)
     df_filtered.eval(
         'ResDecX = (fXDecVtx - fGenXDecVtx)/fGenXDecVtx', inplace=True)
     df_filtered.eval(

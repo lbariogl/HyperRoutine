@@ -42,7 +42,8 @@ hPtRecMatter.SetDirectory(0)
 hPtGenMatter = input_file_matter.Get('MC/hPtGen')
 hPtGenMatter.SetDirectory(0)
 
-hEffMatter = utils.computeEfficiency(hPtGenMatter, hPtRecMatter, 'hEffMatter', 2)
+hEffMatter = utils.computeEfficiency(
+    hPtGenMatter, hPtRecMatter, 'hEffMatter', 2)
 utils.setHistStyle(hEffMatter, ROOT.kBlack)
 
 # antimatter
@@ -52,7 +53,8 @@ hPtRecAntimatter.SetDirectory(0)
 hPtGenAntimatter = input_file_antimatter.Get('MC/hPtGen')
 hPtGenAntimatter.SetDirectory(0)
 
-hEffAntimatter = utils.computeEfficiency(hPtGenAntimatter, hPtRecAntimatter, 'hEffAntimatter', 2)
+hEffAntimatter = utils.computeEfficiency(
+    hPtGenAntimatter, hPtRecAntimatter, 'hEffAntimatter', 2)
 utils.setHistStyle(hEffAntimatter, ROOT.kRed)
 
 # joined results
@@ -65,12 +67,13 @@ hEffTot = utils.computeEfficiency(hPtGenTot, hPtRecTot, 'hEffTot')
 utils.setHistStyle(hEffTot, ROOT.kBlue)
 
 cEff = ROOT.TCanvas('cEff', 'cEff', 800, 600)
-hFrame = cEff.DrawFrame(0.001,0.001,10, 0.05, r';#it{p}_{T} (GeV/#it{c});#epsilon #times Acc.')
+hFrame = cEff.DrawFrame(0.001, 0.001, 10, 0.08,
+                        r';#it{p}_{T} (GeV/#it{c});#epsilon #times Acc.')
 cEff.SetLeftMargin(1.8)
 hFrame.GetXaxis().SetTitleOffset(1.2)
 hEffMatter.Draw('PE SAME')
 hEffAntimatter.Draw('PE SAME')
-lEff = ROOT.TLegend(0.21,0.74,0.48,0.86,'','brNDC')
+lEff = ROOT.TLegend(0.21, 0.74, 0.48, 0.86, '', 'brNDC')
 lEff.SetBorderSize(0)
 
 lEff.AddEntry(hEffMatter, 'Matter', 'PE')
