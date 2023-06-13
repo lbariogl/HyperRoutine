@@ -58,7 +58,7 @@ double calcV0alpha(const V0 &v0);
 bool checkV0Decay(std::vector<MCTrack> *MCTracks, const MCTrack &motherTrack, int firstDauPDG, int secDauPDG);
 double calcMass(const V0 &v0, double dauMass[2], int dauCharges[2]);
 
-void v0Study(std::string path = "/data/lbariogl/hyp_mc/round_0/")
+void v0Study(std::string path = "/data/fmazzasc/its_data/sim/hyp_gap_trig_2/")
 {
 
     double bins[2] = {2.96, 3.04};
@@ -102,6 +102,8 @@ void v0Study(std::string path = "/data/lbariogl/hyp_mc/round_0/")
     TH1D *histRecRadius = new TH1D("Rec Radius", "; Rec Radius (cm); Counts", 300, 0, 90);
     TH1D *histoGenPt = new TH1D("Gen Pt", "; Gen Pt (GeV/c); Counts", 50, 0, 10);
     TH1D *histoRecPt = new TH1D("Rec Pt", "; Rec Pt (GeV/c); Counts", 50, 0, 10);
+    TH1D *histoRecPtITS = new TH1D("Rec Pt ITS", "; Rec Pt (GeV/c); Counts", 50, 0, 10);
+    TH1D *histoRecPtNoITS = new TH1D("Rec Pt NoITS", "; Rec Pt (GeV/c); Counts", 50, 0, 10);
 
     TH1D *histGenDecLength = new TH1D("Gen Dec Length", "; Gen Dec Length (cm); Counts", 300, 0, 90);
     TH1D *histGenLifetime = new TH1D("Gen ct", "; Gen ct (cm); Counts", 300, 0, 90);
@@ -270,15 +272,16 @@ void v0Study(std::string path = "/data/lbariogl/hyp_mc/round_0/")
                 std::vector<int> motherIDvec;
                 std::vector<int> daughterIDvec;
                 std::vector<int> evIDvec;
+                std::vector<bool> isITSvec;
 
-                for (int iV0 = 0; iV0 < 2; iV0++)
+                for (int iDaugh = 0; iDaugh < 2; iDaugh++)
                 {
 
-                    if (map[v0.getProngID(iV0).getSourceName()])
+                    if (map[v0.getProngID(iDaugh).getSourceName()])
                     {
-
-                        auto labTrackType = map[v0.getProngID(iV0).getSourceName()];
-                        auto lab = labTrackType->at(v0.getProngID(iV0).getIndex());
+                        auto source = v0.getProngID(iDaugh).getSourceName();
+                        auto labTrackType = map[source];
+                        auto lab = labTrackType->at(v0.getProngID(iDaugh).getIndex());
 
                         int trackID, evID, srcID;
                         bool fake;
@@ -289,6 +292,7 @@ void v0Study(std::string path = "/data/lbariogl/hyp_mc/round_0/")
                             motherIDvec.push_back(motherID);
                             daughterIDvec.push_back(trackID);
                             evIDvec.push_back(evID);
+                            isITSvec.push_back(source == "ITS");
                         }
                     }
                 }
@@ -328,6 +332,14 @@ void v0Study(std::string path = "/data/lbariogl/hyp_mc/round_0/")
                 auto recRad = TMath::Sqrt(v0.calcR2());
                 histRecRadius->Fill(recRad);
                 histoRecPt->Fill(calcPt(v0, dauMassTemp, dauChargesTemp));
+                if ((std::abs(pdg0) == firstDaughterPDG && isITSvec[0]) || (std::abs(pdg1) == firstDaughterPDG && isITSvec[1]))
+                {
+                    histoRecPtITS->Fill(calcPt(v0, dauMassTemp, dauChargesTemp));
+                }
+                else
+                {
+                    histoRecPtNoITS->Fill(calcPt(v0, dauMassTemp, dauChargesTemp));
+                }
 
                 histV0radiusRes->Fill(genRad, (recRad - genRad) / genRad);
 
@@ -360,15 +372,29 @@ void v0Study(std::string path = "/data/lbariogl/hyp_mc/round_0/")
 
     TH1D *histoEffvsPt = (TH1D *)histoRecPt->Clone("histoEffvsPt");
     histoEffvsPt->Divide(histoGenPt);
-    histoEffvsPt->GetYaxis()->SetTitle("Efficiency");
-    histoEffvsPt->GetXaxis()->SetTitle("V0 Pt (GeV/c)");
+    histoEffvsPt->GetYaxis()->SetTitle("#epsilon #times Acc.");
+    histoEffvsPt->GetXaxis()->SetTitle("#it{p}_{T} (GeV/#it{c})");
     histoEffvsPt->Write();
+
+    TH1D *histoEffvsPtITS = (TH1D *)histoRecPtITS->Clone("histoEffvsPtITS");
+    histoEffvsPtITS->Divide(histoGenPt);
+    histoEffvsPtITS->GetYaxis()->SetTitle("#epsilon #times Acc.");
+    histoEffvsPtITS->GetXaxis()->SetTitle("#it{p}_{T} (GeV/#it{c})");
+    histoEffvsPtITS->Write();
+
+    TH1D *histoEffvsPtNoITS = (TH1D *)histoRecPtNoITS->Clone("histoEffvsPtNoITS");
+    histoEffvsPtNoITS->Divide(histoGenPt);
+    histoEffvsPtNoITS->GetYaxis()->SetTitle("#epsilon #times Acc.");
+    histoEffvsPtNoITS->GetXaxis()->SetTitle("#it{p}_{T} (GeV/#it{c})");
+    histoEffvsPtNoITS->Write();
 
     histInvMass->Write();
     histGenLifetime->Write();
     histRecRadius->Write();
     histoGenPt->Write();
     histoRecPt->Write();
+    histoRecPtITS->Write();
+    histoRecPtNoITS->Write();
     histRecDecLength->Write();
     histGenDecLength->Write();
     histGenRadius->Write();

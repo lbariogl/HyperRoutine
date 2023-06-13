@@ -1,16 +1,17 @@
 mc: True
 input_files:
   [
-    "/data/lbariogl/hyp_mc/round_0/AnalysisResults_trees_merged.root",
-    "/data/lbariogl/hyp_mc/round_1/AnalysisResults_trees_merged.root",
-    "/data/lbariogl/hyp_mc/round_2/AnalysisResults_trees_merged.root",
-    "/data/lbariogl/hyp_mc/round_3/AnalysisResults_trees_merged.root",
-    "/data/lbariogl/hyp_mc/round_4/AnalysisResults_trees_merged.root",
-    "/data/lbariogl/hyp_mc/round_5/AnalysisResults_trees_merged.root",
-    "/data/lbariogl/hyp_mc/round_6/AnalysisResults_trees_merged.root",
-    "/data/lbariogl/hyp_mc/round_7/AnalysisResults_trees_merged.root",
+    # "/data/lbariogl/hyp_mc/round_0/AnalysisResults_trees_merged.root"
+    # "/data/lbariogl/hyp_mc/round_1/AnalysisResults_trees_merged.root",
+    # "/data/lbariogl/hyp_mc/round_2/AnalysisResults_trees_merged.root",
+    # "/data/lbariogl/hyp_mc/round_3/AnalysisResults_trees_merged.root",
+    # "/data/lbariogl/hyp_mc/round_4/AnalysisResults_trees_merged.root",
+    # "/data/lbariogl/hyp_mc/round_5/AnalysisResults_trees_merged.root",
+    # "/data/lbariogl/hyp_mc/round_6/AnalysisResults_trees_merged.root",
+    # "/data/lbariogl/hyp_mc/round_7/AnalysisResults_trees_merged.root",
+    "/data/lbariogl/hyp_mc/fmazzasc_sim/AnalysisResults_trees_merged.root"
   ]
-output_dir: "~/hyp3/results"
+output_dir: "~/hyp3/results/fmazzasc_sim"
 output_file: "HypertritonResults_inj_gap_antimatter.root"
-selection: "fCosPA > 0.9995 & fNSigmaHe > -2 & fNTPCclusHe > 120 & fDcaV0Daug<0.05"
+selection: ""
 is_matter: "antimatter"

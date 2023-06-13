@@ -1,4 +1,4 @@
-input_file_matter : '../results/HypertritonResults_inj_gap_matter.root'
-input_file_antimatter : '../results/HypertritonResults_inj_gap_antimatter.root'
-output_dir : '../results'
+input_file_matter : '../results/fmazzasc_sim/HypertritonResults_inj_gap_matter.root'
+input_file_antimatter : '../results/fmazzasc_sim/HypertritonResults_inj_gap_antimatter.root'
+output_dir : '../results/fmazzasc_sim'
 output_file : 'Efficiency.root'
