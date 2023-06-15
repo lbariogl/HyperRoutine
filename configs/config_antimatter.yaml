@@ -1,5 +1,6 @@
 mc : False
-input_file : '/home/fmazzasc/AO2D_22r.root'
+input_files : ['../data/AO2D_pass4_merged.root']
 output_dir : '../results/'
-output_file : 'HypertritonResults_antimatter.root'
-selection : 'fCosPA > 0.999  & fNTPCclusHe > 120 & fIsMatter == False & fDcaV0Daug<0.05'
+output_file : 'HypertritonResults_antimatter_pass4.root'
+selection : 'fCosPA > 0.999 & fNSigmaHe > -2 & fNTPCclusHe > 120'
+is_matter : 'antimatter'

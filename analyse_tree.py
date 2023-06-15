@@ -84,7 +84,7 @@ hMass4LH = ROOT.TH1F(
 hPtRec = ROOT.TH1F("hPtRec", ";#it{p}_{T} (GeV/#it{c})", 50, 0, 10)
 hRadius = ROOT.TH1F("hRadius", ";Radius (cm)", 100, 0, 40)
 hDecLen = ROOT.TH1F("hDecLen", ";Decay length (cm)", 100, 0, 40)
-hNSigHe = ROOT.TH1F("hNSigmaHe", ";n #sigma He3", 50, -3, 3)
+hNSigHe = ROOT.TH1F("hNSigmaHe", ";n_{#sigma}^{TPC}({}^{3}He)", 50, -3, 3)
 
 h2MassCosPA = ROOT.TH2F(
     "h2MassCosPA", ";cos(#theta_{PA}); m({}^{3}_{#Lambda}H) (GeV/#it{c})", 100, 0.99, 1, 50, 2.96, 3.04)

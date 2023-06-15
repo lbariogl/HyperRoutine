@@ -1,5 +1,6 @@
 mc : False
-input_file : 'AO2D_22t.root'
+input_files : ['../data/AO2D_pass4_merged.root']
 output_dir : '../results/'
-output_file : 'HypertritonResults_22t.root'
-selection : 'fCosPA > 0.9995 & fNSigmaHe > -2 & fNTPCclusHe > 120'
+output_file : 'HypertritonResults_matter_pass4.root'
+selection : 'fCosPA > 0.999 & fNSigmaHe > -2 & fNTPCclusHe > 120'
+is_matter : 'matter'
