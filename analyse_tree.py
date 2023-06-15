@@ -54,6 +54,7 @@ def fill_th1_hist(h, df, var):
     for var_val in df[var]:
         h.Fill(var_val)
 
+
 def fill_th1_hist_abs(h, df, var):
     for var_val in df[var]:
         h.Fill(abs(var_val))
@@ -62,6 +63,11 @@ def fill_th1_hist_abs(h, df, var):
 def fill_th2_hist(h, df, var1, var2):
     for var1_val, var2_val in zip(df[var1], df[var2]):
         h.Fill(var1_val, var2_val)
+
+
+def fill_th2_hist_abs(h, df, var1, var2):
+    for var1_val, var2_val in zip(df[var1], df[var2]):
+        h.Fill(abs(var1_val), var2_val)
 
 
 print('**********************************')
@@ -94,8 +100,13 @@ h2MassPt = ROOT.TH2F(
 # for MC only
 hPtGen = ROOT.TH1F("hPtGen", "; Pt gen", 50, 0, 10)
 hResolutionPt = ROOT.TH1F(
-    "hResolutionPT", ";Resolution #it{p}_{T}", 50, -0.2, 0.2)
-hResolutionP = ROOT.TH1F("hResolutionP", ";Resolution #it{p}", 50, -0.2, 0.2)
+    "hResolutionPt", ";(#it{p}_{T}^{rec} - #it{p}_{T}^{gen}) / #it{p}_{T}^{gen}", 50, -0.2, 0.2)
+hResolutionPtvsPt = ROOT.TH2F(
+    "hResolutionPtvsPt", ";#it{p}_{T}^{gen} (GeV/#it{c});(#it{p}_{T}^{rec} - #it{p}_{T}^{gen}) / #it{p}_{T}^{gen}", 50, 0, 10, 50, -0.2, 0.2)
+hResolutionP = ROOT.TH1F(
+    "hResolutionP", ";(#it{p}^{rec} - #it{p}^{gen}) / #it{p}^{gen}", 50, -0.2, 0.2)
+hResolutionPvsP = ROOT.TH2F(
+    "hResolutionPvsP", ";#it{p}^{gen} (GeV/#it{c});(#it{p}^{rec} - #it{p}^{gen}) / #it{p}^{gen}", 50, 0, 10, 50, -0.2, 0.2)
 hResolutionDecVtxX = ROOT.TH1F(
     "hResolutionDecVtxX", "; Resolution Dec X", 50, -0.2, 0.2)
 hResolutionDecVtxY = ROOT.TH1F(
@@ -117,9 +128,11 @@ df.eval('fDecLen = sqrt(fXDecVtx**2 + fYDecVtx**2 + fZDecVtx**2)', inplace=True)
 if mc:
     df.eval('fGenP = fGenPt * cosh(fGenEta)', inplace=True)
     if is_matter == 'matter':
-        fill_th1_hist_abs(hPtGen, df.query('fGenPt>0', inplace=False), 'fGenPt')
+        fill_th1_hist_abs(hPtGen, df.query(
+            'fGenPt>0', inplace=False), 'fGenPt')
     elif is_matter == 'antimatter':
-        fill_th1_hist_abs(hPtGen, df.query('fGenPt<0', inplace=False), 'fGenPt')
+        fill_th1_hist_abs(hPtGen, df.query(
+            'fGenPt<0', inplace=False), 'fGenPt')
     else:
         fill_th1_hist_abs(hPtGen, df, 'fGenPt')
     # select only reconstructed candidates
@@ -175,7 +188,8 @@ if mc:
     fill_th1_hist(hResolutionDecVtxX, df_filtered, 'ResDecX')
     fill_th1_hist(hResolutionDecVtxY, df_filtered, 'ResDecY')
     fill_th1_hist(hResolutionDecVtxZ, df_filtered, 'ResDecZ')
-
+    fill_th2_hist_abs(hResolutionPtvsPt, df_filtered, 'fGenPt', 'resPt')
+    fill_th2_hist_abs(hResolutionPvsP, df_filtered, 'fGenP', 'resP')
 
 # save to file root
 f = ROOT.TFile(f"{output_dir_name}/{output_file_name}", "RECREATE")
@@ -199,7 +213,9 @@ if mc:
     f.mkdir("MC")
     f.cd("MC")
     hResolutionPt.Write()
+    hResolutionPtvsPt.Write()
     hResolutionP.Write()
+    hResolutionPvsP.Write()
     hResolutionDecVtxX.Write()
     hResolutionDecVtxY.Write()
     hResolutionDecVtxZ.Write()
