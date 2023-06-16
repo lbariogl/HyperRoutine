@@ -78,11 +78,13 @@ struct GPart
 double calcRadius(std::vector<MCTrack> *MCTracks, const MCTrack &motherTrack, int dauPDG);
 
 void DauTreeBuilder(int dau0PDG = 211, int dau1PDG = 1000020030, int mothPDG = 1010010030,
-                    bool debug = true, std::string path = "/data/fmazzasc/its_data/sim/hyp_gap_trig/")
+                    bool debug = true, std::string path = "/data/fmazzasc/its_data/sim/hyp_gap_trig/", std::string outsuffix = "")
 {
 
-    // write the output tree
-    std::string outFileName = "../../match_res/DauTreeMC.root";
+    if(outsuffix != "")
+        outsuffix = "_" + outsuffix;
+
+    std::string outFileName = "../../match_res/DauTreeMC" + outsuffix + ".root";
     std::string treeName = "DauTreeMC";
     TFile outFile = TFile(outFileName.data(), "recreate");
     TTree *DauTree = new TTree(treeName.data(), treeName.data());
@@ -104,8 +106,8 @@ void DauTreeBuilder(int dau0PDG = 211, int dau1PDG = 1000020030, int mothPDG = 1
         if (file.substr(0, 2) == "tf")
         {
             int dirnum = stoi(file.substr(2, file.size()));
-            if (dirnum != 36)
-                continue;
+            // if (dirnum != 3)
+            //     continue;
             dirs.push_back(path + file);
             dirnums.push_back(dirnum);
             auto innerdir = (TSystemDirectory *)fileObj;
@@ -248,7 +250,7 @@ void DauTreeBuilder(int dau0PDG = 211, int dau1PDG = 1000020030, int mothPDG = 1
 
         for (int frame = 0; frame < treeITS->GetEntriesFast(); frame++)
         {
-            if (!treeITS->GetEvent(frame) || !treeITSTPC->GetEvent(frame) || !treeTPC->GetEvent(frame) ||
+            if (!treeITS->GetEvent(frame) || !treeITS->GetEvent(frame) || !treeITSTPC->GetEvent(frame) || !treeTPC->GetEvent(frame) ||
                 !treeITSTPCTOF->GetEvent(frame) || !treeTPCTOF->GetEvent(frame) || !treeITSclus->GetEvent(frame) || !treeTPCTRD->GetEvent(frame) ||
                 !treeITSTPCTRD->GetEvent(frame) || !treeTPCTRDTOF->GetEvent(frame) || !treeITSTPCTRDTOF->GetEvent(frame))
                 continue;
@@ -276,10 +278,10 @@ void DauTreeBuilder(int dau0PDG = 211, int dau1PDG = 1000020030, int mothPDG = 1
                     {
                         gPart.itsRef = i;
                         gPart.isITSfake = label.isFake();
-
+                        
                         auto &ITStrack = ITStracks->at(i);
                         gPart.itsPt = ITStrack.getPt();
-
+                        
                         // flag tracked clusters
                         auto firstClus = ITStrack.getFirstClusterEntry();
                         auto ncl = ITStrack.getNumberOfClusters();
@@ -305,6 +307,8 @@ void DauTreeBuilder(int dau0PDG = 211, int dau1PDG = 1000020030, int mothPDG = 1
                         if (track.getRefITS().getSource() == 24)
                             gPart.isAB = true;
                         gPart.isITSTPCfake = label.isFake();
+                        gPart.chi2Match = track.getChi2Match();
+
                     }
                 }
             }
@@ -335,7 +339,7 @@ void DauTreeBuilder(int dau0PDG = 211, int dau1PDG = 1000020030, int mothPDG = 1
                 }
 
                 // LOG(info) << "TPC ref: " << gPart.tpcRef;
-                // LOG(info) << "Found cluster in layer " << layer;
+                // LOG(info) << "Found cluster " << iClus << " in layer " << layer;
                 // LOG(info) << "Cluster layer map: " << gPart.clusLayerMap;
             }
         }
@@ -373,9 +377,8 @@ void DauTreeBuilder(int dau0PDG = 211, int dau1PDG = 1000020030, int mothPDG = 1
                 auto &gPart = GPartMatrix[itsLab->getEventID()][itsLab->getTrackID()];
                 if (!gPart.isSecDau)
                     continue;
-
-                gPart.chi2Match = chi2match;
                 gPart.rejFlag = rejflag;
+                gPart.chi2Match = chi2match;
             }
         }
 

@@ -1,7 +1,10 @@
 import ROOT
-import utils
 import argparse
 import yaml
+
+import sys
+sys.path.append('utils')
+import utils as utils
 
 
 parser = argparse.ArgumentParser(

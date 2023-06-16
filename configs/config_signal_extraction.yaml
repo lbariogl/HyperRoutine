@@ -1,0 +1,4 @@
+input_parquet_data : '../results/HypertritonResults_antimatter.root.parquet'
+input_parquet_mc: '../results/HypertritonResults_MC.root.parquet'
+output_dir : '../results/'
+output_file : 'fit_results.root'

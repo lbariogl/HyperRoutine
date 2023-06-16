@@ -1,5 +1,6 @@
 mc : True
-input_files : ['/data/shared/hyp_run_3/mc/AO2D_MC_GEN.root']
+input_files : ['/data/shared/hyp_run_3/mc/AO2D_MC.root']
 output_dir : '../results/'
 output_file : 'HypertritonResults_MC.root'
-selection : ''
+is_matter : 'both'
+selection : 'fPt>1 and fCosPA>0.998 and fNSigmaHe>-2. and fTPCsignalPi<1000'
