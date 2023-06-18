@@ -111,10 +111,10 @@ def set_style():
 
 
 
-def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, n, n_ev=300):
+def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, n, n_ev=300, matter_type="both", histo_maximum=130):
 
     fit_results = fit_function.fitTo(dataset, ROOT.RooFit.Extended(True), ROOT.RooFit.Save(True))
-    frame = var.frame(40)
+    frame = var.frame(30)
     frame.SetName('frame_tree')
     frame.SetTitle('')
     set_style()
@@ -129,7 +129,7 @@ def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, n, n
     # fit_function.plotOn(frame, ROOT.RooFit.Components('cb'), ROOT.RooFit.LineStyle(ROOT.kDashed))
 
     frame.SetMinimum(0)
-    frame.SetMaximum(40)
+    frame.SetMaximum(histo_maximum)
 
     sigma_val = sigma.getVal()
     mu_val = mu.getVal()
@@ -193,10 +193,17 @@ def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, n, n
     pinfo2.SetTextAlign(11) 
     pinfo2.SetTextFont(42)
 
+    if matter_type == "matter":
+        matter_string = "{}^{3}_{#Lambda}H #rightarrow ^{3}He+#pi^{-}"
+    elif matter_type == "antimatter":
+        matter_string = "{}^{3}_{#bar{#Lambda}}#bar{H} #rightarrow ^{3}#bar{He}+#pi^{+}"
+    else:
+        matter_string = "{}^{3}_{#Lambda}H #rightarrow ^{3}He+#pi^{-} + c.c."
+
     string_list.append("ALICE Performance")
     string_list.append("Run 3, pp #sqrt{#it{s}} = 13.6 TeV")
-    string_list.append("N_{ev} = " f"{n_ev} "  "#times 10^{9}")
-    string_list.append('{}^{3}_{#Lambda}#bar{H} #rightarrow ^{3}#bar{He}+#pi^{+}')
+    string_list.append("N_{ev} = " f"{n_ev:.0f} "  "#times 10^{9}")
+    string_list.append(matter_string)
     for s in string_list:
         pinfo2.AddText(s)
 

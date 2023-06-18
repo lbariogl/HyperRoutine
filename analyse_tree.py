@@ -86,7 +86,7 @@ print('**********************************')
 hCosPA = ROOT.TH1F("hCosPA", ";cos(#theta_{PA})", 50, 0.95, 1)
 hNTPCclus = ROOT.TH1F("hNTPCclus", ";n TPC clusters", 50, 60, 200)
 hMass3LH = ROOT.TH1F(
-    "h_3lh_mass", "; m({}^{3}_{#Lambda}H) (GeV/#it{c})", 50, 2.96, 3.04)
+    "h_3lh_mass", "; m({}^{3}_{#Lambda}H) (GeV/#it{c})", 40, 2.96, 3.04)
 hMass4LH = ROOT.TH1F(
     "h_4lh_mass", "; m({}^{4}_{#Lambda}H) (GeV/#it{c})", 50, 3.96, 4.04)
 hPtRec = ROOT.TH1F("hPtRec", ";#it{p}_{T} (GeV/#it{c})", 50, 0, 10)
