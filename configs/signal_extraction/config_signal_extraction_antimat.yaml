@@ -1,0 +1,12 @@
+## choose between matter, antimatter or both
+matter_type: "antimatter"
+
+## i/o
+input_parquet_data : ['../results/HypertritonResults_antimatter.root.parquet']
+input_parquet_mc: '../results/HypertritonResults_MC.root.parquet'
+output_dir : '../results/'
+output_file : 'fit_results_antimat.root'
+
+
+## output histogram settings
+histo_maximum: 45
