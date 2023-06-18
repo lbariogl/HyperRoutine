@@ -23,11 +23,15 @@ args = parser.parse_args()
 
 config_file = open(args.config_file, 'r')
 config = yaml.full_load(config_file)
+
+matter_type = config['matter_type']
+
 input_parquet_data = config['input_parquet_data']
+input_analysis_results = config['input_analysis_results']
 input_parquet_mc = config['input_parquet_mc']
 output_dir = config['output_dir']
 output_file = config['output_file']
-matter_type = config['matter_type']
+
 histo_maximum = config['histo_maximum']
 
 if matter_type=="matter":
@@ -41,6 +45,11 @@ else:
 
 
 
+an_vtx_z = uproot.open(input_analysis_results)['hyper-reco-task']['hZvtx']
+n_evts = an_vtx_z.values().sum()
+## count in billions and round to unity
+print(f'Number of events: {n_evts}')
+n_evts = round(n_evts/1e9, 0)
 
 
 mass = ROOT.RooRealVar('m', inv_mass_string, 2.96, 3.04, 'GeV/c^{2}')
@@ -112,4 +121,4 @@ else:
 mass_roo_data = utils.ndarray2roo(mass_array, mass)
 
 
-utils.fit_and_plot(mass_roo_data, mass, fit_function, signal, background, sigma, mu, n, n_ev=330, matter_type=matter_type, histo_maximum=histo_maximum)
+utils.fit_and_plot(mass_roo_data, mass, fit_function, signal, background, sigma, mu, n, n_ev=n_evts, matter_type=matter_type, histo_maximum=histo_maximum)

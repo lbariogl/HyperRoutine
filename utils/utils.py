@@ -202,7 +202,7 @@ def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, n, n
 
     string_list.append("ALICE Performance")
     string_list.append("Run 3, pp #sqrt{#it{s}} = 13.6 TeV")
-    string_list.append("N_{ev} = " f"{n_ev} "  "#times 10^{9}")
+    string_list.append("N_{ev} = " f"{n_ev:.0f} "  "#times 10^{9}")
     string_list.append(matter_string)
     for s in string_list:
         pinfo2.AddText(s)
