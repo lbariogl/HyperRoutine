@@ -111,11 +111,11 @@ def set_style():
 
 
 
-def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, n, n_ev=300, matter_type="both", histo_maximum=130):
+def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, n, n_ev=300, matter_type="both", bdt_eff=None):
 
     fit_results = fit_function.fitTo(dataset, ROOT.RooFit.Extended(True), ROOT.RooFit.Save(True))
     frame = var.frame(30)
-    frame.SetName('frame_tree')
+    frame.SetName(f'data_extr_{bdt_eff}')
     frame.SetTitle('')
     set_style()
     frame.GetYaxis().SetTitleSize(0.06)
@@ -127,9 +127,6 @@ def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, n, n
     fit_function.plotOn(frame, ROOT.RooFit.LineColor(kBlueC), ROOT.RooFit.Name('fit_func'))
     fit_function.plotOn(frame, ROOT.RooFit.Components('bkg'), ROOT.RooFit.LineStyle(ROOT.kDashed), ROOT.RooFit.LineColor(kOrangeC))
     # fit_function.plotOn(frame, ROOT.RooFit.Components('cb'), ROOT.RooFit.LineStyle(ROOT.kDashed))
-
-    frame.SetMinimum(0)
-    frame.SetMaximum(histo_maximum)
 
     sigma_val = sigma.getVal()
     mu_val = mu.getVal()
@@ -156,10 +153,6 @@ def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, n, n
     s_b_ratio_err = np.sqrt((signal_int_val_3s_error/signal_int_val_3s)**2 + (bkg_int_val_3s_error/bkg_int_val_3s)**2)*signal_int_val_3s/bkg_int_val_3s
 
 
-    # rootchi2 = ROOT.RooChi2Var("chi2", "chi2", fit_function, data, ROOT.RooFit.DataError(ROOT.RooAbsData.Expected))
-    # chi2 = rootchi2.getVal()
-    # fit_probability = ROOT.TMath.Prob(chi2, frame.GetNbinsX())
-
     chi2 = frame.chiSquare("fit_func", "data", 6)
     fit_probability = ROOT.TMath.Prob(chi2*(frame.GetNbinsX() -6), frame.GetNbinsX() -6)
 
@@ -167,8 +160,6 @@ def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, n, n
     print('fit probability: ', fit_probability)
     print('muv: ', mu_val)
 
-    # print('chi2: ', chi2, 'frame.GetNbinsX(): ', frame.GetNbinsX())
-    # print('fit probability: ', fit_probability)
 
     pinfo = ROOT.TPaveText(0.632, 0.5, 0.932, 0.85, 'NDC')
     pinfo.SetBorderSize(0)
@@ -195,8 +186,10 @@ def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, n, n
 
     if matter_type == "matter":
         matter_string = "{}^{3}_{#Lambda}H #rightarrow ^{3}He+#pi^{-}"
+
     elif matter_type == "antimatter":
         matter_string = "{}^{3}_{#bar{#Lambda}}#bar{H} #rightarrow ^{3}#bar{He}+#pi^{+}"
+        
     else:
         matter_string = "{}^{3}_{#Lambda}H #rightarrow ^{3}He+#pi^{-} + c.c."
 
@@ -204,6 +197,10 @@ def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, n, n
     string_list.append("Run 3, pp #sqrt{#it{s}} = 13.6 TeV")
     string_list.append("N_{ev} = " f"{n_ev:.0f} "  "#times 10^{9}")
     string_list.append(matter_string)
+    
+    if bdt_eff != None:
+        string_list.append(f"BDT Efficiency: {bdt_eff:.2f}")
+
     for s in string_list:
         pinfo2.AddText(s)
 

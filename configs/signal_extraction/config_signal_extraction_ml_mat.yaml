@@ -2,14 +2,14 @@
 matter_type: "matter"
 
 ## i/o
-input_parquet_data : ['../results/HypertritonResults_matter_pass4.root.parquet']
+input_parquet_data : ['../results/training_test/dataH.parquet.parquet.gzip']
 input_parquet_mc: '../results/HypertritonResults_MC.root.parquet'
 input_analysis_results: '/data/shared/hyp_run_3/apass4/AnalysisResults.root'
-output_dir : '../results/'
+output_dir : "../results/training_test"
 output_file : 'fit_results_mat.root'
 
 
 ## output histogram settings
 preselections: "fIsMatter==False"
-ml_efficiency_scan: False
-input_eff_dir: "../results/training"
+ml_efficiency_scan: True
+input_eff_dir: "../results/training_test"
