@@ -15,8 +15,6 @@ kBlueC = ROOT.TColor.GetColor('#1f78b4')
 kOrangeC  = ROOT.TColor.GetColor("#ff7f00")
 
 ROOT.gROOT.LoadMacro('utils/RooCustomPdfs/RooDSCBShape.cxx++')
-from ROOT import RooDSCBShape
-
 
 def getFitFrames(matter_type, input_parquet_data, input_analysis_results, input_parquet_mc, ml_efficiency_scan=False, preselections='', input_eff_dir='../results/training_test'):
 
