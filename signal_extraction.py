@@ -16,7 +16,7 @@ kOrangeC  = ROOT.TColor.GetColor("#ff7f00")
 
 ROOT.gROOT.LoadMacro('utils/RooCustomPdfs/RooDSCBShape.cxx++')
 
-def getFitFrames(matter_type, input_parquet_data, input_analysis_results, input_parquet_mc, ml_efficiency_scan=False, preselections='', input_eff_dir='../results/training_test'):
+def getFitFrames(matter_type, input_parquet_data, input_analysis_results, input_parquet_mc, preselections='', ml_efficiency_scan=False, input_eff_dir='../results/training_test'):
 
     if matter_type == "matter":
         inv_mass_string = "#it{M}_{^{3}He+#pi^{-}}"
@@ -136,7 +136,7 @@ if __name__ == "__main__":
     input_eff_dir = config['input_eff_dir']
 
     # perform fits
-    frame_prefit, frame_fit = getFitFrames(matter_type, input_parquet_data, input_analysis_results, input_parquet_mc, ml_efficiency_scan, preselections, input_eff_dir)
+    frame_prefit, frame_fit = getFitFrames(matter_type, input_parquet_data, input_analysis_results, input_parquet_mc, preselections, ml_efficiency_scan, input_eff_dir)
 
     # create output file and save frames
     out_file = ROOT.TFile(f'{output_dir}/{output_file}', 'recreate')
