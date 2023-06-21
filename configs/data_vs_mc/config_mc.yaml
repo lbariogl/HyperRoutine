@@ -1,0 +1,6 @@
+mc : True
+input_files : ['/data/shared/hyp_run_3/mc/AO2D_MC_BDT.root']
+output_dir : '../results/'
+output_file : 'HypertritonResults_antimatter_MC_standard_masscut.root'
+is_matter : 'antimatter'
+selection : 'fPt>1 and fCosPA>0.998 and fNSigmaHe>-2. and fTPCsignalPi<1000 and abs(fMassH3L - 2.992) < 0.006'

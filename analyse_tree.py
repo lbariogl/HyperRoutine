@@ -55,28 +55,6 @@ if is_matter not in matter_options:
     raise ValueError(
         f'Invalid is-matter option. Expected one of: {matter_options}')
 
-# utils
-
-
-def fill_th1_hist(h, df, var):
-    for var_val in df[var]:
-        h.Fill(var_val)
-
-
-def fill_th1_hist_abs(h, df, var):
-    for var_val in df[var]:
-        h.Fill(abs(var_val))
-
-
-def fill_th2_hist(h, df, var1, var2):
-    for var1_val, var2_val in zip(df[var1], df[var2]):
-        h.Fill(var1_val, var2_val)
-
-
-def fill_th2_hist_abs(h, df, var1, var2):
-    for var1_val, var2_val in zip(df[var1], df[var2]):
-        h.Fill(abs(var1_val), var2_val)
-
 
 print('**********************************')
 print('    Running analyse_tree.py')
@@ -136,13 +114,13 @@ df.eval('fDecLen = sqrt(fXDecVtx**2 + fYDecVtx**2 + fZDecVtx**2)', inplace=True)
 if mc:
     df.eval('fGenP = fGenPt * cosh(fGenEta)', inplace=True)
     if is_matter == 'matter':
-        fill_th1_hist_abs(hPtGen, df.query(
+        utils.fill_th1_hist_abs(hPtGen, df.query(
             'fGenPt>0', inplace=False), 'fGenPt')
     elif is_matter == 'antimatter':
-        fill_th1_hist_abs(hPtGen, df.query(
+        utils.fill_th1_hist_abs(hPtGen, df.query(
             'fGenPt<0', inplace=False), 'fGenPt')
     else:
-        fill_th1_hist_abs(hPtGen, df, 'fGenPt')
+        utils.fill_th1_hist_abs(hPtGen, df, 'fGenPt')
     # select only reconstructed candidates
     df.query('fIsReco==True', inplace=True)
 
@@ -166,20 +144,20 @@ else:
 # print(df_filtered['fNSigmaHe'])
 
 # fill histograms
-fill_th1_hist(hPtRec, df_filtered, 'fPt')
-fill_th1_hist(hCosPA, df_filtered, 'fCosPA')
-fill_th1_hist(hRadius, df_filtered, 'fDecRad')
-fill_th1_hist(hDecLen, df_filtered, 'fDecLen')
-fill_th1_hist(hNTPCclus, df_filtered, 'fNTPCclusHe')
-fill_th1_hist(hNSigHe, df_filtered, 'fNSigmaHe')
-fill_th1_hist(hMass3LH, df_filtered, 'fMassH3L')
-fill_th1_hist(hMass4LH, df_filtered, 'fMassH4L')
+utils.fill_th1_hist(hPtRec, df_filtered, 'fPt')
+utils.fill_th1_hist(hCosPA, df_filtered, 'fCosPA')
+utils.fill_th1_hist(hRadius, df_filtered, 'fDecRad')
+utils.fill_th1_hist(hDecLen, df_filtered, 'fDecLen')
+utils.fill_th1_hist(hNTPCclus, df_filtered, 'fNTPCclusHe')
+utils.fill_th1_hist(hNSigHe, df_filtered, 'fNSigmaHe')
+utils.fill_th1_hist(hMass3LH, df_filtered, 'fMassH3L')
+utils.fill_th1_hist(hMass4LH, df_filtered, 'fMassH4L')
 
-fill_th2_hist(h2MassCosPA, df_filtered, 'fCosPA', 'fMassH3L')
-fill_th2_hist(h2MassDecLen, df_filtered, 'fDecLen', 'fMassH3L')
-fill_th2_hist(h2MassDCADaughters, df_filtered, 'fDcaV0Daug', 'fMassH3L')
-fill_th2_hist(h2MassDCAHePv, df_filtered, 'fDcaHe', 'fMassH3L')
-fill_th2_hist(h2MassPt, df_filtered, 'fPt', 'fMassH3L')
+utils.fill_th2_hist(h2MassCosPA, df_filtered, 'fCosPA', 'fMassH3L')
+utils.fill_th2_hist(h2MassDecLen, df_filtered, 'fDecLen', 'fMassH3L')
+utils.fill_th2_hist(h2MassDCADaughters, df_filtered, 'fDcaV0Daug', 'fMassH3L')
+utils.fill_th2_hist(h2MassDCAHePv, df_filtered, 'fDcaHe', 'fMassH3L')
+utils.fill_th2_hist(h2MassPt, df_filtered, 'fPt', 'fMassH3L')
 
 # for MC only
 if mc:
@@ -191,13 +169,13 @@ if mc:
         'ResDecY = (fYDecVtx - fGenYDecVtx)/fGenYDecVtx', inplace=True)
     df_filtered.eval(
         'ResDecZ = (fZDecVtx - fGenZDecVtx)/fGenZDecVtx', inplace=True)
-    fill_th1_hist(hResolutionPt, df_filtered, 'resPt')
-    fill_th1_hist(hResolutionP, df_filtered, 'resP')
-    fill_th1_hist(hResolutionDecVtxX, df_filtered, 'ResDecX')
-    fill_th1_hist(hResolutionDecVtxY, df_filtered, 'ResDecY')
-    fill_th1_hist(hResolutionDecVtxZ, df_filtered, 'ResDecZ')
-    fill_th2_hist_abs(hResolutionPtvsPt, df_filtered, 'fGenPt', 'resPt')
-    fill_th2_hist_abs(hResolutionPvsP, df_filtered, 'fGenP', 'resP')
+    utils.fill_th1_hist(hResolutionPt, df_filtered, 'resPt')
+    utils.fill_th1_hist(hResolutionP, df_filtered, 'resP')
+    utils.fill_th1_hist(hResolutionDecVtxX, df_filtered, 'ResDecX')
+    utils.fill_th1_hist(hResolutionDecVtxY, df_filtered, 'ResDecY')
+    utils.fill_th1_hist(hResolutionDecVtxZ, df_filtered, 'ResDecZ')
+    utils.fill_th2_hist_abs(hResolutionPtvsPt, df_filtered, 'fGenPt', 'resPt')
+    utils.fill_th2_hist_abs(hResolutionPvsP, df_filtered, 'fGenP', 'resP')
 
 # save to file root
 f = ROOT.TFile(f"{output_dir_name}/{output_file_name}", "RECREATE")

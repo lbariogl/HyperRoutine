@@ -75,7 +75,7 @@ signal = ROOT.RooDSCBShape('cb', 'cb', mass, mu, sigma, a1, n1, a2, n2)
 ### define background pdf
 c0 = ROOT.RooRealVar('c0', 'constant c0', -1., 1)
 background = ROOT.RooChebychev('bkg', 'pol1 bkg', mass, ROOT.RooArgList(c0))
-n = ROOT.RooRealVar('n', 'n const', 0.01, 0.4)
+f = ROOT.RooRealVar('f', 'fraction of signal', 0.01, 0.4)
 
 ### create output file
 out_file = ROOT.TFile(output_dir + "/" + output_file, 'recreate')
@@ -101,10 +101,8 @@ fit_param.AddText('#sigma = ' + f'{sigma.getVal()*1e3:.2f} #pm {sigma.getError()
 frame.addObject(fit_param)
 frame.Write("histo_mc")
 
-
-
 # define the fit function and perform the actual fit
-fit_function = ROOT.RooAddPdf('total_pdf', 'signal + background', ROOT.RooArgList(signal, background), ROOT.RooArgList(n))
+fit_function = ROOT.RooAddPdf('total_pdf', 'signal + background', ROOT.RooArgList(signal, background), ROOT.RooArgList(f))
 
 ### if input_parquet_data is a list of files, loop over them
 data_hdl = TreeHandler(input_parquet_data)
@@ -112,22 +110,22 @@ data_hdl = TreeHandler(input_parquet_data)
 if preselections!="":
     data_hdl.apply_preselections(preselections)
 
-
-
 if ml_efficiency_scan:
     eff_array = np.load(input_eff_dir + "/efficiency_arr.npy")
     score_arr = np.load(input_eff_dir + "/score_efficiency_arr.npy")
 
     mass_roo_data_uncut = utils.ndarray2roo(np.array(data_hdl['fMassH3L'].values, dtype=np.float64), mass)
-    utils.fit_and_plot(mass_roo_data_uncut, mass, fit_function, signal, background, sigma, mu, n, n_ev=n_evts, matter_type=matter_type, bdt_eff=None)
+    utils.fit_and_plot(mass_roo_data_uncut, mass, fit_function, signal, background, sigma, mu, f, n_ev=n_evts, matter_type=matter_type, bdt_eff=None)
     for eff, score in zip(eff_array, score_arr):
         sel_hdl = data_hdl.apply_preselections(f"model_output > {score}", inplace=False)
         mass_array = np.array(sel_hdl['fMassH3L'].values, dtype=np.float64)
         mass_roo_data = utils.ndarray2roo(mass_array, mass)
-        utils.fit_and_plot(mass_roo_data, mass, fit_function, signal, background, sigma, mu, n, n_ev=n_evts, matter_type=matter_type, bdt_eff=eff)
+        utils.fit_and_plot(mass_roo_data, mass, fit_function, signal, background, sigma, mu, f, n_ev=n_evts, matter_type=matter_type, bdt_eff=eff)
 
 
 else:
     mass_array = np.array(data_hdl['fMassH3L'].values, dtype=np.float64)
     mass_roo_data = utils.ndarray2roo(mass_array, mass)
-    utils.fit_and_plot(mass_roo_data, mass, fit_function, signal, background, sigma, mu, n, n_ev=n_evts, matter_type=matter_type)
+    newframe = utils.fit_and_plot(mass_roo_data, mass, fit_function, signal, background, sigma, mu, f, n_ev=n_evts, matter_type=matter_type)
+    out_file.cd()
+    newframe.Write()

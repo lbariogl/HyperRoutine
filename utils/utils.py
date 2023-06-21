@@ -4,6 +4,25 @@ import numpy as np
 kBlueC = ROOT.TColor.GetColor('#1f78b4')
 kOrangeC  = ROOT.TColor.GetColor("#ff7f00")
 
+def fill_th1_hist(h, df, var):
+    for var_val in df[var]:
+        h.Fill(var_val)
+
+
+def fill_th1_hist_abs(h, df, var):
+    for var_val in df[var]:
+        h.Fill(abs(var_val))
+
+
+def fill_th2_hist(h, df, var1, var2):
+    for var1_val, var2_val in zip(df[var1], df[var2]):
+        h.Fill(var1_val, var2_val)
+
+
+def fill_th2_hist_abs(h, df, var1, var2):
+    for var1_val, var2_val in zip(df[var1], df[var2]):
+        h.Fill(abs(var1_val), var2_val)
+
 
 def computeEfficiency(gen_hist, rec_hist, name, rebin=0):
     if rebin > 1:
@@ -44,11 +63,11 @@ def fill_th2_hist(h, df, var1, var2):
 
 
 def fill_res_hist(h, df, var1, var2):
-    for var_val1, var_val2 in zip(df[var1], df[var2]): 
+    for var_val1, var_val2 in zip(df[var1], df[var2]):
         h.Fill((var_val1 - var_val2)/var_val1)
 
 def fill_res_hist_th2(h, df, var1, var2):
-    for var_val1, var_val2 in zip(df[var1], df[var2]): 
+    for var_val1, var_val2 in zip(df[var1], df[var2]):
         h.Fill(var_val1,(var_val1 - var_val2)/var_val1)
 
 
@@ -87,17 +106,17 @@ def set_style():
     ROOT.gStyle.SetOptDate(0)
     ROOT.gStyle.SetOptFit(1)
     ROOT.gStyle.SetLabelSize(0.04,"xyz")
-    ROOT.gStyle.SetTitleSize(0.05,"xyz") 
+    ROOT.gStyle.SetTitleSize(0.05,"xyz")
     ROOT.gStyle.SetTitleFont(42,"xyz")
     ROOT.gStyle.SetLabelFont(42,"xyz")
     ROOT.gStyle.SetTitleOffset(1.05,"x")
     ROOT.gStyle.SetTitleOffset(1.1,"y")
     ROOT.gStyle.SetCanvasDefW(800)
     ROOT.gStyle.SetCanvasDefH(600)
-    ROOT.gStyle.SetPadBottomMargin(0.12) 
+    ROOT.gStyle.SetPadBottomMargin(0.12)
     ROOT.gStyle.SetPadLeftMargin(0.12)
     ROOT.gStyle.SetPadRightMargin(0.05)
-    ROOT.gStyle.SetPadGridX(0) 
+    ROOT.gStyle.SetPadGridX(0)
     ROOT.gStyle.SetPadGridY(0)
     ROOT.gStyle.SetPadTickX(1)
     ROOT.gStyle.SetPadTickY(1)
@@ -111,9 +130,9 @@ def set_style():
 
 
 
-def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, n, n_ev=300, matter_type="both", bdt_eff=None):
+def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, f, n_ev=300, matter_type="both", bdt_eff=None):
 
-    fit_results = fit_function.fitTo(dataset, ROOT.RooFit.Extended(True), ROOT.RooFit.Save(True))
+    fit_function.fitTo(dataset, ROOT.RooFit.Extended(False), ROOT.RooFit.Save(True))
     frame = var.frame(30)
     frame.SetName(f'data_extr_{bdt_eff}')
     frame.SetTitle('')
@@ -131,12 +150,12 @@ def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, n, n
     sigma_val = sigma.getVal()
     mu_val = mu.getVal()
 
-    signal_counts = n.getVal()*dataset.sumEntries()
-    signal_counts_error = (n.getError()/n.getVal())*n.getVal()*dataset.sumEntries()
+    signal_counts = f.getVal()*dataset.sumEntries()
+    signal_counts_error = (f.getError()/f.getVal())*f.getVal()*dataset.sumEntries()
 
 
-    background_counts = (1-n.getVal())*dataset.sumEntries()
-    background_counts_error = (1-n.getVal())*dataset.sumEntries()*n.getError()/n.getVal()
+    background_counts = (1-f.getVal())*dataset.sumEntries()
+    background_counts_error = (1-f.getVal())*dataset.sumEntries()*f.getError()/f.getVal()
 
     #signal within 3 sigma
     var.setRange('signal', mu_val-3*sigma_val, mu_val+3*sigma_val)
@@ -181,7 +200,7 @@ def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, n, n
     pinfo2 = ROOT.TPaveText(0.17, 0.6, 0.45, 0.85, "NDC")
     pinfo2.SetBorderSize(0)
     pinfo2.SetFillStyle(0)
-    pinfo2.SetTextAlign(11) 
+    pinfo2.SetTextAlign(11)
     pinfo2.SetTextFont(42)
 
     if matter_type == "matter":
@@ -189,7 +208,7 @@ def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, n, n
 
     elif matter_type == "antimatter":
         matter_string = "{}^{3}_{#bar{#Lambda}}#bar{H} #rightarrow ^{3}#bar{He}+#pi^{+}"
-        
+
     else:
         matter_string = "{}^{3}_{#Lambda}H #rightarrow ^{3}He+#pi^{-} + c.c."
 
@@ -197,7 +216,7 @@ def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, n, n
     string_list.append("Run 3, pp #sqrt{#it{s}} = 13.6 TeV")
     string_list.append("N_{ev} = " f"{n_ev:.0f} "  "#times 10^{9}")
     string_list.append(matter_string)
-    
+
     if bdt_eff != None:
         string_list.append(f"BDT Efficiency: {bdt_eff:.2f}")
 
@@ -211,7 +230,7 @@ def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, n, n
     fit_stats = {"signal": [signal_counts, signal_counts_error],
     "significance": [significance, significance_err], "s_b_ratio": [signal_int_val_3s/bkg_int_val_3s, s_b_ratio_err]}
 
-    frame.Write()
+    return frame
 
 
 
