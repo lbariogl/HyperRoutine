@@ -111,10 +111,10 @@ def getFitFrames(matter_type, input_parquet_data, input_analysis_results, input_
     else:
         mass_array = np.array(data_hdl['fMassH3L'].values, dtype=np.float64)
         mass_roo_data = utils.ndarray2roo(mass_array, mass)
-        frame_fit = utils.fit_and_plot(mass_roo_data, mass, fit_function, signal,
+        frame_fit, signal_counts, signal_counts_err = utils.fit_and_plot(mass_roo_data, mass, fit_function, signal,
                                        background, sigma, mu, f, n_ev=n_evts, matter_type=matter_type)
 
-    return frame_prefit, frame_fit
+    return frame_prefit, frame_fit, signal_counts, signal_counts_err
 
 
 if __name__ == "__main__":
@@ -143,7 +143,7 @@ if __name__ == "__main__":
     input_eff_dir = config['input_eff_dir']
 
     # perform fits
-    frame_prefit, frame_fit = getFitFrames(matter_type, input_parquet_data, input_analysis_results,
+    frame_prefit, frame_fit, signal_counts, signal_counts_err = getFitFrames(matter_type, input_parquet_data, input_analysis_results,
                                            input_parquet_mc, preselections, ml_efficiency_scan, input_eff_dir)
 
     # create output file and save frames

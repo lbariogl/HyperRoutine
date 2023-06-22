@@ -230,7 +230,7 @@ def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, f, n
     fit_stats = {"signal": [signal_counts, signal_counts_error],
     "significance": [significance, significance_err], "s_b_ratio": [signal_int_val_3s/bkg_int_val_3s, s_b_ratio_err]}
 
-    return frame
+    return frame, signal_counts, signal_counts_error
 
 
 
