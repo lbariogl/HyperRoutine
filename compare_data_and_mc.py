@@ -21,7 +21,9 @@ df_mc.eval('fP = fPt * cosh(fEta)', inplace=True)
 df_mc.eval('fDecRad = sqrt(fXDecVtx**2 + fYDecVtx**2)', inplace=True)
 df_mc.eval('fDecLen = sqrt(fXDecVtx**2 + fYDecVtx**2 + fZDecVtx**2)', inplace=True)
 df_mc_filtered = df_mc.query(
-    'fPt>1 and fCosPA>0.998 and fNSigmaHe>-2. and fTPCsignalPi<1000 and abs(fMassH3L - 2.992) < 0.006')
+    'fPt>1 and fCosPA>0.998 and fNSigmaHe>-2. and fTPCsignalPi<1000 and abs(fMassH3L - 2.9905) < 0.005 and fIsMatter == False')
+print(F'MC: {df_mc.shape[0]}')
+print(F'MC queried: {df_mc_filtered.shape[0]}')
 
 # Data
 tree_hdl_data = TreeHandler(input_file_name_data, 'O2datahypcands')
@@ -31,12 +33,12 @@ df_data.eval('fDecRad = sqrt(fXDecVtx**2 + fYDecVtx**2)', inplace=True)
 df_data.eval(
     'fDecLen = sqrt(fXDecVtx**2 + fYDecVtx**2 + fZDecVtx**2)', inplace=True)
 df_data_filtered = df_data.query(
-    'fPt>1 and fCosPA>0.998 and fNSigmaHe>-2. and fTPCsignalPi<1000 and abs(fMassH3L - 2.992) < 0.006')
+    'fPt>1 and fCosPA>0.998 and fNSigmaHe>-2. and fTPCsignalPi<1000 and abs(fMassH3L - 2.992) < 0.006 and fIsMatter == False')
 
 # Data histograms
 hDataMassH3L = ROOT.TH1F(
     'hDataMassH3L', '; m({}^{3}_{#Lambda}H) (GeV/#it{c})', 40, 2.96, 3.04)
-hDataCosPA = ROOT.TH1F('hDataCosPA', ';cos(#theta_{PA})', 200, 0.998, 1)
+hDataCosPA = ROOT.TH1F('hDataCosPA', ';cos(#theta_{PA})', 100, 0.995, 1)
 hDataDCAv0Daugh = ROOT.TH1F('hDataDCAv0Daugh', ';DCA (cm)', 200, 0., 1.2)
 hDataDCAhe = ROOT.TH1F('hDataDCAhe', ';DCA (cm)', 200, 0., 1.2)
 hDataDCApi = ROOT.TH1F('hDataDCApi', ';DCA (cm)', 200, 0., 1.2)
@@ -61,7 +63,7 @@ for var, hist in hist_data_dict.items():
 # MC histograms
 hMcMassH3L = ROOT.TH1F(
     'hMcMassH3L', '; m({}^{3}_{#Lambda}H) (GeV/#it{c})', 40, 2.96, 3.04)
-hMcCosPA = ROOT.TH1F('hMcCosPA', ';cos(#theta_{PA})', 200, 0.998, 1)
+hMcCosPA = ROOT.TH1F('hMcCosPA', ';cos(#theta_{PA})', 100, 0.995, 1)
 hMcDCAv0Daugh = ROOT.TH1F('hMcDCAv0Daugh', ';DCA (cm)', 200, 0., 1.2)
 hMcDCAhe = ROOT.TH1F('hMcDCAhe', ';DCA (cm)', 200, 0., 1.2)
 hMcDCApi = ROOT.TH1F('hMcDCApi', ';DCA (cm)', 200, 0., 1.2)
@@ -102,15 +104,6 @@ canvas_dict = {'fMassH3L': cMassH3L,
                'fDecRad': cRadius,
                'fDecLen': cDecLen}
 
-y_limit_dict = {'fMassH3L': 0.5,
-                'fCosPA': 0.4,
-                'fDcaV0Daug': 0.22,
-                'fDcaHe': 0.06,
-                'fDcaPi': 0.02,
-                'fPt': 0.5,
-                'fDecRad': 0.07,
-                'fDecLen': 0.05}
-
 output_file = ROOT.TFile('../results/data_vs_mc.root', 'recreate')
 
 for var, canvas in canvas_dict.items():
@@ -122,7 +115,7 @@ for var, canvas in canvas_dict.items():
     right_edge = hist_data_dict[var].GetXaxis().GetBinUpEdge(
         hist_data_dict[var].GetNbinsX())
     x_title = hist_data_dict[var].GetXaxis().GetTitle()
-    canvas.DrawFrame(left_edge, 0., right_edge, y_limit_dict[var], f';{x_title};')
+    canvas.DrawFrame(left_edge, 0., right_edge, 1, f';{x_title};')
     hist_data_dict[var].Draw('HISTO SAME')
     hist_mc_dict[var].Draw('HISTO SAME')
 

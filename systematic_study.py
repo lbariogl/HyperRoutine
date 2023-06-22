@@ -30,9 +30,10 @@ cCosPA.Print('../results/SystematicChecksCosPA.pdf[')
 ROOT.RooMsgService.instance().setSilentMode(True)
 ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.WARNING)
 
-for cosPA in cosPA_arr:
-    presel = f'fCosPA > {cosPA}'
+for cosPA in cosPA_arr[:-1]:
+    presel = f'fCosPA > {cosPA:.4f}'
     label = r'cos(#theta_{PA}) > ' + f'{cosPA:.4f}'
+    print(f'presel: {presel}')
     # perform fits
     _, frame_fit = signal_extraction.getFitFrames(matter_type, input_parquet_data, input_analysis_results,
                                                   input_parquet_mc, preselections=presel)

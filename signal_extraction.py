@@ -16,19 +16,26 @@ kOrangeC  = ROOT.TColor.GetColor("#ff7f00")
 
 ROOT.gROOT.LoadMacro('utils/RooCustomPdfs/RooDSCBShape.cxx++')
 
+
 def getFitFrames(matter_type, input_parquet_data, input_analysis_results, input_parquet_mc, preselections='', ml_efficiency_scan=False, input_eff_dir='../results/training_test'):
 
     if matter_type == "matter":
         inv_mass_string = "#it{M}_{^{3}He+#pi^{-}}"
-        preselections = "fIsMatter==True"
+        if preselections != "":
+            extended_preselections = preselections + " and fIsMatter==True"
+        else:
+            extended_preselections = "fIsMatter==True"
 
     elif matter_type == "antimatter":
         inv_mass_string = "#it{M}_{^{3}#bar{He}+#pi^{+}}"
-        preselections = "fIsMatter==False"
+        if preselections != "":
+            extended_preselections = preselections + " and fIsMatter==False"
+        else:
+            extended_preselections = "fIsMatter==False"
 
     else:
         inv_mass_string = "#it{M}_{^{3}He+#pi^{-}} + c.c."
-        preselections = ""
+        extended_preselections = preselections
 
     # get number of events
     an_vtx_z = uproot.open(input_analysis_results)['hyper-reco-task']['hZvtx']
@@ -82,8 +89,8 @@ def getFitFrames(matter_type, input_parquet_data, input_analysis_results, input_
     # if input_parquet_data is a list of files, loop over them
     data_hdl = TreeHandler(input_parquet_data)
 
-    if preselections != "":
-        data_hdl.apply_preselections(preselections)
+    if extended_preselections != "":
+        data_hdl.apply_preselections(extended_preselections)
 
     if ml_efficiency_scan:
         eff_array = np.load(input_eff_dir + "/efficiency_arr.npy")
@@ -105,7 +112,7 @@ def getFitFrames(matter_type, input_parquet_data, input_analysis_results, input_
         mass_array = np.array(data_hdl['fMassH3L'].values, dtype=np.float64)
         mass_roo_data = utils.ndarray2roo(mass_array, mass)
         frame_fit = utils.fit_and_plot(mass_roo_data, mass, fit_function, signal,
-                                      background, sigma, mu, f, n_ev=n_evts, matter_type=matter_type)
+                                       background, sigma, mu, f, n_ev=n_evts, matter_type=matter_type)
 
     return frame_prefit, frame_fit
 
@@ -136,7 +143,8 @@ if __name__ == "__main__":
     input_eff_dir = config['input_eff_dir']
 
     # perform fits
-    frame_prefit, frame_fit = getFitFrames(matter_type, input_parquet_data, input_analysis_results, input_parquet_mc, preselections, ml_efficiency_scan, input_eff_dir)
+    frame_prefit, frame_fit = getFitFrames(matter_type, input_parquet_data, input_analysis_results,
+                                           input_parquet_mc, preselections, ml_efficiency_scan, input_eff_dir)
 
     # create output file and save frames
     out_file = ROOT.TFile(f'{output_dir}/{output_file}', 'recreate')
