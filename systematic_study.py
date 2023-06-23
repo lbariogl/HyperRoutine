@@ -30,6 +30,15 @@ output_file = ROOT.TFile('../results/systematic_study.root', 'recreate')
 
 # common info for MC
 tree_hdl = TreeHandler(input_parquet_mc)
+
+##apply pT rejection
+spectra_file = ROOT.TFile.Open('utils/heliumSpectraMB.root')
+he3_spectrum = spectra_file.Get('fCombineHeliumSpecLevyFit_0-100')
+spectra_file.Close()
+tree_hdl.eval_data_frame("fAbsGenPt = abs(fGenPt)")
+utils.reweight_pt_spectrum(tree_hdl, 'fAbsGenPt', he3_spectrum)
+tree_hdl.apply_preselections("rej==True and fIsReco==True")
+
 df = tree_hdl.get_data_frame()
 
 # silent mode for fits
