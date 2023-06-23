@@ -5,8 +5,8 @@ input_data_path: ['/data/shared/hyp_run_3/apass4/LHC_22o/AO2D_o_merged.root', '/
 input_mc_path: '/data/shared/hyp_run_3/mc/AO2D_MC_BDT.root'
 output_dir : '../results/training_test/'
 
-training_preselections: 'fPt>2 and fTPCsignalPi<1000'
-training_variables: ['fDcaV0Daug', 'fDcaHe', 'fDcaPi', 'fCosPA', 'fNSigmaHe']
+training_preselections: 'fPt>1 and fTPCsignalPi<1000'
+training_variables: ['fDcaV0Daug', 'fDcaHe', 'fDcaPi', 'fCosPA']
 test_set_size: 0.5
 background_over_signal: 1
 random_state: 42
