@@ -255,3 +255,16 @@ def ndarray2roo(ndarray, var, name='data'):
 
     array_roo = ROOT.RooDataSet(name, 'dataset from tree', tree, ROOT.RooArgSet(var))
     return array_roo
+
+
+### reweight a distribution with rejection sampling
+def reweight_pt_spectrum(df, var, distribution):
+    rej_flag = np.ones(len(df))
+    random_arr = np.random.rand(len(df))
+    max_bw = distribution.GetMaximum()
+
+    for ind, (val, rand) in enumerate(zip(df[var],random_arr)):
+        frac = distribution.Eval(val)/max_bw
+        if rand > frac:
+            rej_flag[ind] = -1
+    df._full_data_frame['rej'] = rej_flag
