@@ -45,6 +45,42 @@ df = tree_hdl.get_data_frame()
 ROOT.RooMsgService.instance().setSilentMode(True)
 ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.ERROR)
 
+def systematic_routine(var, arr, sel_string, histo_data, histo_mc, canvas):
+    for i, val in tqdm(enumerate(arr), total=len(arr)):
+        # data
+        presel = sel_string.format(var, val)
+        _, frame_fit, signal_counts, signal_counts_err = signal_extraction.getFitFrames(matter_type, input_parquet_data, input_analysis_results,
+                                                    input_parquet_mc, preselections=presel, print_info=False)
+        histo_data.SetBinContent(i+1, signal_counts)
+        histo_data.SetBinError(i+1, signal_counts_err)
+
+        # mc
+        sel = presel + ' and fMassH3L > 2.98 and fMassH3L < 3.'
+        df_filtered = df.query(sel)
+        signal_counts = df_filtered.shape[0]
+        signal_counts_err = np.sqrt(signal_counts)
+        histo_mc.SetBinContent(i+1, signal_counts)
+        histo_mc.SetBinError(i+1, signal_counts_err)
+
+    histo_mc.Scale(1./histo_mc.GetBinContent(1))
+    histo_data.Scale(1./histo_data.GetBinContent(1))
+
+    output_file.cd()
+    histo_data.Write()
+    histo_mc.Write()
+
+    canvas.cd()
+    histo_mc.Draw('PE')
+    histo_mc.GetYaxis().SetRangeUser(0.,1.2)
+    histo_data.Draw('PE SAME')
+    histo_data.GetYaxis().SetRangeUser(0.,1.2)
+    legend = ROOT.TLegend(0.2, 0.3, 0.4, 0.4, '', 'brNDC')
+    legend.SetLineWidth(0)
+    legend.AddEntry(histo_data, 'Data', 'L')
+    legend.AddEntry(histo_mc, 'MC', 'L')
+    legend.Draw()
+    canvas.Write()
+
 ##########################
 ##        CosPA         ##
 ##########################
@@ -60,37 +96,8 @@ utils.setHistStyle(hDataSigCosPA, ROOT.kRed+1)
 hMcSigCosPA = ROOT.TH1D('hMcSigCosPA', ';cos(#theta_{PA}); signal fraction', nCosPa_bins, cosPA_arr)
 utils.setHistStyle(hMcSigCosPA, ROOT.kAzure+2)
 
-for iCosPA, cosPA in tqdm(enumerate(cosPA_arr[:-1]), total=len(cosPA_arr)-1):
-    # data
-    presel = f'fCosPA > {cosPA:.4f}'
-    _, frame_fit, signal_counts, signal_counts_err = signal_extraction.getFitFrames(matter_type, input_parquet_data, input_analysis_results,
-                                                  input_parquet_mc, preselections=presel, print_info=False)
-    hDataSigCosPA.SetBinContent(iCosPA+1, signal_counts)
-    hDataSigCosPA.SetBinError(iCosPA+1, signal_counts_err)
-
-    # mc
-    sel = f'fCosPA > {cosPA:.4f} and fMassH3L > 2.98 and fMassH3L < 3.'
-    df_filtered = df.query(sel)
-    signal_counts = df_filtered.shape[0]
-    signal_counts_err = np.sqrt(signal_counts)
-    hMcSigCosPA.SetBinContent(iCosPA+1, signal_counts)
-    hMcSigCosPA.SetBinError(iCosPA+1, signal_counts_err)
-
-hDataSigCosPA.Scale(1/hDataSigCosPA.GetBinContent(1))
-hMcSigCosPA.Scale(1/hMcSigCosPA.GetBinContent(1))
-
-output_file.cd()
-hDataSigCosPA.Write()
-hMcSigCosPA.Write()
-
 cCosPAcomparison = ROOT.TCanvas('cCosPAcomparison', 'cCosPAcomparison', 800, 600)
-hMcSigCosPA.Draw('PE')
-hMcSigCosPA.GetYaxis().SetRangeUser(0.,1.2)
-hDataSigCosPA.Draw('PE SAME')
-hDataSigCosPA.GetYaxis().SetRangeUser(0.,1.2)
-legend = ROOT.TLegend(0.2, 0.3, 0.4, 0.4, '', 'brNDC')
-legend.SetLineWidth(0)
-legend.AddEntry(hDataSigCosPA, 'Data', 'L')
-legend.AddEntry(hMcSigCosPA, 'MC', 'L')
-legend.Draw()
-cCosPAcomparison.Write()
+
+sel_string = r'{} > {}'
+
+systematic_routine('fCosPA', cosPA_arr[:-1], sel_string, hDataSigCosPA, hMcSigCosPA, cCosPAcomparison)
