@@ -17,7 +17,7 @@ kOrangeC  = ROOT.TColor.GetColor("#ff7f00")
 ROOT.gROOT.LoadMacro('utils/RooCustomPdfs/RooDSCBShape.cxx++')
 
 
-def getFitFrames(matter_type, input_parquet_data, input_analysis_results, input_parquet_mc, preselections='', ml_efficiency_scan=False, input_eff_dir='../results/training_test'):
+def getFitFrames(matter_type, input_parquet_data, input_analysis_results, input_parquet_mc, preselections='', ml_efficiency_scan=False, input_eff_dir='../results/training_test', print_info = True):
 
     if matter_type == "matter":
         inv_mass_string = "#it{M}_{^{3}He+#pi^{-}}"
@@ -40,7 +40,8 @@ def getFitFrames(matter_type, input_parquet_data, input_analysis_results, input_
     # get number of events
     an_vtx_z = uproot.open(input_analysis_results)['hyper-reco-task']['hZvtx']
     n_evts = an_vtx_z.values().sum()
-    print(f'Number of events: {n_evts}')
+    if print_info:
+        print(f'Number of events: {n_evts}')
     n_evts = round(n_evts/1e9, 0)
 
     # define signal pdf
@@ -99,20 +100,20 @@ def getFitFrames(matter_type, input_parquet_data, input_analysis_results, input_
         mass_roo_data_uncut = utils.ndarray2roo(
             np.array(data_hdl['fMassH3L'].values, dtype=np.float64), mass)
         utils.fit_and_plot(mass_roo_data_uncut, mass, fit_function, signal, background,
-                           sigma, mu, f, n_ev=n_evts, matter_type=matter_type, bdt_eff=None)
+                           sigma, mu, f, n_ev=n_evts, matter_type=matter_type, bdt_eff=None, print_info=print_info)
         for eff, score in zip(eff_array, score_arr):
             sel_hdl = data_hdl.apply_preselections(
                 f"model_output > {score}", inplace=False)
             mass_array = np.array(sel_hdl['fMassH3L'].values, dtype=np.float64)
             mass_roo_data = utils.ndarray2roo(mass_array, mass)
             utils.fit_and_plot(mass_roo_data, mass, fit_function, signal, background,
-                               sigma, mu, f, n_ev=n_evts, matter_type=matter_type, bdt_eff=eff)
+                               sigma, mu, f, n_ev=n_evts, matter_type=matter_type, bdt_eff=eff, print_info=print_info)
 
     else:
         mass_array = np.array(data_hdl['fMassH3L'].values, dtype=np.float64)
         mass_roo_data = utils.ndarray2roo(mass_array, mass)
         frame_fit, signal_counts, signal_counts_err = utils.fit_and_plot(mass_roo_data, mass, fit_function, signal,
-                                       background, sigma, mu, f, n_ev=n_evts, matter_type=matter_type)
+                                       background, sigma, mu, f, n_ev=n_evts, matter_type=matter_type, print_info=print_info)
 
     return frame_prefit, frame_fit, signal_counts, signal_counts_err
 

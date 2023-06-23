@@ -130,7 +130,7 @@ def set_style():
 
 
 
-def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, f, n_ev=300, matter_type="both", bdt_eff=None):
+def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, f, n_ev=300, matter_type="both", bdt_eff=None, print_info = True):
 
     fit_function.fitTo(dataset, ROOT.RooFit.Extended(False), ROOT.RooFit.Save(True))
     frame = var.frame(30)
@@ -175,9 +175,10 @@ def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, f, n
     chi2 = frame.chiSquare("fit_func", "data", 6)
     fit_probability = ROOT.TMath.Prob(chi2*(frame.GetNbinsX() -6), frame.GetNbinsX() -6)
 
-    print('chi2: ', chi2)
-    print('fit probability: ', fit_probability)
-    print('muv: ', mu_val)
+    if print_info:
+        print('chi2: ', chi2)
+        print('fit probability: ', fit_probability)
+        print('muv: ', mu_val)
 
 
     pinfo = ROOT.TPaveText(0.632, 0.5, 0.932, 0.85, 'NDC')
