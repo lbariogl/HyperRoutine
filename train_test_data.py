@@ -45,6 +45,7 @@ training_variables = params['training_variables']
 test_set_size = params['test_set_size']
 bkg_fraction = params["background_over_signal"]
 random_state = params["random_state"]
+hyperparams = params["hyperparams"]
 
 
 ### create output directory if it does not exist
@@ -97,6 +98,7 @@ if do_training:
         print("Data loaded. Training and testing ....")
 
         model_hdl = ModelHandler(xgb.XGBClassifier(), training_variables)
+        model_hdl.set_model_params(hyperparams)
         y_pred_test = model_hdl.train_test_model(train_test_data, True, True)
 
         print("Model trained and tested. Saving results ...")
