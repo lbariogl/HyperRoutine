@@ -25,13 +25,20 @@ hdlMC_rew = hdlMC.apply_preselections('rej == True', inplace=False)
 
 hPtShapeBefore = ROOT.TH1F('hPtShapeBefore', 'hPtShapeBefore; #it{p}_{T}^{gen}; Counts', 100, 0, 5)
 hPtShapeAfter = ROOT.TH1F('hPtShapeAfter', 'hPtShapeAfter; #it{p}_{T}^{gen}; Counts', 100, 0, 5)
+hCosPABefore = ROOT.TH1F('hCosPABefore', 'hCosPABefore; cos(#theta_{PA}); Counts', 100, 0.985, 1)
+hCosPAAfter = ROOT.TH1F('hCosPAAfter', 'hCosPAAfter; cos(#theta_{PA}); Counts', 100, 0.985, 1)
 
 utils.fill_th1_hist(hPtShapeBefore, hdlMC, 'fAbsGenPt')
 utils.fill_th1_hist(hPtShapeAfter, hdlMC_rew, 'fAbsGenPt')
+utils.fill_th1_hist(hCosPABefore, hdlMC, 'fCosPA')
+utils.fill_th1_hist(hCosPAAfter, hdlMC_rew, 'fCosPA')
 
 outfile = ROOT.TFile("../../results/test_rej.root", "recreate")
 outfile.cd()
 hPtShapeBefore.Write()
 hPtShapeAfter.Write()
+
+hCosPABefore.Write()
+hCosPAAfter.Write()
 outfile.Close()
 
