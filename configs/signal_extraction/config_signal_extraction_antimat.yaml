@@ -9,7 +9,7 @@ output_dir : '../results/signal_extraction'
 output_file : 'fit_results_antimat.root'
 
 
-preselections: "fIsMatter==False"
+preselections: ""
 ml_efficiency_scan: False
 input_eff_dir: "../results/training"
 

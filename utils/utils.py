@@ -198,7 +198,7 @@ def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, f, n
         pinfo.AddText(s)
 
     string_list = []
-    pinfo2 = ROOT.TPaveText(0.17, 0.6, 0.45, 0.85, "NDC")
+    pinfo2 = ROOT.TPaveText(0.13, 0.6, 0.41, 0.85, "NDC")
     pinfo2.SetBorderSize(0)
     pinfo2.SetFillStyle(0)
     pinfo2.SetTextAlign(11)

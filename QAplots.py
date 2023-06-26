@@ -2,6 +2,8 @@ import ROOT
 import argparse
 import os
 
+ROOT.SetOptStat(0)
+
 parser = argparse.ArgumentParser(
     description='Configure the parameters of the script.')
 parser.add_argument('--mc', dest='mc', action='store_true',
