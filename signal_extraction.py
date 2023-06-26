@@ -17,7 +17,7 @@ kOrangeC  = ROOT.TColor.GetColor("#ff7f00")
 ROOT.gROOT.LoadMacro('utils/RooCustomPdfs/RooDSCBShape.cxx++')
 
 
-def getFitFrames(matter_type, input_parquet_data, input_analysis_results, input_parquet_mc, preselections='', ml_efficiency_scan=False, input_eff_dir='../results/training_test', print_info = True):
+def getFitFrames(matter_type, input_parquet_data, input_analysis_results, input_parquet_mc, preselections='', ml_efficiency_scan=False, input_eff_dir='../results/training_test', print_info = True, n_bins = 30):
 
     if matter_type == "matter":
         inv_mass_string = "#it{M}_{^{3}He+#pi^{-}}"
@@ -100,20 +100,20 @@ def getFitFrames(matter_type, input_parquet_data, input_analysis_results, input_
         mass_roo_data_uncut = utils.ndarray2roo(
             np.array(data_hdl['fMassH3L'].values, dtype=np.float64), mass)
         utils.fit_and_plot(mass_roo_data_uncut, mass, fit_function, signal, background,
-                           sigma, mu, f, n_ev=n_evts, matter_type=matter_type, bdt_eff=None, print_info=print_info)
+                           sigma, mu, f, n_ev=n_evts, matter_type=matter_type, bdt_eff=None, print_info=print_info, n_bins=n_bins)
         for eff, score in zip(eff_array, score_arr):
             sel_hdl = data_hdl.apply_preselections(
                 f"model_output > {score}", inplace=False)
             mass_array = np.array(sel_hdl['fMassH3L'].values, dtype=np.float64)
             mass_roo_data = utils.ndarray2roo(mass_array, mass)
             utils.fit_and_plot(mass_roo_data, mass, fit_function, signal, background,
-                               sigma, mu, f, n_ev=n_evts, matter_type=matter_type, bdt_eff=eff, print_info=print_info)
+                               sigma, mu, f, n_ev=n_evts, matter_type=matter_type, bdt_eff=eff, print_info=print_info, n_bins=n_bins)
 
     else:
         mass_array = np.array(data_hdl['fMassH3L'].values, dtype=np.float64)
         mass_roo_data = utils.ndarray2roo(mass_array, mass)
         frame_fit, signal_counts, signal_counts_err = utils.fit_and_plot(mass_roo_data, mass, fit_function, signal,
-                                       background, sigma, mu, f, n_ev=n_evts, matter_type=matter_type, print_info=print_info)
+                                       background, sigma, mu, f, n_ev=n_evts, matter_type=matter_type, print_info=print_info, n_bins=n_bins)
 
     return frame_prefit, frame_fit, signal_counts, signal_counts_err
 
@@ -123,9 +123,10 @@ if __name__ == "__main__":
     # set parameters
     parser = argparse.ArgumentParser(
         description='Configure the parameters of the script.')
-    parser.add_argument('--config-file', dest='config_file',
+    parser.add_argument('--config-file', dest='config_file', default='',
                         help="path to the YAML file with configuration.")
-    parser.set_defaults(config_file='')
+    parser.add_argument('--nbins', dest='n_bins', default=30,
+                        help="number of bins in the final plot.")
     args = parser.parse_args()
 
     config_file = open(args.config_file, 'r')
@@ -143,9 +144,11 @@ if __name__ == "__main__":
     preselections = config['preselections']
     input_eff_dir = config['input_eff_dir']
 
+    n_bins = args.n_bins
+
     # perform fits
     frame_prefit, frame_fit, signal_counts, signal_counts_err = getFitFrames(matter_type, input_parquet_data, input_analysis_results,
-                                           input_parquet_mc, preselections, ml_efficiency_scan, input_eff_dir)
+                                           input_parquet_mc, preselections, ml_efficiency_scan, input_eff_dir, n_bins=n_bins)
 
     # create output file and save frames
     out_file = ROOT.TFile(f'{output_dir}/{output_file}', 'recreate')

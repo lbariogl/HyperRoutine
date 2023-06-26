@@ -130,15 +130,17 @@ def set_style():
 
 
 
-def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, f, n_ev=300, matter_type="both", bdt_eff=None, print_info = True):
+def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, f, n_ev=300, matter_type="both", bdt_eff=None, print_info = True, n_bins = 30):
 
     fit_function.fitTo(dataset, ROOT.RooFit.Extended(False), ROOT.RooFit.Save(True))
-    frame = var.frame(30)
+    frame = var.frame(n_bins)
+    bin_width = (var.getRange().second - var.getRange().first) / n_bins
     frame.SetName(f'data_extr_{bdt_eff}')
     frame.SetTitle('')
     set_style()
     frame.GetYaxis().SetTitleSize(0.06)
     frame.GetYaxis().SetTitleOffset(0.9)
+    frame.GetYaxis().SetTitle(f'Events / ({bin_width:.4f} ' + 'GeV/#it{c}^{2})')
     frame.GetYaxis().SetMaxDigits(2)
     frame.GetXaxis().SetTitleOffset(1.1)
 
