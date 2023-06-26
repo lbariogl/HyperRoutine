@@ -155,3 +155,7 @@ if __name__ == "__main__":
     out_file.cd()
     frame_prefit.Write("histo_mc")
     frame_fit.Write("fit")
+
+    cSignalExtraction = ROOT.TCanvas('cSignalExtraction', 'cSignalExtraction', 800, 600)
+    frame_fit.Draw()
+    cSignalExtraction.SaveAs(f'{output_dir}/cSignalExtraction_{matter_type}.pdf')
