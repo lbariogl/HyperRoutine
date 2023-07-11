@@ -25,7 +25,7 @@ parser.add_argument('--selection', dest='selection', help="selections to be bass
 parser.add_argument('--is-matter', dest='is_matter',
                     help="path to the YAML file with configuration.", default='matter')
 
-parser.add_argument('--dump-out-tree', dest='dump_out_tree', action='store_true', help="if True dump output tree.")
+parser.add_argument('--skip-out-tree', dest='skip_out_tree', action='store_true', help="if True do not save output tree.")
 
 parser.add_argument('--config-file', dest='config_file',
                     help="path to the YAML file with configuration.", default='')
@@ -33,7 +33,7 @@ args = parser.parse_args()
 
 # initialise parameters from parser (can be overwritten by external yaml file)
 mc = args.mc
-dump_out_tree = args.dump_out_tree
+skip_out_tree = args.skip_out_tree
 input_file_name = args.input_files
 output_dir_name = args.output_dir
 output_file_name = args.output_file
@@ -195,7 +195,7 @@ h2MassDCADaughters.Write()
 h2MassDCAHePv.Write()
 h2MassPt.Write()
 
-if dump_out_tree:
+if not skip_out_tree:
     df_filtered.to_parquet(f"{output_dir_name}/{output_file_name}.parquet")
 
 if mc:

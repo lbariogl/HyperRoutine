@@ -1,5 +1,6 @@
 import ROOT
 import numpy as np
+import pandas as pd
 
 kBlueC = ROOT.TColor.GetColor('#1f78b4')
 kOrangeC  = ROOT.TColor.GetColor("#ff7f00")
@@ -270,4 +271,8 @@ def reweight_pt_spectrum(df, var, distribution):
         frac = distribution.Eval(val)/max_bw
         if rand > frac:
             rej_flag[ind] = -1
+    ## check if it is a pandas dataframe
+    if isinstance(df, pd.DataFrame):
+        df['rej'] = rej_flag
+        return
     df._full_data_frame['rej'] = rej_flag
