@@ -25,7 +25,7 @@ parser.add_argument('--selection', dest='selection', help="selections to be bass
 parser.add_argument('--is-matter', dest='is_matter',
                     help="path to the YAML file with configuration.", default='matter')
 
-parser.add_argument('--dump-out-tree', dest='dump_out_tree', action='store_true', help="if True dump output tree.")
+parser.add_argument('--skip-out-tree', dest='skip_out_tree', action='store_true', help="if True do not save output tree.")
 
 parser.add_argument('--config-file', dest='config_file',
                     help="path to the YAML file with configuration.", default='')
@@ -33,7 +33,7 @@ args = parser.parse_args()
 
 # initialise parameters from parser (can be overwritten by external yaml file)
 mc = args.mc
-dump_out_tree = args.dump_out_tree
+skip_out_tree = args.skip_out_tree
 input_file_name = args.input_files
 output_dir_name = args.output_dir
 output_file_name = args.output_file
@@ -67,7 +67,7 @@ hMass3LH = ROOT.TH1F(
     "h_3lh_mass", "; m({}^{3}_{#Lambda}H) (GeV/#it{c})", 40, 2.96, 3.04)
 hMass4LH = ROOT.TH1F(
     "h_4lh_mass", "; m({}^{4}_{#Lambda}H) (GeV/#it{c})", 50, 3.96, 4.04)
-hPtRec = ROOT.TH1F("hPtRec", ";#it{p}_{T} (GeV/#it{c})", 50, 0, 10)
+hPtRec = ROOT.TH1F("hPtRec", ";#it{p}_{T} (GeV/#it{c})", 50, 0, 5)
 hRadius = ROOT.TH1F("hRadius", ";Radius (cm)", 100, 0, 40)
 hDecLen = ROOT.TH1F("hDecLen", ";Decay length (cm)", 100, 0, 40)
 hNSigHe = ROOT.TH1F("hNSigmaHe", ";n_{#sigma}^{TPC}({}^{3}He)", 50, -3, 3)
@@ -84,15 +84,19 @@ h2MassPt = ROOT.TH2F(
     "h2MassPt", ";#it{p}_{T} (GeV/#it{c}); m({}^{3}_{#Lambda}H) (GeV/#it{c})", 50, 0, 7, 50, 2.96, 3.04)
 
 # for MC only
-hPtGen = ROOT.TH1F("hPtGen", "; Pt gen", 50, 0, 10)
+hPtGen = ROOT.TH1F("hPtGen", "; Pt gen", 50, 0, 5)
 hResolutionPt = ROOT.TH1F(
     "hResolutionPt", ";(#it{p}_{T}^{rec} - #it{p}_{T}^{gen}) / #it{p}_{T}^{gen}", 50, -0.2, 0.2)
 hResolutionPtvsPt = ROOT.TH2F(
-    "hResolutionPtvsPt", ";#it{p}_{T}^{gen} (GeV/#it{c});(#it{p}_{T}^{rec} - #it{p}_{T}^{gen}) / #it{p}_{T}^{gen}", 50, 0, 10, 50, -0.2, 0.2)
+    "hResolutionPtvsPt", ";#it{p}_{T}^{gen} (GeV/#it{c});(#it{p}_{T}^{rec} - #it{p}_{T}^{gen}) / #it{p}_{T}^{gen}", 50, 0, 5, 50, -0.2, 0.2)
+hResolutionHe3PtvsPt = ROOT.TH2F(
+    "hResolutionHe3PtvsPt", ";#it{p}_{T}^{gen} (GeV/#it{c});(#it{p}_{T}^{rec} - #it{p}_{T}^{gen}) / #it{p}_{T}^{gen}", 50, 0, 5, 50, -0.2, 0.2)
+hResolutionPiPtvsPt = ROOT.TH2F(
+    "hResolutionPiPtvsPt", ";#it{p}_{T}^{gen} (GeV/#it{c});(#it{p}_{T}^{rec} - #it{p}_{T}^{gen}) / #it{p}_{T}^{gen}", 50, 0, 1, 50, -0.2, 0.2)
 hResolutionP = ROOT.TH1F(
     "hResolutionP", ";(#it{p}^{rec} - #it{p}^{gen}) / #it{p}^{gen}", 50, -0.2, 0.2)
 hResolutionPvsP = ROOT.TH2F(
-    "hResolutionPvsP", ";#it{p}^{gen} (GeV/#it{c});(#it{p}^{rec} - #it{p}^{gen}) / #it{p}^{gen}", 50, 0, 10, 50, -0.2, 0.2)
+    "hResolutionPvsP", ";#it{p}^{gen} (GeV/#it{c});(#it{p}^{rec} - #it{p}^{gen}) / #it{p}^{gen}", 50, 0, 5, 50, -0.2, 0.2)
 hResolutionDecVtxX = ROOT.TH1F(
     "hResolutionDecVtxX", "; Resolution Dec X", 50, -0.2, 0.2)
 hResolutionDecVtxY = ROOT.TH1F(
@@ -113,6 +117,17 @@ df.eval('fDecLen = sqrt(fXDecVtx**2 + fYDecVtx**2 + fZDecVtx**2)', inplace=True)
 # for MC only
 if mc:
     df.eval('fGenP = fGenPt * cosh(fGenEta)', inplace=True)
+    
+    ##apply pT rejection
+    spectra_file = ROOT.TFile.Open('utils/heliumSpectraMB.root')
+    he3_spectrum = spectra_file.Get('fCombineHeliumSpecLevyFit_0-100')
+    spectra_file.Close()
+    df.eval("fAbsGenPt = abs(fGenPt)", inplace=True)
+    utils.reweight_pt_spectrum(df, 'fAbsGenPt', he3_spectrum)
+    df.query('rej==True', inplace=True)
+
+
+
     if is_matter == 'matter':
         utils.fill_th1_hist_abs(hPtGen, df.query(
             'fGenPt>0', inplace=False), 'fGenPt')
@@ -195,7 +210,7 @@ h2MassDCADaughters.Write()
 h2MassDCAHePv.Write()
 h2MassPt.Write()
 
-if dump_out_tree:
+if not skip_out_tree:
     df_filtered.to_parquet(f"{output_dir_name}/{output_file_name}.parquet")
 
 if mc:

@@ -5,7 +5,7 @@ matter_type: "antimatter"
 input_parquet_data : ['../results/HypertritonResults_antimatter.root.parquet']
 input_parquet_mc: '../results/HypertritonResults_antimatter_MC.root.parquet'
 input_analysis_results: '/data/shared/hyp_run_3/apass4/AnalysisResults.root'
-output_dir : '../results/signal_extraction'
+output_dir : '../results'
 output_file : 'fit_results_antimat.root'
 
 

@@ -2,5 +2,5 @@ mc : False
 input_files : ['/data/shared/hyp_run_3/apass4/LHC_22o/AO2D_o_merged.root', '/data/shared/hyp_run_3/apass4/LHC_22t/AO2D_t_merged.root', '/data/shared/hyp_run_3/apass4/LHC_22m/AO2D_m_merged.root', '/data/shared/hyp_run_3/apass4/LHC_22r/AO2D_r_merged.root']
 output_dir : '../results/'
 output_file : 'HypertritonResults_antimatter.root'
-selection : 'fPt>1 and fCosPA>0.998 and fNSigmaHe>-2. and fTPCsignalPi<1000'
+selection : 'fPt>1.3 and fNSigmaHe>-2. and fTPCsignalPi<1000'
 is_matter : 'antimatter'

@@ -57,6 +57,7 @@ struct GPart
     int tpcRef = -1;
     float itsPt = -1;
     float tpcPt = -1;
+    float itsTPCPt = -1;
     float chi2Match = -1;
     bool isSecDau = false;
     bool isReco = false;
@@ -78,7 +79,7 @@ struct GPart
 double calcRadius(std::vector<MCTrack> *MCTracks, const MCTrack &motherTrack, int dauPDG);
 
 void DauTreeBuilder(int dau0PDG = 211, int dau1PDG = 1000020030, int mothPDG = 1010010030,
-                    bool debug = true, std::string path = "/data/fmazzasc/its_data/sim/hyp_gap_trig/", std::string outsuffix = "")
+                    bool debug = false, std::string path = "/data/fmazzasc/its_data/sim/hyp_gap_trig/1/", std::string outsuffix = "")
 {
 
     if(outsuffix != "")
@@ -307,6 +308,7 @@ void DauTreeBuilder(int dau0PDG = 211, int dau1PDG = 1000020030, int mothPDG = 1
                         if (track.getRefITS().getSource() == 24)
                             gPart.isAB = true;
                         gPart.isITSTPCfake = label.isFake();
+                        gPart.itsTPCPt = track.getPt();
                         gPart.chi2Match = track.getChi2Match();
 
                     }

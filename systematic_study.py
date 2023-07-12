@@ -11,6 +11,9 @@ import sys
 sys.path.append('utils')
 import utils as utils
 
+## ROOT batch mode
+ROOT.gROOT.SetBatch(True)
+
 parser = argparse.ArgumentParser(
     description='Configure the parameters of the script.')
 parser.add_argument('--config-file', dest='config_file', default='configs/signal_extraction/config_signal_extraction_antimat_noCosPA.yaml',
@@ -55,7 +58,7 @@ def systematic_routine(var, arr, sel_string, histo_data, histo_mc, canvas, norma
         histo_data.SetBinError(i+1, signal_counts_err)
 
         # mc
-        sel = presel + ' and fMassH3L > 2.98 and fMassH3L < 3.'
+        sel = presel
         df_filtered = df.query(sel)
         signal_counts = df_filtered.shape[0]
         signal_counts_err = np.sqrt(signal_counts)
@@ -91,7 +94,7 @@ def systematic_routine(var, arr, sel_string, histo_data, histo_mc, canvas, norma
 
 print('Checking cosPA')
 
-cosPA_arr = np.linspace(0.985, 1., 75, dtype=np.float64)
+cosPA_arr = np.linspace(0.98, 1., 75, dtype=np.float64)
 nCosPa_bins = len(cosPA_arr) - 1
 
 hDataSigCosPA = ROOT.TH1F('hDataSigCosPA', ';cos(#theta_{PA}); signal fraction', nCosPa_bins, cosPA_arr)
