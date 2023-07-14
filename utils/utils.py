@@ -274,17 +274,21 @@ def ndarray2roo(ndarray, var, name='data'):
     return array_roo
 
 
-# reweight a distribution with rejection sampling
+### reweight a distribution with rejection sampling
 def reweight_pt_spectrum(df, var, distribution):
     rej_flag = np.ones(len(df))
     random_arr = np.random.rand(len(df))
     max_bw = distribution.GetMaximum()
 
-    for ind, (val, rand) in enumerate(zip(df[var], random_arr)):
+    for ind, (val, rand) in enumerate(zip(df[var],random_arr)):
         frac = distribution.Eval(val)/max_bw
         if rand > frac:
             rej_flag[ind] = -1
-    df['rej'] = rej_flag.tolist()
+    ## check if it is a pandas dataframe
+    if isinstance(df, pd.DataFrame):
+        df['rej'] = rej_flag
+        return
+    df._full_data_frame['rej'] = rej_flag
 
 # put dataframe in the correct format
 
