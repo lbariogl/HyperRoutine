@@ -109,10 +109,12 @@ tree_name = 'O2datahypcands' if not mc else 'O2mchypcands'
 tree_hdl = TreeHandler(input_files_name, tree_name)
 df = tree_hdl.get_data_frame()
 
+# try to convert
+utils.correct_and_convert_df(df)
+
 # add new columns
 df.eval('fP = fPt * cosh(fEta)', inplace=True)
 df.eval('fDecRad = sqrt(fXDecVtx**2 + fYDecVtx**2)', inplace=True)
-df.eval('fDecLen = sqrt(fXDecVtx**2 + fYDecVtx**2 + fZDecVtx**2)', inplace=True)
 
 # for MC only
 if mc:

@@ -3,7 +3,8 @@ import numpy as np
 import pandas as pd
 
 kBlueC = ROOT.TColor.GetColor('#1f78b4')
-kOrangeC  = ROOT.TColor.GetColor("#ff7f00")
+kOrangeC = ROOT.TColor.GetColor("#ff7f00")
+
 
 def fill_th1_hist(h, df, var):
     for var_val in df[var]:
@@ -58,6 +59,7 @@ def fill_th1_hist(h, df, var):
     for var_val in df[var]:
         h.Fill(var_val)
 
+
 def fill_th2_hist(h, df, var1, var2):
     for i in range(df.shape[0]):
         h.Fill(df[var1].iloc[i], df[var2].iloc[i])
@@ -67,18 +69,20 @@ def fill_res_hist(h, df, var1, var2):
     for var_val1, var_val2 in zip(df[var1], df[var2]):
         h.Fill((var_val1 - var_val2)/var_val1)
 
+
 def fill_res_hist_th2(h, df, var1, var2):
     for var_val1, var_val2 in zip(df[var1], df[var2]):
-        h.Fill(var_val1,(var_val1 - var_val2)/var_val1)
+        h.Fill(var_val1, (var_val1 - var_val2)/var_val1)
 
 
-def fill_mass_weighted_hist(h, df, var, weight = [1,1]):
+def fill_mass_weighted_hist(h, df, var, weight=[1, 1]):
 
     for var_val, w in zip(df[var], df['isSignal']):
         if w == 1:
             h.Fill(var_val, weight[0])
         else:
             h.Fill(var_val, weight[1])
+
 
 def significance_error(signal, background, signal_error, background_error):
 
@@ -93,25 +97,27 @@ def significance_error(signal, background, signal_error, background_error):
 
     return np.sqrt(s_propag * s_propag + b_propag * b_propag)
 
+
 def scale_hist_content(h, scale):
-    ## generate poissonian counts
+    # generate poissonian counts
     for i in range(1, h.GetNbinsX()+1):
         pois = ROOT.gRandom.Poisson(scale)
         pois_sqrt = np.sqrt(pois)
         h.SetBinContent(i, h.GetBinContent(i)+pois)
-        h.SetBinError(i, np.sqrt(pois_sqrt*pois_sqrt + h.GetBinError(i)*h.GetBinError(i)))
+        h.SetBinError(i, np.sqrt(pois_sqrt*pois_sqrt +
+                      h.GetBinError(i)*h.GetBinError(i)))
 
 
 def set_style():
     ROOT.gStyle.SetOptStat(1)
     ROOT.gStyle.SetOptDate(0)
     ROOT.gStyle.SetOptFit(1)
-    ROOT.gStyle.SetLabelSize(0.04,"xyz")
-    ROOT.gStyle.SetTitleSize(0.05,"xyz")
-    ROOT.gStyle.SetTitleFont(42,"xyz")
-    ROOT.gStyle.SetLabelFont(42,"xyz")
-    ROOT.gStyle.SetTitleOffset(1.05,"x")
-    ROOT.gStyle.SetTitleOffset(1.1,"y")
+    ROOT.gStyle.SetLabelSize(0.04, "xyz")
+    ROOT.gStyle.SetTitleSize(0.05, "xyz")
+    ROOT.gStyle.SetTitleFont(42, "xyz")
+    ROOT.gStyle.SetLabelFont(42, "xyz")
+    ROOT.gStyle.SetTitleOffset(1.05, "x")
+    ROOT.gStyle.SetTitleOffset(1.1, "y")
     ROOT.gStyle.SetCanvasDefW(800)
     ROOT.gStyle.SetCanvasDefH(600)
     ROOT.gStyle.SetPadBottomMargin(0.12)
@@ -122,14 +128,11 @@ def set_style():
     ROOT.gStyle.SetPadTickX(1)
     ROOT.gStyle.SetPadTickY(1)
     ROOT.gStyle.SetFrameBorderMode(0)
-    ROOT.gStyle.SetPaperSize(20,24)
+    ROOT.gStyle.SetPaperSize(20, 24)
     ROOT.gStyle.SetLegendBorderSize(0)
     ROOT.gStyle.SetLegendFillColor(0)
     ROOT.gStyle.SetEndErrorSize(0.)
     ROOT.gStyle.SetMarkerSize(1)
-
-
-
 
 def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, f, n_ev=300, matter_type="both", bdt_eff=None, print_info = True, n_bins = 30):
 
@@ -146,43 +149,50 @@ def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, f, n
     frame.GetXaxis().SetTitleOffset(1.1)
 
     dataset.plotOn(frame, ROOT.RooFit.Name('data'))
-    fit_function.plotOn(frame, ROOT.RooFit.LineColor(kBlueC), ROOT.RooFit.Name('fit_func'))
-    fit_function.plotOn(frame, ROOT.RooFit.Components('bkg'), ROOT.RooFit.LineStyle(ROOT.kDashed), ROOT.RooFit.LineColor(kOrangeC))
+    fit_function.plotOn(frame, ROOT.RooFit.LineColor(
+        kBlueC), ROOT.RooFit.Name('fit_func'))
+    fit_function.plotOn(frame, ROOT.RooFit.Components(
+        'bkg'), ROOT.RooFit.LineStyle(ROOT.kDashed), ROOT.RooFit.LineColor(kOrangeC))
     # fit_function.plotOn(frame, ROOT.RooFit.Components('cb'), ROOT.RooFit.LineStyle(ROOT.kDashed))
 
     sigma_val = sigma.getVal()
     mu_val = mu.getVal()
 
     signal_counts = f.getVal()*dataset.sumEntries()
-    signal_counts_error = (f.getError()/f.getVal())*f.getVal()*dataset.sumEntries()
-
+    signal_counts_error = (f.getError()/f.getVal()) * \
+        f.getVal()*dataset.sumEntries()
 
     background_counts = (1-f.getVal())*dataset.sumEntries()
-    background_counts_error = (1-f.getVal())*dataset.sumEntries()*f.getError()/f.getVal()
+    background_counts_error = (1-f.getVal()) * \
+        dataset.sumEntries()*f.getError()/f.getVal()
 
-    #signal within 3 sigma
+    # signal within 3 sigma
     var.setRange('signal', mu_val-3*sigma_val, mu_val+3*sigma_val)
-    signal_int = signal.createIntegral(ROOT.RooArgSet(var), ROOT.RooArgSet(var), 'signal')
+    signal_int = signal.createIntegral(
+        ROOT.RooArgSet(var), ROOT.RooArgSet(var), 'signal')
     signal_int_val_3s = signal_int.getVal()*signal_counts
     signal_int_val_3s_error = signal_int_val_3s*signal_counts_error/signal_counts
-    #background within 3 sigma
+    # background within 3 sigma
     var.setRange('bkg', mu_val-3*sigma_val, mu_val+3*sigma_val)
-    bkg_int = background.createIntegral(ROOT.RooArgSet(var), ROOT.RooArgSet(var), 'bkg')
+    bkg_int = background.createIntegral(
+        ROOT.RooArgSet(var), ROOT.RooArgSet(var), 'bkg')
     bkg_int_val_3s = bkg_int.getVal()*background_counts
     bkg_int_val_3s_error = bkg_int_val_3s*background_counts_error/background_counts
-    significance = signal_int_val_3s/np.sqrt(signal_int_val_3s + bkg_int_val_3s)
-    significance_err = significance_error(signal_int_val_3s, bkg_int_val_3s, signal_int_val_3s_error, bkg_int_val_3s_error)
-    s_b_ratio_err = np.sqrt((signal_int_val_3s_error/signal_int_val_3s)**2 + (bkg_int_val_3s_error/bkg_int_val_3s)**2)*signal_int_val_3s/bkg_int_val_3s
-
+    significance = signal_int_val_3s / \
+        np.sqrt(signal_int_val_3s + bkg_int_val_3s)
+    significance_err = significance_error(
+        signal_int_val_3s, bkg_int_val_3s, signal_int_val_3s_error, bkg_int_val_3s_error)
+    s_b_ratio_err = np.sqrt((signal_int_val_3s_error/signal_int_val_3s)**2 + (
+        bkg_int_val_3s_error/bkg_int_val_3s)**2)*signal_int_val_3s/bkg_int_val_3s
 
     chi2 = frame.chiSquare("fit_func", "data", 6)
-    fit_probability = ROOT.TMath.Prob(chi2*(frame.GetNbinsX() -6), frame.GetNbinsX() -6)
+    fit_probability = ROOT.TMath.Prob(
+        chi2*(frame.GetNbinsX() - 6), frame.GetNbinsX() - 6)
 
     if print_info:
         print('chi2: ', chi2)
         print('fit probability: ', fit_probability)
         print('muv: ', mu_val)
-
 
     pinfo = ROOT.TPaveText(0.632, 0.5, 0.932, 0.85, 'NDC')
     pinfo.SetBorderSize(0)
@@ -192,11 +202,16 @@ def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, f, n
     string_list = []
 
     # string_list.append('Fit Probability: ' + f'{fit_probability:.2f}')
-    string_list.append(f'Signal (S): {signal_counts:.0f} #pm {signal_counts_error:.0f}')
-    string_list.append(f'S/B (3 #sigma): {signal_int_val_3s/bkg_int_val_3s:.1f} #pm {s_b_ratio_err:.1f}')
-    string_list.append('S/#sqrt{S+B} (3 #sigma): ' + f'{significance:.1f} #pm {significance_err:.1f}')
-    string_list.append('#mu = ' + f'{mu_val*1e3:.2f} #pm {mu.getError()*1e3:.2f}' + ' MeV/#it{c}^{2}')
-    string_list.append('#sigma = ' + f'{sigma_val*1e3:.2f} #pm {sigma.getError()*1e3:.2f}' + ' MeV/#it{c}^{2}')
+    string_list.append(
+        f'Signal (S): {signal_counts:.0f} #pm {signal_counts_error:.0f}')
+    string_list.append(
+        f'S/B (3 #sigma): {signal_int_val_3s/bkg_int_val_3s:.1f} #pm {s_b_ratio_err:.1f}')
+    string_list.append('S/#sqrt{S+B} (3 #sigma): ' +
+                       f'{significance:.1f} #pm {significance_err:.1f}')
+    string_list.append(
+        '#mu = ' + f'{mu_val*1e3:.2f} #pm {mu.getError()*1e3:.2f}' + ' MeV/#it{c}^{2}')
+    string_list.append(
+        '#sigma = ' + f'{sigma_val*1e3:.2f} #pm {sigma.getError()*1e3:.2f}' + ' MeV/#it{c}^{2}')
     for s in string_list:
         pinfo.AddText(s)
 
@@ -227,16 +242,13 @@ def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, f, n
     for s in string_list:
         pinfo2.AddText(s)
 
-
     frame.addObject(pinfo)
     frame.addObject(pinfo2)
 
     fit_stats = {"signal": [signal_counts, signal_counts_error],
-    "significance": [significance, significance_err], "s_b_ratio": [signal_int_val_3s/bkg_int_val_3s, s_b_ratio_err]}
+                 "significance": [significance, significance_err], "s_b_ratio": [signal_int_val_3s/bkg_int_val_3s, s_b_ratio_err]}
 
     return frame, signal_counts, signal_counts_error
-
-
 
 
 def ndarray2roo(ndarray, var, name='data'):
@@ -251,28 +263,62 @@ def ndarray2roo(ndarray, var, name='data'):
     x = np.zeros(1, dtype=np.float64)
 
     tree = ROOT.TTree('tree', 'tree')
-    tree.Branch(f'{name}', x ,f'{name}/D')
+    tree.Branch(f'{name}', x, f'{name}/D')
 
     for i in ndarray:
         x[0] = i
         tree.Fill()
 
-    array_roo = ROOT.RooDataSet(name, 'dataset from tree', tree, ROOT.RooArgSet(var))
+    array_roo = ROOT.RooDataSet(
+        name, 'dataset from tree', tree, ROOT.RooArgSet(var))
     return array_roo
 
 
-### reweight a distribution with rejection sampling
+# reweight a distribution with rejection sampling
 def reweight_pt_spectrum(df, var, distribution):
     rej_flag = np.ones(len(df))
     random_arr = np.random.rand(len(df))
     max_bw = distribution.GetMaximum()
 
-    for ind, (val, rand) in enumerate(zip(df[var],random_arr)):
+    for ind, (val, rand) in enumerate(zip(df[var], random_arr)):
         frac = distribution.Eval(val)/max_bw
         if rand > frac:
             rej_flag[ind] = -1
-    ## check if it is a pandas dataframe
-    if isinstance(df, pd.DataFrame):
-        df['rej'] = rej_flag
-        return
     df._full_data_frame['rej'] = rej_flag
+
+# put dataframe in the correct format
+
+def correct_and_convert_df(df, histo=None):
+    if not histo == None:
+        pass
+    # 3He momentum
+    df.eval('fPxHe3 = fPtHe3 * cos(fPhiHe3)', inplace=True)
+    df.eval('fPyHe3 = fPtHe3 * sin(fPhiHe3)', inplace=True)
+    df.eval('fPzHe3 = fPtHe3 * sinh(fEtaHe3)', inplace=True)
+    df.eval('fPHe3 = fPtHe3 * cosh(fEtaHe3)', inplace=True)
+    df.eval('fEnHe3 = sqrt(fPHe3**2 + 2.8083916**2)', inplace=True)
+    df.eval('fEnHe4 = sqrt(fPHe3**2 + 3.7273794**2)', inplace=True)
+    # pi momentum
+    df.eval('fPxPi = fPtPi * cos(fPhiPi)', inplace=True)
+    df.eval('fPyPi = fPtPi * sin(fPhiPi)', inplace=True)
+    df.eval('fPzPi = fPtPi * sinh(fEtaPi)', inplace=True)
+    df.eval('fPPi = fPtPi * cosh(fEtaPi)', inplace=True)
+    df.eval('fEnPi = sqrt(fPPi**2 + 0.139570**2)', inplace=True)
+    # hypertriton momentum
+    df.eval('fPx = fPxHe3 + fPxPi', inplace=True)
+    df.eval('fPy = fPyHe3 + fPyPi', inplace=True)
+    df.eval('fPz = fPzHe3 + fPzPi', inplace=True)
+    df.eval('fP = sqrt(fPx**2 + fPy**2 + fPz**2)', inplace=True)
+    df.eval('fEn = fEnHe3 + fEnPi', inplace=True)
+    df.eval('fEn4 = fEnHe4 + fEnPi', inplace=True)
+    # Momentum variables to be stored
+    df.eval('fPt = sqrt(fPx**2 + fPy**2)', inplace=True)
+    df.eval('fEta = arccosh(fP/fPt)', inplace=True)
+    df.eval('fPhi = arctan(fPy/fPx)', inplace=True)
+    # Variables of interest
+    df.eval('fDecLen = sqrt(fXDecVtx**2 + fYDecVtx**2 + fZDecVtx**2)', inplace=True)
+    df.eval('fCosPA = (fPx * fXDecVtx + fPy * fYDecVtx + fPz * fZDecVtx) / (fP * fDecLen)', inplace=True)
+    df.eval('fMassH3L = sqrt(fEn**2 - fP**2)', inplace=True)
+    df.eval('fMassH4L = sqrt(fEn4**2 - fP**2)', inplace=True)
+    # remove useless columns
+    df.drop(columns=['fPxHe3', 'fPyHe3', 'fPzHe3', 'fPHe3', 'fEnHe3', 'fPxPi', 'fPyPi', 'fPzPi', 'fPPi', 'fEnPi', 'fPx', 'fPy', 'fPz', 'fP', 'fEn'])

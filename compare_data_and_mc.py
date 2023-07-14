@@ -20,6 +20,7 @@ input_file_name_data = config_data['input_files']
 # MC
 tree_hdl_mc = TreeHandler(input_file_name_mc, 'O2mchypcands')
 df_mc = tree_hdl_mc.get_data_frame()
+utils.correct_and_convert_df(df_mc)
 df_mc.eval('fP = fPt * cosh(fEta)', inplace=True)
 df_mc.eval('fDecRad = sqrt(fXDecVtx**2 + fYDecVtx**2)', inplace=True)
 df_mc.eval('fDecLen = sqrt(fXDecVtx**2 + fYDecVtx**2 + fZDecVtx**2)', inplace=True)
@@ -40,6 +41,7 @@ print(F'MC queried: {df_mc_filtered.shape[0]}')
 # Data
 tree_hdl_data = TreeHandler(input_file_name_data, 'O2datahypcands')
 df_data = tree_hdl_data.get_data_frame()
+utils.correct_and_convert_df(df_data)
 df_data.eval('fP = fPt * cosh(fEta)', inplace=True)
 df_data.eval('fDecRad = sqrt(fXDecVtx**2 + fYDecVtx**2)', inplace=True)
 df_data.eval(
