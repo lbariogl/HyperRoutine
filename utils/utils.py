@@ -284,7 +284,7 @@ def reweight_pt_spectrum(df, var, distribution):
         frac = distribution.Eval(val)/max_bw
         if rand > frac:
             rej_flag[ind] = -1
-    df._full_data_frame['rej'] = rej_flag
+    df['rej'] = rej_flag.tolist()
 
 # put dataframe in the correct format
 
