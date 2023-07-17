@@ -7,50 +7,15 @@ import utils as utils
 
 ROOT.gROOT.SetBatch(True)
 
-
-def create_pt_shift_histo(df):
-    h2MomResoVsPtHe3 = ROOT.TH2F("h2MomResoVsPtHe3", ";^{3}He #it{p}_{T} (GeV/#it{c});  ^{3}He #it{p}_{T}^{reco} - #it{p}_{T}^{gen} (GeV/#it{c})", 50, 1., 5, 50, -0.4, 0.4)
-    df.eval("PtResHe3 = (fPtHe3- fGenPtHe3)", inplace=True)
-    utils.fill_th2_hist(h2MomResoVsPtHe3, df, "fPtHe3", "PtResHe3")
-    h2MomResoVsPtHe3.FitSlicesY()
-    h2MomResoVsPtHe3_mean = ROOT.gDirectory.Get("h2MomResoVsPtHe3_1")
-    return h2MomResoVsPtHe3, h2MomResoVsPtHe3_mean
-
-def create_derived_columns(df):
-    df["fPxHe3"] = df["fPtHe3"] * np.cos(df["fPhiHe3"])
-    df["fPyHe3"] = df["fPtHe3"] * np.sin(df["fPhiHe3"])
-    df["fPzHe3"] = df["fPtHe3"] * np.sinh(df["fEtaHe3"])
-    df["fPxPi"] = df["fPtPi"] * np.cos(df["fPhiPi"])
-    df["fPyPi"] = df["fPtPi"] * np.sin(df["fPhiPi"])
-    df["fPzPi"] = df["fPtPi"] * np.sinh(df["fEtaPi"])
-    df["fPt"] = np.sqrt((df["fPxHe3"] + df["fPxPi"])**2 + (df["fPyHe3"] + df["fPyPi"])**2)
-    df["fPx"] = df["fPxHe3"] + df["fPxPi"]
-    df["fPy"] = df["fPyHe3"] + df["fPyPi"]
-    df["fPz"] = df["fPzHe3"] + df["fPzPi"]
-    df["fP"] = np.sqrt(df["fPx"]**2 + df["fPy"]**2 + df["fPz"]**2)
-    df["fDecayL"] = np.sqrt(df["fXDecVtx"]**2 + df["fYDecVtx"]**2 + df["fZDecVtx"]**2)
-    df["fCosPA"] = (df["fPx"]*df["fXDecVtx"] + df["fPy"]*df["fYDecVtx"] + df["fPz"]*df["fZDecVtx"]) / (df["fP"]*df["fDecayL"])
-    df["fEnHe3"] = np.sqrt(df["fPxHe3"]**2 + df["fPyHe3"]**2 + df["fPzHe3"]**2 + 2.8083916**2)
-    df["fEnPi"] = np.sqrt(df["fPxPi"]**2 + df["fPyPi"]**2 + df["fPzPi"]**2 + 0.139570**2)
-    df["fMassH3L"] = np.sqrt((df["fEnHe3"] + df["fEnPi"])**2 - (df["fPxHe3"] + df["fPxPi"])**2 - (df["fPyHe3"] + df["fPyPi"])**2 - (df["fPzHe3"] + df["fPzPi"])**2)
-
-
 df1 = uproot.open("/data/shared/hyp_run_3/mc/AO2D_new_task.root")["O2mchypcands"].arrays(library="pd")
 df2 = df1.copy(deep=True)
 df1.query("fIsReco > 0", inplace=True)
 df2.query("fIsReco > 0", inplace=True)
 
-create_derived_columns(df1)
+utils.correct_and_convert_df(df1)
 
-### loop over df2 and shift the pT according to the resolution
-h2MomResoVsPtHe3, h_pt_shift = create_pt_shift_histo(df2)
-cloned_pt_arr = np.array(df2["fPtHe3"])
-for i in range(len(cloned_pt_arr)):
-    pt_shift = h_pt_shift.GetBinContent(h_pt_shift.FindBin(cloned_pt_arr[i]))
-    cloned_pt_arr[i] -= pt_shift
-df2["fPtHe3"] = cloned_pt_arr
-create_derived_columns(df2)
-
+h2MomResoVsPtHe3, h_pt_shift = utils.create_pt_shift_histo(df2)
+utils.correct_and_convert_df(df2, h_pt_shift)
 
 h_df1_mass_pt = ROOT.TH2D("h_df1_mass_pt", "; M (^{3}He + #pi) (GeV/#it{c}^{2}); #it{p}_{T}^{gen}", 10, 1, 5, 30, 2.96, 3.04)
 h_df2_mass_pt = ROOT.TH2D("h_df2_mass_pt", "; M (^{3}He + #pi) (GeV/#it{c}^{2}); #it{p}_{T}^{gen}", 10, 1, 5, 30, 2.96, 3.04)

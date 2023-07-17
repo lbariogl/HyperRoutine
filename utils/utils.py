@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 
 kBlueC = ROOT.TColor.GetColor('#1f78b4')
-kOrangeC = ROOT.TColor.GetColor("#ff7f00")
+kOrangeC = ROOT.TColor.GetColor('#ff7f00')
 
 
 def fill_th1_hist(h, df, var):
@@ -112,12 +112,12 @@ def set_style():
     ROOT.gStyle.SetOptStat(1)
     ROOT.gStyle.SetOptDate(0)
     ROOT.gStyle.SetOptFit(1)
-    ROOT.gStyle.SetLabelSize(0.04, "xyz")
-    ROOT.gStyle.SetTitleSize(0.05, "xyz")
-    ROOT.gStyle.SetTitleFont(42, "xyz")
-    ROOT.gStyle.SetLabelFont(42, "xyz")
-    ROOT.gStyle.SetTitleOffset(1.05, "x")
-    ROOT.gStyle.SetTitleOffset(1.1, "y")
+    ROOT.gStyle.SetLabelSize(0.04, 'xyz')
+    ROOT.gStyle.SetTitleSize(0.05, 'xyz')
+    ROOT.gStyle.SetTitleFont(42, 'xyz')
+    ROOT.gStyle.SetLabelFont(42, 'xyz')
+    ROOT.gStyle.SetTitleOffset(1.05, 'x')
+    ROOT.gStyle.SetTitleOffset(1.1, 'y')
     ROOT.gStyle.SetCanvasDefW(800)
     ROOT.gStyle.SetCanvasDefH(600)
     ROOT.gStyle.SetPadBottomMargin(0.12)
@@ -134,7 +134,7 @@ def set_style():
     ROOT.gStyle.SetEndErrorSize(0.)
     ROOT.gStyle.SetMarkerSize(1)
 
-def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, f, n_ev=300, matter_type="both", bdt_eff=None, print_info = True, n_bins = 30):
+def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, f, n_ev=300, matter_type='both', bdt_eff=None, print_info = True, n_bins = 30):
 
     fit_function.fitTo(dataset, ROOT.RooFit.Extended(False), ROOT.RooFit.Save(True))
     frame = var.frame(n_bins)
@@ -185,7 +185,7 @@ def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, f, n
     s_b_ratio_err = np.sqrt((signal_int_val_3s_error/signal_int_val_3s)**2 + (
         bkg_int_val_3s_error/bkg_int_val_3s)**2)*signal_int_val_3s/bkg_int_val_3s
 
-    chi2 = frame.chiSquare("fit_func", "data", 6)
+    chi2 = frame.chiSquare('fit_func', 'data', 6)
     fit_probability = ROOT.TMath.Prob(
         chi2*(frame.GetNbinsX() - 6), frame.GetNbinsX() - 6)
 
@@ -216,28 +216,28 @@ def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, f, n
         pinfo.AddText(s)
 
     string_list = []
-    pinfo2 = ROOT.TPaveText(0.14, 0.6, 0.42, 0.85, "NDC")
+    pinfo2 = ROOT.TPaveText(0.14, 0.6, 0.42, 0.85, 'NDC')
     pinfo2.SetBorderSize(0)
     pinfo2.SetFillStyle(0)
     pinfo2.SetTextAlign(11)
     pinfo2.SetTextFont(42)
 
-    if matter_type == "matter":
-        matter_string = "{}^{3}_{#Lambda}H #rightarrow ^{3}He+#pi^{-}"
+    if matter_type == 'matter':
+        matter_string = '{}^{3}_{#Lambda}H #rightarrow ^{3}He+#pi^{-}'
 
-    elif matter_type == "antimatter":
-        matter_string = "{}^{3}_{#bar{#Lambda}}#bar{H} #rightarrow ^{3}#bar{He}+#pi^{+}"
+    elif matter_type == 'antimatter':
+        matter_string = '{}^{3}_{#bar{#Lambda}}#bar{H} #rightarrow ^{3}#bar{He}+#pi^{+}'
 
     else:
-        matter_string = "{}^{3}_{#Lambda}H #rightarrow ^{3}He+#pi^{-} + c.c."
+        matter_string = '{}^{3}_{#Lambda}H #rightarrow ^{3}He+#pi^{-} + c.c.'
 
-    string_list.append("ALICE Performance")
-    string_list.append("Run 3, pp #sqrt{#it{s}} = 13.6 TeV")
-    string_list.append("N_{ev} = " f"{n_ev:.0f} "  "#times 10^{9}")
+    string_list.append('ALICE Performance')
+    string_list.append('Run 3, pp #sqrt{#it{s}} = 13.6 TeV')
+    string_list.append('N_{ev} = ' f'{n_ev:.0f} '  '#times 10^{9}')
     string_list.append(matter_string)
 
     if bdt_eff != None:
-        string_list.append(f"BDT Efficiency: {bdt_eff:.2f}")
+        string_list.append(f'BDT Efficiency: {bdt_eff:.2f}')
 
     for s in string_list:
         pinfo2.AddText(s)
@@ -245,8 +245,8 @@ def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, f, n
     frame.addObject(pinfo)
     frame.addObject(pinfo2)
 
-    fit_stats = {"signal": [signal_counts, signal_counts_error],
-                 "significance": [significance, significance_err], "s_b_ratio": [signal_int_val_3s/bkg_int_val_3s, s_b_ratio_err]}
+    fit_stats = {'signal': [signal_counts, signal_counts_error],
+                 'significance': [significance, significance_err], 's_b_ratio': [signal_int_val_3s/bkg_int_val_3s, s_b_ratio_err]}
 
     return frame, signal_counts, signal_counts_error
 
@@ -290,11 +290,29 @@ def reweight_pt_spectrum(df, var, distribution):
         return
     df._full_data_frame['rej'] = rej_flag
 
+# create histogram for momentum correction
+
+def create_pt_shift_histo(df):
+    h2MomResoVsPtHe3 = ROOT.TH2F('h2MomResoVsPtHe3', ';{}^{3}He #it{p}_{T} (GeV/#it{c});{}^{3}He #it{p}_{T}^{reco} - #it{p}_{T}^{gen} (GeV/#it{c})', 50, 1., 5, 50, -0.4, 0.4)
+    df.eval('PtResHe3 = (fPtHe3 - fGenPtHe3)', inplace=True)
+    fill_th2_hist(h2MomResoVsPtHe3, df, 'fPtHe3', 'PtResHe3')
+    h2MomResoVsPtHe3.FitSlicesY()
+    hShiftVsPtHe3 = ROOT.gDirectory.Get('h2MomResoVsPtHe3_1')
+    hShiftVsPtHe3.SetName('hShiftVsPtHe3')
+    return h2MomResoVsPtHe3, hShiftVsPtHe3
+
 # put dataframe in the correct format
 
 def correct_and_convert_df(df, histo=None):
+
+    # correct 3He momentum
     if not histo == None:
-        pass
+        cloned_pt_arr = np.array(df['fPtHe3'])
+        for i in range(len(cloned_pt_arr)):
+            pt_shift = histo.GetBinContent(histo.FindBin(cloned_pt_arr[i]))
+            cloned_pt_arr[i] -= pt_shift
+        df['fPtHe3'] = cloned_pt_arr
+
     # 3He momentum
     df.eval('fPxHe3 = fPtHe3 * cos(fPhiHe3)', inplace=True)
     df.eval('fPyHe3 = fPtHe3 * sin(fPhiHe3)', inplace=True)

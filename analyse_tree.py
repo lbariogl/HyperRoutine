@@ -27,6 +27,9 @@ parser.add_argument('--is-matter', dest='is_matter',
 
 parser.add_argument('--skip-out-tree', dest='skip_out_tree', action='store_true', help="if True do not save output tree.")
 
+parser.add_argument('--correction-file', dest='correction_file',
+                    help="path to the file use for 3He pt correction.", default=None)
+
 parser.add_argument('--config-file', dest='config_file',
                     help="path to the YAML file with configuration.", default='')
 args = parser.parse_args()
@@ -39,6 +42,7 @@ output_dir_name = args.output_dir
 output_file_name = args.output_file
 selections = args.selection
 is_matter = args.is_matter
+correction_file = args.correction_file
 
 if args.config_file != "":
     config_file = open(args.config_file, 'r')
@@ -49,6 +53,7 @@ if args.config_file != "":
     output_file_name = config['output_file']
     selections = config['selection']
     is_matter = config['is_matter']
+    correction_file = config['correction_file']
 
 matter_options = ['matter', 'antimatter', 'both']
 if is_matter not in matter_options:
@@ -109,8 +114,14 @@ tree_name = 'O2datahypcands' if not mc else 'O2mchypcands'
 tree_hdl = TreeHandler(input_files_name, tree_name)
 df = tree_hdl.get_data_frame()
 
+# import correction file
+correction_hist = None
+if correction_file:
+    corr_file = ROOT.TFile(correction_file)
+    correction_hist = corr_file.Get('hShiftVsPtHe3')
+
 # try to convert
-utils.correct_and_convert_df(df)
+utils.correct_and_convert_df(df, correction_hist)
 
 # add new columns
 df.eval('fP = fPt * cosh(fEta)', inplace=True)
@@ -119,7 +130,7 @@ df.eval('fDecRad = sqrt(fXDecVtx**2 + fYDecVtx**2)', inplace=True)
 # for MC only
 if mc:
     df.eval('fGenP = fGenPt * cosh(fGenEta)', inplace=True)
-    
+
     ##apply pT rejection
     spectra_file = ROOT.TFile.Open('utils/heliumSpectraMB.root')
     he3_spectrum = spectra_file.Get('fCombineHeliumSpecLevyFit_0-100')
@@ -157,8 +168,6 @@ if selections != '':
     df_filtered = df.query(selections)
 else:
     df_filtered = df
-# print(df_filtered.columns)
-# print(df_filtered['fNSigmaHe'])
 
 # fill histograms
 utils.fill_th1_hist(hPtRec, df_filtered, 'fPt')
