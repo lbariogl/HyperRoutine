@@ -119,6 +119,7 @@ correction_hist = None
 if correction_file:
     corr_file = ROOT.TFile(correction_file)
     correction_hist = corr_file.Get('hShiftVsPtHe3')
+    correction_hist.SetDirectory(0)
 
 # try to convert
 utils.correct_and_convert_df(df, correction_hist)

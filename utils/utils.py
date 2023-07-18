@@ -5,6 +5,9 @@ import pandas as pd
 kBlueC = ROOT.TColor.GetColor('#1f78b4')
 kOrangeC = ROOT.TColor.GetColor('#ff7f00')
 
+## set numpy seed
+np.random.seed(42)
+
 
 def fill_th1_hist(h, df, var):
     for var_val in df[var]:
@@ -159,6 +162,7 @@ def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, f, n
     mu_val = mu.getVal()
 
     signal_counts = f.getVal()*dataset.sumEntries()
+    print("SIGNAL COUNTS: ", signal_counts)
     signal_counts_error = (f.getError()/f.getVal()) * \
         f.getVal()*dataset.sumEntries()
 

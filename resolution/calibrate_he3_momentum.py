@@ -7,7 +7,7 @@ import utils as utils
 
 ROOT.gROOT.SetBatch(True)
 
-df1 = uproot.open("/data/shared/hyp_run_3/mc/AO2D_new_task.root")["O2mchypcands"].arrays(library="pd")
+df1 = uproot.open("/data/shared/hyp_run_3/mc/AO2D_MC.root")["O2mchypcands"].arrays(library="pd")
 df2 = df1.copy(deep=True)
 df1.query("fIsReco > 0", inplace=True)
 df2.query("fIsReco > 0", inplace=True)
@@ -27,7 +27,7 @@ df2["PtReso"] = (df2["fPtHe3"] - df2["fGenPtHe3"]) / df2["fGenPtHe3"]
 utils.fill_th2_hist(h_df2_pt_reso, df2, "fGenPtHe3", "PtReso")
 
 
-outf = ROOT.TFile("../../results/pt_mass_resolutions.root", "RECREATE")
+outf = ROOT.TFile("../utils/he3_pt_calibration.root", "RECREATE")
 h2MomResoVsPtHe3.Write()
 h_pt_shift.Write()
 h_df2_pt_reso.Write()

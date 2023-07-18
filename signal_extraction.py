@@ -17,7 +17,7 @@ kOrangeC  = ROOT.TColor.GetColor("#ff7f00")
 ROOT.gROOT.LoadMacro('utils/RooCustomPdfs/RooDSCBShape.cxx++')
 
 
-def getFitFrames(matter_type, input_parquet_data, input_analysis_results, input_parquet_mc, preselections='', ml_efficiency_scan=False, input_eff_dir='../results/training_test', print_info = True, n_bins = 30):
+def getFitFrames(matter_type, input_parquet_data, input_analysis_results, input_parquet_mc, preselections='', ml_efficiency_scan=False, input_eff_dir='../results/training_test', print_info = True, n_bins = 40):
 
     if matter_type == "matter":
         inv_mass_string = "#it{M}_{^{3}He+#pi^{-}}"
@@ -57,15 +57,17 @@ def getFitFrames(matter_type, input_parquet_data, input_analysis_results, input_
 
     # define background pdf
     c0 = ROOT.RooRealVar('c0', 'constant c0', -1., 1)
+    c1 = ROOT.RooRealVar('c1', 'constant c1', -1., 1)
+    c2 = ROOT.RooRealVar('c2', 'constant c2', -1., 1)
     background = ROOT.RooChebychev(
-        'bkg', 'pol1 bkg', mass, ROOT.RooArgList(c0))
+        'bkg', 'pol1 bkg', mass, ROOT.RooArgList(c0, c1))
     f = ROOT.RooRealVar('f', 'fraction of signal', 0.01, 0.4)
 
     # fix DSCB parameters to MC
     hdl_mc = TreeHandler(input_parquet_mc)
     mass_roo_mc = utils.ndarray2roo(
         np.array(hdl_mc['fMassH3L'].values, dtype=np.float64), mass, "histo_mc")
-    signal.fitTo(mass_roo_mc, ROOT.RooFit.Range(2.96, 3.01))
+    signal.fitTo(mass_roo_mc, ROOT.RooFit.Range(2.97, 3.01))
     a1.setConstant()
     a2.setConstant()
     n1.setConstant()
@@ -144,7 +146,7 @@ if __name__ == "__main__":
     preselections = config['preselections']
     input_eff_dir = config['input_eff_dir']
 
-    n_bins = args.n_bins
+    n_bins = 40
 
     # perform fits
     frame_prefit, frame_fit, signal_counts, signal_counts_err = getFitFrames(matter_type, input_parquet_data, input_analysis_results,
