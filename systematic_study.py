@@ -47,11 +47,15 @@ ROOT.RooMsgService.instance().setSilentMode(True)
 ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.ERROR)
 
 def systematic_routine(var, arr, sel_string, histo_data, histo_mc, canvas, normalise_to_first=True):
+    ## for each variable, create a directory and save the fits
+    output_file.mkdir(var)
+    output_file.cd(var)
     for i, val in enumerate(arr):
         # data
         presel = sel_string.format(var, val)
         _, frame_fit, signal_counts, signal_counts_err = signal_extraction.getFitFrames(matter_type, input_parquet_data, input_analysis_results,
                                                     input_parquet_mc, preselections=presel, print_info=False)
+        frame_fit.Write(f'fit_{np.round(val,2)}')
         histo_data.SetBinContent(i+1, signal_counts)
         histo_data.SetBinError(i+1, signal_counts_err)
 
