@@ -155,7 +155,7 @@ systematic_routine('fDcaHe', DcaHe_arr[1:], sel_string, hDataSigDcaHe, hMcSigDca
 
 print('CPicking DcaPi')
 
-DcaPi_arr = np.linspace(0., .3, 30, dtype=np.float64)
+DcaPi_arr = np.linspace(0., 3., 30, dtype=np.float64)
 nDcaPi_bins = len(DcaPi_arr) - 1
 
 hDataSigDcaPi = ROOT.TH1F('hDataSigDcaPi', ';DCA(#pi) (cm); signal fraction', nDcaPi_bins, DcaPi_arr)
