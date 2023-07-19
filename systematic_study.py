@@ -5,7 +5,6 @@ import numpy as np
 import ROOT
 import uproot
 from hipe4ml.tree_handler import TreeHandler
-from tqdm.auto import tqdm
 
 import sys
 sys.path.append('utils')
@@ -16,7 +15,7 @@ ROOT.gROOT.SetBatch(True)
 
 parser = argparse.ArgumentParser(
     description='Configure the parameters of the script.')
-parser.add_argument('--config-file', dest='config_file', default='configs/signal_extraction/config_signal_extraction_antimat_noCosPA.yaml',
+parser.add_argument('--config-file', dest='config_file', default='configs/signal_extraction/config_signal_extraction_antimat.yaml',
                     help="path to the YAML file with configuration.")
 args = parser.parse_args()
 
@@ -26,7 +25,6 @@ config = yaml.full_load(config_file)
 matter_type = config['matter_type']
 input_parquet_data = config['input_parquet_data']
 input_analysis_results = config['input_analysis_results']
-input_analysis_results_mc = config['input_analysis_results_mc']
 input_parquet_mc = config['input_parquet_mc']
 
 output_file = ROOT.TFile('../results/systematic_study.root', 'recreate')
@@ -49,7 +47,7 @@ ROOT.RooMsgService.instance().setSilentMode(True)
 ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.ERROR)
 
 def systematic_routine(var, arr, sel_string, histo_data, histo_mc, canvas, normalise_to_first=True):
-    for i, val in tqdm(enumerate(arr), total=len(arr)):
+    for i, val in enumerate(arr):
         # data
         presel = sel_string.format(var, val)
         _, frame_fit, signal_counts, signal_counts_err = signal_extraction.getFitFrames(matter_type, input_parquet_data, input_analysis_results,
@@ -94,7 +92,7 @@ def systematic_routine(var, arr, sel_string, histo_data, histo_mc, canvas, norma
 
 print('Checking cosPA')
 
-cosPA_arr = np.linspace(0.98, 1., 75, dtype=np.float64)
+cosPA_arr = np.linspace(0.99, 1., 50, dtype=np.float64)
 nCosPa_bins = len(cosPA_arr) - 1
 
 hDataSigCosPA = ROOT.TH1F('hDataSigCosPA', ';cos(#theta_{PA}); signal fraction', nCosPa_bins, cosPA_arr)
@@ -147,9 +145,9 @@ utils.setHistStyle(hMcSigDcaHe, ROOT.kAzure+2)
 
 cDcaHecomparison = ROOT.TCanvas('cDcaHecomparison', 'cDcaHecomparison', 800, 600)
 
-sel_string = r'abs({}) < {}'
+sel_string = r'abs({}) > {}'
 
-systematic_routine('fDcaHe', DcaHe_arr[1:], sel_string, hDataSigDcaHe, hMcSigDcaHe, cDcaHecomparison, normalise_to_first=False)
+systematic_routine('fDcaHe', DcaHe_arr[1:], sel_string, hDataSigDcaHe, hMcSigDcaHe, cDcaHecomparison)
 
 ##########################
 ##         DcaPi        ##
@@ -168,7 +166,7 @@ utils.setHistStyle(hMcSigDcaPi, ROOT.kAzure+2)
 
 cDcaPicomparison = ROOT.TCanvas('cDcaPicomparison', 'cDcaPicomparison', 800, 600)
 
-sel_string = r'abs({}) < {}'
+sel_string = r'abs({}) > {}'
 
-systematic_routine('fDcaPi', DcaPi_arr[1:], sel_string, hDataSigDcaPi, hMcSigDcaPi, cDcaPicomparison, normalise_to_first=False)
+systematic_routine('fDcaPi', DcaPi_arr[1:], sel_string, hDataSigDcaPi, hMcSigDcaPi, cDcaPicomparison)
 
