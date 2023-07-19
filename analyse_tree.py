@@ -139,6 +139,7 @@ if mc:
     df.eval("fAbsGenPt = abs(fGenPt)", inplace=True)
     utils.reweight_pt_spectrum(df, 'fAbsGenPt', he3_spectrum)
     df.query('rej==True', inplace=True)
+    n_gen = len(df)
 
 
 
@@ -152,6 +153,8 @@ if mc:
         utils.fill_th1_hist_abs(hPtGen, df, 'fGenPt')
     # select only reconstructed candidates
     df.query('fIsReco==True', inplace=True)
+    n_reco = len(df)
+    print("MC, integrated efficiency: ", n_reco/n_gen)
 
 if selections == '':
     if is_matter == 'matter':

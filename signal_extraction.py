@@ -60,7 +60,7 @@ def getFitFrames(matter_type, input_parquet_data, input_analysis_results, input_
     c1 = ROOT.RooRealVar('c1', 'constant c1', -1., 1)
     c2 = ROOT.RooRealVar('c2', 'constant c2', -1., 1)
     background = ROOT.RooChebychev(
-        'bkg', 'pol1 bkg', mass, ROOT.RooArgList(c0, c1))
+        'bkg', 'pol1 bkg', mass, ROOT.RooArgList(c0))
     f = ROOT.RooRealVar('f', 'fraction of signal', 0.01, 0.4)
 
     # fix DSCB parameters to MC

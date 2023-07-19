@@ -5,6 +5,6 @@ input_files : ['/data/shared/hyp_run_3/apass4/new_dataformat/LHC22m/AO2D_merged.
                '/data/shared/hyp_run_3/apass4/new_dataformat/LHC22t/AO2D_merged.root']
 output_dir : '../results/'
 output_file : 'HypertritonResults_antimatter.root'
-selection : 'fPt>1 and fCosPA>0.99 and fNSigmaHe>-2. and fTPCsignalPi<1000'
+selection : 'fPt>1 and fCosPA>0.995 and fNSigmaHe>-2. and fTPCsignalPi<1000'
 is_matter : 'antimatter'
 correction_file: "utils/he3_pt_calibration.root"
