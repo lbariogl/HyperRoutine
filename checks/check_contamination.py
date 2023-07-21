@@ -20,12 +20,11 @@ parser.add_argument('--selection', dest='selection', help="selections to be bass
                     default='fCosPA > 0.998 & fNTPCclusHe > 110 & abs(fDcaHe) > 0.1')
 parser.add_argument('--is-matter', dest='is_matter',
                     help="path to the YAML file with configuration.", default='matter')
-
 parser.add_argument('--skip-out-tree', dest='skip_out_tree', action='store_true', help="if True do not save output tree.")
-
 parser.add_argument('--correction-file', dest='correction_file',
                     help="path to the file use for 3He pt correction.", default=None)
-
+parser.add_argument('--output-file', dest='output_file',
+                    help="path to the output file.", default=None)
 parser.add_argument('--config-file', dest='config_file',
                     help="path to the YAML file with configuration.", default='')
 args = parser.parse_args()
@@ -36,6 +35,7 @@ input_file_name = args.input_files
 selections = args.selection
 is_matter = args.is_matter
 correction_file = args.correction_file
+output_file = args.output_file
 
 if args.config_file != "":
     config_file = open(args.config_file, 'r')
@@ -86,22 +86,13 @@ if selections != '':
 else:
     df_filtered = df
 
-h2MassMass = ROOT.TH2F('h2MassMass',';m({}^{3}_{#Lambda}H) (GeV/#it{c}^{2});m({}^{4}_{#Lambda}H) (GeV/#it{c}^{2})', 40, 2.96, 3.04, 30, 3.89, 3.97)
+h2MassMass = ROOT.TH2F('h2MassMass',';m({}^{3}_{#Lambda}H) (GeV/#it{c}^{2});m({}^{4}_{#Lambda}H) (GeV/#it{c}^{2})', 80, 2.92, 3.08, 60, 3.85, 4.01)
 
-h2NsigmaMass = ROOT.TH2F('h2NsigmaMass',';n_{#sigma}^{TPC}({}^{3}He);m({}^{4}_{#Lambda}H) (GeV/#it{c}^{2})', 50, 0.7, 6.7, 30, 3.89, 3.97)
+h2NsigmaMass = ROOT.TH2F('h2NsigmaMass',';n_{#sigma}^{TPC}({}^{3}He);m({}^{4}_{#Lambda}H) (GeV/#it{c}^{2})', 50, 0.7, 6.7, 60, 3.85, 4.01)
 
 utils.fill_th2_hist(h2MassMass, df_filtered, 'fMassH3L', 'fMassH4L')
 utils.fill_th2_hist(h2NsigmaMass, df_filtered, 'fNSigmaHe', 'fMassH4L')
 
-parquet_data = '../results/check_contamination.parquet'
-df_filtered.to_parquet(parquet_data)
-
-parquet_mc = '../results/HypertritonResults_antimatter_MC.root.parquet'
-
-_, frame_fit, signal_counts, signal_counts_err = signal_extraction.getFitFrames(is_matter, parquet_data, '/data/shared/hyp_run_3/apass4/new_dataformat/AnalysisResults.root', parquet_mc, preselections='', print_info=False)
-
-cContamina = ROOT.TCanvas('')
-
-output_file = ROOT.TFile('../results/check_contamination.root', 'recreate')
+output_file = ROOT.TFile(output_file, 'recreate')
 h2MassMass.Write()
 h2NsigmaMass.Write()
