@@ -80,5 +80,5 @@ for i in range(0, 100000):
 
   h2MassMass.Fill(h3l_vec_rec.M(), h4l_vec_rec.M())
 
-output_file = ROOT.TFile('../results/check_he_mass.root', 'recreate')
+output_file = ROOT.TFile('../../results/check_he_mass.root', 'recreate')
 h2MassMass.Write()
