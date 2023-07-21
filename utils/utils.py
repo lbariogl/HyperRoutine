@@ -6,7 +6,7 @@ kBlueC = ROOT.TColor.GetColor('#1f78b4')
 kOrangeC = ROOT.TColor.GetColor('#ff7f00')
 
 ## set numpy seed
-np.random.seed(42)
+np.random.seed(1995)
 
 
 def fill_th1_hist(h, df, var):
@@ -308,7 +308,6 @@ def create_pt_shift_histo(df):
 # put dataframe in the correct format
 
 def correct_and_convert_df(df, histo=None):
-
     # correct 3He momentum
     if not histo == None:
         cloned_pt_arr = np.array(df['fPtHe3'])

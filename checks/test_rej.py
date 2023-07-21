@@ -11,8 +11,11 @@ sys.path.append('../utils')
 import utils as utils
 
 
-hdlMC = TreeHandler(['/data/shared/hyp_run_3/mc/AO2D_MC_BDT.root'], 'O2mchypcands')
+hdlMC = TreeHandler(['/data/shared/hyp_run_3/mc/AO2D_MC.root'], 'O2mchypcands')
 hdlMC.print_summary()
+df = hdlMC.get_data_frame()
+# try to convert
+utils.correct_and_convert_df(df, None)
 
 spectra_file = ROOT.TFile.Open('../utils/heliumSpectraMB.root')
 he3_spectrum = spectra_file.Get('fCombineHeliumSpecLevyFit_0-100')
@@ -36,6 +39,17 @@ utils.fill_th1_hist(hPtShapeAfter, hdlMC_rew, 'fAbsGenPt')
 utils.fill_th1_hist(hCosPABefore, hdlMC, 'fCosPA')
 utils.fill_th1_hist(hCosPAAfter, hdlMC_rew.apply_preselections('fPt<2', inplace=False), 'fCosPA')
 utils.fill_th1_hist(hRecoSpectrumAfter, hdlMC_rew, 'fPt')
+
+den = len(hdlMC_rew)
+num = len(hdlMC_rew.apply_preselections('fIsReco==1', inplace=False))
+print('Reco efficiency: ', num/den)
+## get integral of the spectrum
+he3_spectrum.SetRange(0, 5)
+he3_spectrum.SetNpx(500)
+he3_spectrum.SetNormalized(True)
+integral = he3_spectrum.Integral(1, 5)
+integral_full = he3_spectrum.Integral(0, 5)
+print('Fraction of events in the range 1-5 GeV/c: ', integral/integral_full)
 
 
 cv6 = ROOT.TCanvas("cv6", "cv6", 800, 600)

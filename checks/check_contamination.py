@@ -7,9 +7,9 @@ import argparse
 import yaml
 
 import sys
-sys.path.append('utils')
+sys.path.append('../utils')
 import utils as utils
-
+sys.path.append('../.')
 import signal_extraction
 
 parser = argparse.ArgumentParser(

@@ -22,14 +22,18 @@ h_df2_mass_pt = ROOT.TH2D("h_df2_mass_pt", "; M (^{3}He + #pi) (GeV/#it{c}^{2});
 
 utils.fill_th2_hist(h_df1_mass_pt, df1, "fGenPt", "fMassH3L")
 utils.fill_th2_hist(h_df2_mass_pt, df2, "fGenPt", "fMassH3L")
-h_df2_pt_reso = ROOT.TH2D("h_df2_pt_reso", "h2_pt_reso", 50, 1, 5, 50, -0.4, 0.4)
+h_df1_pt_reso = ROOT.TH2D("h_df1_pt_reso", ";#it{p}^{gen}_{T} (GeV/#it{c});(#it{p}_{T}^{reco} - #it{p}_{T}^{gen})/ #it{p}_{T}^{gen}", 50, 1, 5, 50, -0.2, 0.2)
+h_df2_pt_reso = ROOT.TH2D("h_df2_pt_reso", ";#it{p}^{gen}_{T} (GeV/#it{c});(#it{p}_{T}^{reco} - #it{p}_{T}^{gen})/ #it{p}_{T}^{gen}", 50, 1, 5, 50, -0.2, 0.2)
+df1["PtReso"] = (df1["fPt"] - df1["fGenPt"]) / df1["fGenPt"]
 df2["PtReso"] = (df2["fPtHe3"] - df2["fGenPtHe3"]) / df2["fGenPtHe3"]
+utils.fill_th2_hist(h_df1_pt_reso, df1, "fGenPtHe3", "PtReso")
 utils.fill_th2_hist(h_df2_pt_reso, df2, "fGenPtHe3", "PtReso")
 
 
 outf = ROOT.TFile("../utils/he3_pt_calibration.root", "RECREATE")
 h2MomResoVsPtHe3.Write()
 h_pt_shift.Write()
+h_df1_pt_reso.Write()
 h_df2_pt_reso.Write()
 h_df2_mass_pt.Write()
 

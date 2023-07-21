@@ -3,5 +3,5 @@ input_files : ['/data/shared/hyp_run_3/mc/AO2D_MC.root']
 output_dir : '../results/'
 output_file : 'HypertritonResults_antimatter_MC.root'
 is_matter : 'antimatter'
-selection : 'fPt>1 and fNSigmaHe>-2. and fTPCsignalPi<1000'
+selection : 'fPt>1 and fCosPA>0.99 and fNSigmaHe>-2. and fTPCsignalPi<1000'
 correction_file: "utils/he3_pt_calibration.root"
