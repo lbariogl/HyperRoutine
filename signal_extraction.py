@@ -12,30 +12,43 @@ import utils as utils
 
 utils.set_style()
 kBlueC = ROOT.TColor.GetColor('#1f78b4')
-kOrangeC  = ROOT.TColor.GetColor("#ff7f00")
+kOrangeC = ROOT.TColor.GetColor("#ff7f00")
 
 ROOT.gROOT.LoadMacro('utils/RooCustomPdfs/RooDSCBShape.cxx++')
 
 
-def getFitFrames(matter_type, input_parquet_data, input_analysis_results, input_parquet_mc, preselections='', ml_efficiency_scan=False, input_eff_dir='../results/training_test', print_info = True, n_bins = 40):
+
+
+def configureMatterTypeSelections(matter_type, preselections):
 
     if matter_type == "matter":
-        inv_mass_string = "#it{M}_{^{3}He+#pi^{-}}"
         if preselections != "":
             extended_preselections = preselections + " and fIsMatter==True"
         else:
             extended_preselections = "fIsMatter==True"
-
     elif matter_type == "antimatter":
-        inv_mass_string = "#it{M}_{^{3}#bar{He}+#pi^{+}}"
         if preselections != "":
             extended_preselections = preselections + " and fIsMatter==False"
         else:
             extended_preselections = "fIsMatter==False"
-
     else:
-        inv_mass_string = "#it{M}_{^{3}He+#pi^{-}} + c.c."
         extended_preselections = preselections
+
+    return extended_preselections
+
+def getNevents(input_analysis_results, print_info=True):
+    # get number of events
+    an_vtx_z = uproot.open(input_analysis_results)['hyper-reco-task']['hZvtx']
+    n_evts = an_vtx_z.values().sum()
+    if print_info:
+        print(f'Number of events: {n_evts}')
+    n_evts = round(n_evts/1e9, 0)
+    return n_evts
+
+
+def getFitFrames(data_hdl, mc_hdl, matter_type, decay_label, mass_label, input_analysis_results, preselections='', ml_efficiency_scan=False, input_eff_dir='../results/training_test', print_info = True, n_bins = 40):
+
+    extended_preselections = configureMatterTypeSelections(matter_type, preselections)
 
     # get number of events
     an_vtx_z = uproot.open(input_analysis_results)['hyper-reco-task']['hZvtx']
@@ -45,7 +58,7 @@ def getFitFrames(matter_type, input_parquet_data, input_analysis_results, input_
     n_evts = round(n_evts/1e9, 0)
 
     # define signal pdf
-    mass = ROOT.RooRealVar('m', inv_mass_string, 2.96, 3.04, 'GeV/c^{2}')
+    mass = ROOT.RooRealVar('m', mass_label, 2.96, 3.04, 'GeV/c^{2}')
     mu = ROOT.RooRealVar('mu', 'hypernucl mass', 2.98, 3.0, 'GeV/c^{2}')
     sigma = ROOT.RooRealVar('sigma', 'hypernucl width',
                             0.001, 0.004, 'GeV/c^{2}')
@@ -64,9 +77,8 @@ def getFitFrames(matter_type, input_parquet_data, input_analysis_results, input_
     f = ROOT.RooRealVar('f', 'fraction of signal', 0.01, 0.4)
 
     # fix DSCB parameters to MC
-    hdl_mc = TreeHandler(input_parquet_mc)
     mass_roo_mc = utils.ndarray2roo(
-        np.array(hdl_mc['fMassH3L'].values, dtype=np.float64), mass, "histo_mc")
+        np.array(mc_hdl['fMassH3L'].values, dtype=np.float64), mass, "histo_mc")
     signal.fitTo(mass_roo_mc, ROOT.RooFit.Range(2.97, 3.01))
     a1.setConstant()
     a2.setConstant()
@@ -88,9 +100,6 @@ def getFitFrames(matter_type, input_parquet_data, input_analysis_results, input_
     # define the fit function and perform the actual fit
     fit_function = ROOT.RooAddPdf(
         'total_pdf', 'signal + background', ROOT.RooArgList(signal, background), ROOT.RooArgList(f))
-
-    # if input_parquet_data is a list of files, loop over them
-    data_hdl = TreeHandler(input_parquet_data)
 
     if extended_preselections != "":
         data_hdl.apply_preselections(extended_preselections)
@@ -114,11 +123,9 @@ def getFitFrames(matter_type, input_parquet_data, input_analysis_results, input_
     else:
         mass_array = np.array(data_hdl['fMassH3L'].values, dtype=np.float64)
         mass_roo_data = utils.ndarray2roo(mass_array, mass)
-        frame_fit, signal_counts, signal_counts_err = utils.fit_and_plot(mass_roo_data, mass, fit_function, signal,
-                                       background, sigma, mu, f, n_ev=n_evts, matter_type=matter_type, print_info=print_info, n_bins=n_bins)
+        frame_fit, signal_counts, signal_counts_err = utils.fit_and_plot(mass_roo_data, mass, fit_function, signal, background, sigma, mu, f, n_ev=n_evts, decay_label=decay_label, print_info=print_info, n_bins=n_bins)
 
     return frame_prefit, frame_fit, signal_counts, signal_counts_err
-
 
 if __name__ == "__main__":
 
@@ -136,9 +143,16 @@ if __name__ == "__main__":
 
     matter_type = config['matter_type']
     input_parquet_data = config['input_parquet_data']
+    data_hdl = TreeHandler(input_parquet_data)
     input_analysis_results = config['input_analysis_results']
 
     input_parquet_mc = config['input_parquet_mc']
+    mc_hdl = TreeHandler(input_parquet_mc)
+
+    var_name = config['var_name']
+    decay_label = config['decay_label']
+    mass_label = config['mass_label']
+
     output_dir = config['output_dir']
     output_file = config['output_file']
 
@@ -148,9 +162,11 @@ if __name__ == "__main__":
 
     n_bins = 40
 
+    # get n events
+    n_evts =  getNevents(input_analysis_results)
+
     # perform fits
-    frame_prefit, frame_fit, signal_counts, signal_counts_err = getFitFrames(matter_type, input_parquet_data, input_analysis_results,
-                                           input_parquet_mc, preselections, ml_efficiency_scan, input_eff_dir, n_bins=n_bins)
+    frame_prefit, frame_fit, signal_counts, signal_counts_err = getFitFrames(data_hdl, mc_hdl, matter_type, decay_label, mass_label, input_analysis_results, preselections, ml_efficiency_scan, input_eff_dir, n_bins=n_bins)
 
     # create output file and save frames
     out_file = ROOT.TFile(f'{output_dir}/{output_file}', 'recreate')
@@ -158,6 +174,8 @@ if __name__ == "__main__":
     frame_prefit.Write("histo_mc")
     frame_fit.Write("fit")
 
-    cSignalExtraction = ROOT.TCanvas('cSignalExtraction', 'cSignalExtraction', 800, 600)
+    cSignalExtraction = ROOT.TCanvas(
+        'cSignalExtraction', 'cSignalExtraction', 800, 600)
     frame_fit.Draw()
-    cSignalExtraction.SaveAs(f'{output_dir}/cSignalExtraction_{matter_type}.pdf')
+    cSignalExtraction.SaveAs(
+        f'{output_dir}/cSignalExtraction_{matter_type}.pdf')

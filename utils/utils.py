@@ -137,7 +137,7 @@ def set_style():
     ROOT.gStyle.SetEndErrorSize(0.)
     ROOT.gStyle.SetMarkerSize(1)
 
-def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, f, n_ev=300, matter_type='both', bdt_eff=None, print_info = True, n_bins = 30):
+def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, f, n_ev=300, decay_label='{}^{3}_{#Lambda}H #rightarrow ^{3}He+#pi^{-}', bdt_eff=None, print_info = True, n_bins = 30):
 
     fit_function.fitTo(dataset, ROOT.RooFit.Extended(False), ROOT.RooFit.Save(True))
     frame = var.frame(n_bins)
@@ -162,7 +162,6 @@ def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, f, n
     mu_val = mu.getVal()
 
     signal_counts = f.getVal()*dataset.sumEntries()
-    print("SIGNAL COUNTS: ", signal_counts)
     signal_counts_error = (f.getError()/f.getVal()) * \
         f.getVal()*dataset.sumEntries()
 
@@ -226,19 +225,10 @@ def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, f, n
     pinfo2.SetTextAlign(11)
     pinfo2.SetTextFont(42)
 
-    if matter_type == 'matter':
-        matter_string = '{}^{3}_{#Lambda}H #rightarrow ^{3}He+#pi^{-}'
-
-    elif matter_type == 'antimatter':
-        matter_string = '{}^{3}_{#bar{#Lambda}}#bar{H} #rightarrow ^{3}#bar{He}+#pi^{+}'
-
-    else:
-        matter_string = '{}^{3}_{#Lambda}H #rightarrow ^{3}He+#pi^{-} + c.c.'
-
     string_list.append('ALICE Performance')
     string_list.append('Run 3, pp #sqrt{#it{s}} = 13.6 TeV')
     string_list.append('N_{ev} = ' f'{n_ev:.0f} '  '#times 10^{9}')
-    string_list.append(matter_string)
+    string_list.append(decay_label)
 
     if bdt_eff != None:
         string_list.append(f'BDT Efficiency: {bdt_eff:.2f}')
