@@ -12,4 +12,5 @@ output_file : 'fit_results_antimat.root'
 preselections: ""
 ml_efficiency_scan: False
 input_eff_dir: "../results/training"
+n_bins: 40
 
