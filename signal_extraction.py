@@ -12,37 +12,52 @@ import utils as utils
 
 utils.set_style()
 kBlueC = ROOT.TColor.GetColor('#1f78b4')
-kOrangeC  = ROOT.TColor.GetColor("#ff7f00")
+kOrangeC  = ROOT.TColor.GetColor('#ff7f00')
 
 ROOT.gROOT.LoadMacro('utils/RooCustomPdfs/RooDSCBShape.cxx++')
 
+def configureMatterType3LH(matter_type, selections):
 
-def getFitFrames(matter_type, input_parquet_data, input_analysis_results, input_parquet_mc, preselections='', ml_efficiency_scan=False, input_eff_dir='../results/training_test', print_info = True, n_bins = 40):
-
-    if matter_type == "matter":
-        inv_mass_string = "#it{M}_{^{3}He+#pi^{-}}"
-        if preselections != "":
-            extended_preselections = preselections + " and fIsMatter==True"
+    if matter_type == 'matter':
+        inv_mass_string = '#it{M}_{^{3}He+#pi^{-}}'
+        if selections != '':
+            extended_selections = selections + ' and fIsMatter==True'
         else:
-            extended_preselections = "fIsMatter==True"
-
-    elif matter_type == "antimatter":
-        inv_mass_string = "#it{M}_{^{3}#bar{He}+#pi^{+}}"
-        if preselections != "":
-            extended_preselections = preselections + " and fIsMatter==False"
+            extended_selections = 'fIsMatter==True'
+    elif matter_type == 'antimatter':
+        inv_mass_string = '#it{M}_{^{3}#bar{He}+#pi^{+}}'
+        if selections != '':
+            extended_selections = selections + ' and fIsMatter==False'
         else:
-            extended_preselections = "fIsMatter==False"
-
+            extended_selections = 'fIsMatter==False'
     else:
-        inv_mass_string = "#it{M}_{^{3}He+#pi^{-}} + c.c."
-        extended_preselections = preselections
+        '#it{M}_{^{3}He+#pi^{-}} + c.c.'
+        extended_selections = selections
 
+    return extended_selections, inv_mass_string
+
+def getNevents(input_analysis_results, print_info=True):
     # get number of events
     an_vtx_z = uproot.open(input_analysis_results)['hyper-reco-task']['hZvtx']
     n_evts = an_vtx_z.values().sum()
     if print_info:
         print(f'Number of events: {n_evts}')
     n_evts = round(n_evts/1e9, 0)
+    return n_evts
+
+def create_handlers(input_parquet_data, input_parquet_mc):
+    data_hdl = TreeHandler(input_parquet_data)
+    mc_hdl =  TreeHandler(input_parquet_mc)
+    return data_hdl, mc_hdl
+
+
+def fit3LH(data_hdl, mc_hdl, matter_type, input_analysis_results, selections='', n_bins = 40, print_info = True):
+
+    # adapt labels and selections to matter type
+    extended_selections, inv_mass_string = configureMatterType3LH(matter_type, selections)
+
+    # get number of events
+    n_evts = getNevents(input_analysis_results, print_info)
 
     # define signal pdf
     mass = ROOT.RooRealVar('m', inv_mass_string, 2.96, 3.04, 'GeV/c^{2}')
@@ -58,15 +73,13 @@ def getFitFrames(matter_type, input_parquet_data, input_analysis_results, input_
     # define background pdf
     c0 = ROOT.RooRealVar('c0', 'constant c0', -1., 1)
     c1 = ROOT.RooRealVar('c1', 'constant c1', -1., 1)
-    c2 = ROOT.RooRealVar('c2', 'constant c2', -1., 1)
     background = ROOT.RooChebychev(
         'bkg', 'pol1 bkg', mass, ROOT.RooArgList(c0, c1))
     f = ROOT.RooRealVar('f', 'fraction of signal', 0.01, 0.4)
 
     # fix DSCB parameters to MC
-    hdl_mc = TreeHandler(input_parquet_mc)
     mass_roo_mc = utils.ndarray2roo(
-        np.array(hdl_mc['fMassH3L'].values, dtype=np.float64), mass, "histo_mc")
+        np.array(mc_hdl['fMassH3L'].values, dtype=np.float64), mass, 'histo_mc')
     signal.fitTo(mass_roo_mc, ROOT.RooFit.Range(2.97, 3.01))
     a1.setConstant()
     a2.setConstant()
@@ -89,46 +102,25 @@ def getFitFrames(matter_type, input_parquet_data, input_analysis_results, input_
     fit_function = ROOT.RooAddPdf(
         'total_pdf', 'signal + background', ROOT.RooArgList(signal, background), ROOT.RooArgList(f))
 
-    # if input_parquet_data is a list of files, loop over them
-    data_hdl = TreeHandler(input_parquet_data)
+    if extended_selections != '':
+        data_hdl.apply_preselections(extended_selections)
 
-    if extended_preselections != "":
-        data_hdl.apply_preselections(extended_preselections)
-
-    if ml_efficiency_scan:
-        eff_array = np.load(input_eff_dir + "/efficiency_arr.npy")
-        score_arr = np.load(input_eff_dir + "/score_efficiency_arr.npy")
-
-        mass_roo_data_uncut = utils.ndarray2roo(
-            np.array(data_hdl['fMassH3L'].values, dtype=np.float64), mass)
-        utils.fit_and_plot(mass_roo_data_uncut, mass, fit_function, signal, background,
-                           sigma, mu, f, n_ev=n_evts, matter_type=matter_type, bdt_eff=None, print_info=print_info, n_bins=n_bins)
-        for eff, score in zip(eff_array, score_arr):
-            sel_hdl = data_hdl.apply_preselections(
-                f"model_output > {score}", inplace=False)
-            mass_array = np.array(sel_hdl['fMassH3L'].values, dtype=np.float64)
-            mass_roo_data = utils.ndarray2roo(mass_array, mass)
-            utils.fit_and_plot(mass_roo_data, mass, fit_function, signal, background,
-                               sigma, mu, f, n_ev=n_evts, matter_type=matter_type, bdt_eff=eff, print_info=print_info, n_bins=n_bins)
-
-    else:
-        mass_array = np.array(data_hdl['fMassH3L'].values, dtype=np.float64)
-        mass_roo_data = utils.ndarray2roo(mass_array, mass)
-        frame_fit, signal_counts, signal_counts_err = utils.fit_and_plot(mass_roo_data, mass, fit_function, signal,
+    mass_array = np.array(data_hdl['fMassH3L'].values, dtype=np.float64)
+    mass_roo_data = utils.ndarray2roo(mass_array, mass)
+    frame_fit, signal_counts, signal_counts_err = utils.fit_and_plot(mass_roo_data, mass, fit_function, signal,
                                        background, sigma, mu, f, n_ev=n_evts, matter_type=matter_type, print_info=print_info, n_bins=n_bins)
 
     return frame_prefit, frame_fit, signal_counts, signal_counts_err
 
-
-if __name__ == "__main__":
+if __name__ == '__main__':
 
     # set parameters
     parser = argparse.ArgumentParser(
         description='Configure the parameters of the script.')
     parser.add_argument('--config-file', dest='config_file', default='',
-                        help="path to the YAML file with configuration.")
+                        help='path to the YAML file with configuration.')
     parser.add_argument('--nbins', dest='n_bins', default=30,
-                        help="number of bins in the final plot.")
+                        help='number of bins in the final plot.')
     args = parser.parse_args()
 
     config_file = open(args.config_file, 'r')
@@ -143,20 +135,20 @@ if __name__ == "__main__":
     output_file = config['output_file']
 
     ml_efficiency_scan = config['ml_efficiency_scan']
-    preselections = config['preselections']
+    selections = config['preselections']
     input_eff_dir = config['input_eff_dir']
+    n_bins = config['n_bins']
 
-    n_bins = 40
+    data_hdl, mc_hdl = create_handlers(input_parquet_data, input_parquet_mc)
 
     # perform fits
-    frame_prefit, frame_fit, signal_counts, signal_counts_err = getFitFrames(matter_type, input_parquet_data, input_analysis_results,
-                                           input_parquet_mc, preselections, ml_efficiency_scan, input_eff_dir, n_bins=n_bins)
+    frame_prefit, frame_fit, signal_counts, signal_counts_err = fit3LH(data_hdl, mc_hdl, matter_type, input_analysis_results, selections, n_bins)
 
     # create output file and save frames
     out_file = ROOT.TFile(f'{output_dir}/{output_file}', 'recreate')
     out_file.cd()
-    frame_prefit.Write("histo_mc")
-    frame_fit.Write("fit")
+    frame_prefit.Write('histo_mc')
+    frame_fit.Write('fit')
 
     cSignalExtraction = ROOT.TCanvas('cSignalExtraction', 'cSignalExtraction', 800, 600)
     frame_fit.Draw()
