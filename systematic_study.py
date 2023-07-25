@@ -46,22 +46,21 @@ df = tree_hdl.get_data_frame()
 ROOT.RooMsgService.instance().setSilentMode(True)
 ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.ERROR)
 
-def systematic_routine(var, arr, sel_string, histo_data, histo_mc, canvas, normalise_to_first=True):
+def systematic_routine(input_parquet_data, input_parquet_mc, var, arr, sel_string, histo_data, histo_mc, canvas, normalise_to_first=True):
     ## for each variable, create a directory and save the fits
     output_file.mkdir(var)
     output_file.cd(var)
     for i, val in enumerate(arr):
         # data
+        data_hdl, mc_hdl = signal_extraction.create_handlers(input_parquet_data, input_parquet_mc)
         presel = sel_string.format(var, val)
-        _, frame_fit, signal_counts, signal_counts_err = signal_extraction.getFitFrames(matter_type, input_parquet_data, input_analysis_results,
-                                                    input_parquet_mc, preselections=presel, print_info=False)
+        _, frame_fit, signal_counts, signal_counts_err = signal_extraction.fit3LH(data_hdl, mc_hdl, matter_type, input_analysis_results, selections=presel, print_info=False)
         frame_fit.Write(f'fit_{np.round(val,2)}')
         histo_data.SetBinContent(i+1, signal_counts)
         histo_data.SetBinError(i+1, signal_counts_err)
 
         # mc
-        sel = presel
-        df_filtered = df.query(sel)
+        df_filtered = df.query(presel)
         signal_counts = df_filtered.shape[0]
         signal_counts_err = np.sqrt(signal_counts)
         histo_mc.SetBinContent(i+1, signal_counts)
@@ -109,7 +108,7 @@ cCosPAcomparison = ROOT.TCanvas('cCosPAcomparison', 'cCosPAcomparison', 800, 600
 
 sel_string = r'{} > {}'
 
-systematic_routine('fCosPA', cosPA_arr[:-1], sel_string, hDataSigCosPA, hMcSigCosPA, cCosPAcomparison)
+systematic_routine(input_parquet_data, input_parquet_mc, 'fCosPA', cosPA_arr[:-1], sel_string, hDataSigCosPA, hMcSigCosPA, cCosPAcomparison)
 
 ##########################
 ##      DcaV0Daug       ##
@@ -130,7 +129,7 @@ cDcaV0Daugcomparison = ROOT.TCanvas('cDcaV0Daugcomparison', 'cDcaV0Daugcompariso
 
 sel_string = r'abs({}) < {}'
 
-systematic_routine('fDcaV0Daug', DcaV0Daug_arr[1:], sel_string, hDataSigDcaV0Daug, hMcSigDcaV0Daug, cDcaV0Daugcomparison, normalise_to_first=False)
+systematic_routine(input_parquet_data, input_parquet_mc, 'fDcaV0Daug', DcaV0Daug_arr[1:], sel_string, hDataSigDcaV0Daug, hMcSigDcaV0Daug, cDcaV0Daugcomparison, normalise_to_first=False)
 
 ##########################
 ##         DcaHe        ##
@@ -151,7 +150,7 @@ cDcaHecomparison = ROOT.TCanvas('cDcaHecomparison', 'cDcaHecomparison', 800, 600
 
 sel_string = r'abs({}) > {}'
 
-systematic_routine('fDcaHe', DcaHe_arr[1:], sel_string, hDataSigDcaHe, hMcSigDcaHe, cDcaHecomparison)
+systematic_routine(input_parquet_data, input_parquet_mc, 'fDcaHe', DcaHe_arr[1:], sel_string, hDataSigDcaHe, hMcSigDcaHe, cDcaHecomparison)
 
 ##########################
 ##         DcaPi        ##
@@ -172,5 +171,5 @@ cDcaPicomparison = ROOT.TCanvas('cDcaPicomparison', 'cDcaPicomparison', 800, 600
 
 sel_string = r'abs({}) > {}'
 
-systematic_routine('fDcaPi', DcaPi_arr[1:], sel_string, hDataSigDcaPi, hMcSigDcaPi, cDcaPicomparison)
+systematic_routine(input_parquet_data, input_parquet_mc, 'fDcaPi', DcaPi_arr[1:], sel_string, hDataSigDcaPi, hMcSigDcaPi, cDcaPicomparison)
 
