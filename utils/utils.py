@@ -152,17 +152,13 @@ def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, f, n
     frame.GetXaxis().SetTitleOffset(1.1)
 
     dataset.plotOn(frame, ROOT.RooFit.Name('data'))
-    fit_function.plotOn(frame, ROOT.RooFit.LineColor(
-        kBlueC), ROOT.RooFit.Name('fit_func'))
-    fit_function.plotOn(frame, ROOT.RooFit.Components(
-        'bkg'), ROOT.RooFit.LineStyle(ROOT.kDashed), ROOT.RooFit.LineColor(kOrangeC))
+    fit_function.plotOn(frame, ROOT.RooFit.Components('bkg'), ROOT.RooFit.LineStyle(ROOT.kDashed), ROOT.RooFit.LineColor(kOrangeC))
+    fit_function.plotOn(frame, ROOT.RooFit.LineColor(kBlueC), ROOT.RooFit.Name('fit_func'))
     # fit_function.plotOn(frame, ROOT.RooFit.Components('cb'), ROOT.RooFit.LineStyle(ROOT.kDashed))
 
     sigma_val = sigma.getVal()
     mu_val = mu.getVal()
-
     signal_counts = f.getVal()*dataset.sumEntries()
-    print("SIGNAL COUNTS: ", signal_counts)
     signal_counts_error = (f.getError()/f.getVal()) * \
         f.getVal()*dataset.sumEntries()
 
