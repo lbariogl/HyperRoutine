@@ -6,7 +6,7 @@ kBlueC = ROOT.TColor.GetColor('#1f78b4')
 kOrangeC = ROOT.TColor.GetColor('#ff7f00')
 
 ## set numpy seed
-np.random.seed(1995)
+np.random.seed(42)
 
 
 def fill_th1_hist(h, df, var):
@@ -151,18 +151,16 @@ def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, f, n
     frame.GetYaxis().SetMaxDigits(2)
     frame.GetXaxis().SetTitleOffset(1.1)
 
-    dataset.plotOn(frame, ROOT.RooFit.Name('data'))
-    fit_function.plotOn(frame, ROOT.RooFit.LineColor(
-        kBlueC), ROOT.RooFit.Name('fit_func'))
-    fit_function.plotOn(frame, ROOT.RooFit.Components(
-        'bkg'), ROOT.RooFit.LineStyle(ROOT.kDashed), ROOT.RooFit.LineColor(kOrangeC))
-    # fit_function.plotOn(frame, ROOT.RooFit.Components('cb'), ROOT.RooFit.LineStyle(ROOT.kDashed))
+    dataset.plotOn(frame, ROOT.RooFit.Name('data'), ROOT.RooFit.DrawOption('p'))
+    ## get roohist from frame
+    roohist = frame.getHist('data')
+    roohist.SetDrawOption('p')
+    fit_function.plotOn(frame, ROOT.RooFit.Components('bkg'), ROOT.RooFit.LineStyle(ROOT.kDashed), ROOT.RooFit.LineColor(kOrangeC))
+    fit_function.plotOn(frame, ROOT.RooFit.LineColor(kBlueC), ROOT.RooFit.Name('fit_func'))
 
     sigma_val = sigma.getVal()
     mu_val = mu.getVal()
-
     signal_counts = f.getVal()*dataset.sumEntries()
-    print("SIGNAL COUNTS: ", signal_counts)
     signal_counts_error = (f.getError()/f.getVal()) * \
         f.getVal()*dataset.sumEntries()
 
@@ -307,7 +305,9 @@ def create_pt_shift_histo(df):
 
 # put dataframe in the correct format
 
-def correct_and_convert_df(df, histo=None):
+def correct_and_convert_df(df, histo=None, isMC=False):
+    if not type(df) == pd.DataFrame:
+        df = df._full_data_frame
     # correct 3He momentum
     if not histo == None:
         cloned_pt_arr = np.array(df['fPtHe3'])
@@ -342,6 +342,14 @@ def correct_and_convert_df(df, histo=None):
     df.eval('fPhi = arctan(fPy/fPx)', inplace=True)
     # Variables of interest
     df.eval('fDecLen = sqrt(fXDecVtx**2 + fYDecVtx**2 + fZDecVtx**2)', inplace=True)
+    df.eval('fCt = fDecLen * 2.99131 / fP', inplace=True)
+
+    if isMC:
+        df.eval('fGenDecLen = sqrt(fGenXDecVtx**2 + fGenYDecVtx**2 + fGenZDecVtx**2)', inplace=True)
+        df.eval('fGenPz = fGenPt * sinh(fGenEta)', inplace=True)
+        df.eval('fGenP = sqrt(fGenPt**2 + fGenPz**2)', inplace=True)
+        df.eval('fGenCt = fGenDecLen * 2.99131 / fGenP', inplace=True)
+
     df.eval('fCosPA = (fPx * fXDecVtx + fPy * fYDecVtx + fPz * fZDecVtx) / (fP * fDecLen)', inplace=True)
     df.eval('fMassH3L = sqrt(fEn**2 - fP**2)', inplace=True)
     df.eval('fMassH4L = sqrt(fEn4**2 - fP**2)', inplace=True)

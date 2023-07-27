@@ -87,6 +87,9 @@ h2MassDCAHePv = ROOT.TH2F(
     "h2MassDCAHe", ";DCA He3 PVs (cm); m({}^{3}_{#Lambda}H) (GeV/#it{c})", 100, 0, 2, 50, 2.96, 3.04)
 h2MassPt = ROOT.TH2F(
     "h2MassPt", ";#it{p}_{T} (GeV/#it{c}); m({}^{3}_{#Lambda}H) (GeV/#it{c})", 50, 0, 7, 50, 2.96, 3.04)
+h2Mass4LHnSigmaHe = ROOT.TH2F(
+    "h2Mass4LHnSigmaHe", ";n_{#sigma}^{TPC}({}^{3}He); m({}^{4}_{#Lambda}H) (GeV/#it{c})", 50, -4, 4, 30, 3.89, 3.97)
+ 
 
 # for MC only
 hPtGen = ROOT.TH1F("hPtGen", "; Pt gen", 50, 0, 5)
@@ -188,6 +191,7 @@ utils.fill_th2_hist(h2MassDecLen, df_filtered, 'fDecLen', 'fMassH3L')
 utils.fill_th2_hist(h2MassDCADaughters, df_filtered, 'fDcaV0Daug', 'fMassH3L')
 utils.fill_th2_hist(h2MassDCAHePv, df_filtered, 'fDcaHe', 'fMassH3L')
 utils.fill_th2_hist(h2MassPt, df_filtered, 'fPt', 'fMassH3L')
+utils.fill_th2_hist(h2Mass4LHnSigmaHe, df_filtered, 'fNSigmaHe', 'fMassH4L')
 
 # for MC only
 if mc:
@@ -223,6 +227,7 @@ h2MassCosPA.Write()
 h2MassDecLen.Write()
 h2MassDCADaughters.Write()
 h2MassDCAHePv.Write()
+h2Mass4LHnSigmaHe.Write()
 h2MassPt.Write()
 
 if not skip_out_tree:

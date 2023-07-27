@@ -31,7 +31,7 @@ def configureMatterType3LH(matter_type, selections, is_4lh=False):
         if is_4lh:
             inv_mass_string = '#it{M}_{^{4}#bar{He}+#pi^{+}}'
         else :
-            inv_mass_string = '#it{M}_{^{4}#bar{He}+#pi^{+}}'
+            inv_mass_string = '#it{M}_{^{3}#bar{He}+#pi^{+}}'
         if selections != '':
             extended_selections = selections + ' and fIsMatter==False'
         else:
@@ -51,7 +51,6 @@ def getNevents(input_analysis_results, print_info=True):
     n_evts = an_vtx_z.values().sum()
     if print_info:
         print(f'Number of events: {n_evts}')
-    n_evts = round(n_evts/1e9, 0)
     return n_evts
 
 def create_handlers(input_parquet_data, input_parquet_mc):
@@ -60,13 +59,10 @@ def create_handlers(input_parquet_data, input_parquet_mc):
     return data_hdl, mc_hdl
 
 
-def fit3LH(data_hdl, mc_hdl, matter_type, input_analysis_results, selections='', n_bins = 40, print_info = True):
+def fit3LH(data_hdl, mc_hdl, matter_type, n_evts, selections='', n_bins = 40, print_info = True, bkg_fit_func='pol1'):
 
     # adapt labels and selections to matter type
     extended_selections, inv_mass_string = configureMatterType3LH(matter_type, selections, is_4lh=False)
-
-    # get number of events
-    n_evts = getNevents(input_analysis_results, print_info)
 
     # define signal pdf
     mass = ROOT.RooRealVar('m', inv_mass_string, 2.96, 3.04, 'GeV/c^{2}')
@@ -74,16 +70,20 @@ def fit3LH(data_hdl, mc_hdl, matter_type, input_analysis_results, selections='',
     sigma = ROOT.RooRealVar('sigma', 'hypernucl width',
                             0.001, 0.004, 'GeV/c^{2}')
     a1 = ROOT.RooRealVar('a1', 'a1', 0, 5.)
-    a2 = ROOT.RooRealVar('a2', 'a2', 0, 10.)
-    n1 = ROOT.RooRealVar('n1', 'n1', 1, 10.)
-    n2 = ROOT.RooRealVar('n2', 'n2', 1, 10.)
+    a2 = ROOT.RooRealVar('a2', 'a2', 0, 5.)
+    n1 = ROOT.RooRealVar('n1', 'n1', 1, 5.)
+    n2 = ROOT.RooRealVar('n2', 'n2', 1, 5.)
     signal = ROOT.RooDSCBShape('cb', 'cb', mass, mu, sigma, a1, n1, a2, n2)
 
     # define background pdf
     c0 = ROOT.RooRealVar('c0', 'constant c0', -1., 1)
     c1 = ROOT.RooRealVar('c1', 'constant c1', -1., 1)
-    background = ROOT.RooChebychev(
-        'bkg', 'pol1 bkg', mass, ROOT.RooArgList(c0, c1))
+    if bkg_fit_func == 'pol1':
+        background = ROOT.RooChebychev('bkg', 'pol1 bkg', mass, ROOT.RooArgList(c0))
+    elif bkg_fit_func == 'pol2':
+        background = ROOT.RooChebychev('bkg', 'pol2 bkg', mass, ROOT.RooArgList(c0, c1))
+    else:
+        raise ValueError(f'Invalid background fit function. Expected one of: pol1, pol2')
     f = ROOT.RooRealVar('f', 'fraction of signal', 0.01, 0.4)
 
     # fix DSCB parameters to MC
@@ -94,6 +94,7 @@ def fit3LH(data_hdl, mc_hdl, matter_type, input_analysis_results, selections='',
     a2.setConstant()
     n1.setConstant()
     n2.setConstant()
+    sigma.setRange(sigma.getVal(), sigma.getVal()*1.5)
     frame_prefit = mass.frame(80)
     mass_roo_mc.plotOn(frame_prefit)
     signal.plotOn(frame_prefit)
@@ -121,13 +122,10 @@ def fit3LH(data_hdl, mc_hdl, matter_type, input_analysis_results, selections='',
 
     return frame_prefit, frame_fit, signal_counts, signal_counts_err
 
-def fit4LH(data_hdl, mc_hdl, matter_type, input_analysis_results, selections='', n_bins = 40, print_info = True):
+def fit4LH(data_hdl, mc_hdl, matter_type, n_evts, selections='', n_bins = 40, print_info = True):
 
     # adapt labels and selections to matter type
     extended_selections, inv_mass_string = configureMatterType3LH(matter_type, selections, is_4lh=True)
-
-    # get number of events
-    n_evts = getNevents(input_analysis_results, print_info)
 
     # define signal pdf
     mass = ROOT.RooRealVar('m', inv_mass_string, 3.89, 3.97, 'GeV/c^{2}')
@@ -175,6 +173,7 @@ def fit4LH(data_hdl, mc_hdl, matter_type, input_analysis_results, selections='',
 
     mass_array = np.array(data_hdl['fMassH4L'].values, dtype=np.float64)
     mass_roo_data = utils.ndarray2roo(mass_array, mass)
+    
     frame_fit, signal_counts, signal_counts_err = utils.fit_and_plot(mass_roo_data, mass, fit_function, signal,
                                        background, sigma, mu, f, n_ev=n_evts, matter_type=matter_type, print_info=print_info, n_bins=n_bins)
 
@@ -209,11 +208,14 @@ if __name__ == '__main__':
 
     data_hdl, mc_hdl = create_handlers(input_parquet_data, input_parquet_mc)
 
+    n_evts = getNevents(input_analysis_results) / 1e9
+    n_evts = round(n_evts, 0)
+
     # perform fits
     if is_4lh:
-        frame_fit, signal_counts, signal_counts_err = fit4LH(data_hdl, mc_hdl, matter_type, input_analysis_results, selections, n_bins)
+        frame_fit, signal_counts, signal_counts_err = fit4LH(data_hdl, mc_hdl, matter_type, n_evts, selections, n_bins)
     else:
-        frame_prefit, frame_fit, signal_counts, signal_counts_err = fit3LH(data_hdl, mc_hdl, matter_type, input_analysis_results, selections, n_bins)
+        frame_prefit, frame_fit, signal_counts, signal_counts_err = fit3LH(data_hdl, mc_hdl, matter_type, n_evts, selections, n_bins)
 
     # create output file and save frames
     out_file = ROOT.TFile(f'{output_dir}/{output_file}', 'recreate')
