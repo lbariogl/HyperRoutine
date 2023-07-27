@@ -1,0 +1,17 @@
+mc : False
+input_files_data : ['/data/shared/hyp_run_3/apass4/new_dataformat/LHC22m/AO2D_merged.root',
+               '/data/shared/hyp_run_3/apass4/new_dataformat/LHC22o/AO2D_merged.root',
+               '/data/shared/hyp_run_3/apass4/new_dataformat/LHC22r/AO2D_merged.root',
+               '/data/shared/hyp_run_3/apass4/new_dataformat/LHC22t/AO2D_merged.root']
+          
+input_files_mc: ['/data/shared/hyp_run_3/mc/AO2D_MC.root']
+input_analysis_results_file: '/data/shared/hyp_run_3/apass4/new_dataformat/AnalysisResults.root'
+output_dir : '../results/'
+output_file : 'ct_analysis.root'
+
+ct_bins: [2, 4, 6, 8, 20]
+selection : ['fCosPA>0.99 and fNSigmaHe>-2. and fTPCsignalPi<1000 and fPt > 1', 'fCosPA>0.99 and fNSigmaHe>-2. and fTPCsignalPi<1000 and fPt > 1', 'fCosPA>0.99 and fNSigmaHe>-2. and fTPCsignalPi<1000 and fPt > 1', 'fCosPA>0.99 and fNSigmaHe>-2. and fTPCsignalPi<1000 and fPt > 1']
+bkg_fit_func: "pol1" ## choose between pol1 and pol2 (To be expanded)
+is_matter : 'antimatter'
+pt_correction_file: "utils/he3_pt_calibration.root"
+
