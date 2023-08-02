@@ -228,6 +228,11 @@ if __name__ == '__main__':
         frame_prefit.Write('histo_mc')
     frame_fit.Write('fit')
 
+    if is_4lh:
+        state_label = '4lh'
+    else:
+        state_label = '3lh'
+
     cSignalExtraction = ROOT.TCanvas('cSignalExtraction', 'cSignalExtraction', 800, 600)
     frame_fit.Draw()
-    cSignalExtraction.SaveAs(f'{output_dir}/cSignalExtraction_{matter_type}.pdf')
+    cSignalExtraction.SaveAs(f'{output_dir}/cSignalExtraction_{matter_type}_{state_label}.pdf')
