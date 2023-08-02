@@ -59,7 +59,7 @@ def create_handlers(input_parquet_data, input_parquet_mc):
     return data_hdl, mc_hdl
 
 
-def fit3LH(data_hdl, mc_hdl, matter_type, n_evts, selections='', n_bins = 40, print_info = True, bkg_fit_func='pol1'):
+def fit3LH(data_hdl, mc_hdl, matter_type, n_evts, selections='', n_bins = 40, print_info = True, bkg_fit_func = 'pol1', performance = False):
 
     # adapt labels and selections to matter type
     extended_selections, inv_mass_string = configureMatterType3LH(matter_type, selections, is_4lh=False)
@@ -118,11 +118,11 @@ def fit3LH(data_hdl, mc_hdl, matter_type, n_evts, selections='', n_bins = 40, pr
     mass_array = np.array(data_hdl['fMassH3L'].values, dtype=np.float64)
     mass_roo_data = utils.ndarray2roo(mass_array, mass)
     frame_fit, signal_counts, signal_counts_err = utils.fit_and_plot(mass_roo_data, mass, fit_function, signal,
-                                       background, sigma, mu, f, n_ev=n_evts, matter_type=matter_type, print_info=print_info, n_bins=n_bins)
+                                       background, sigma, mu, f, n_ev=n_evts, matter_type=matter_type, print_info=print_info, n_bins=n_bins, performance=performance)
 
     return frame_prefit, frame_fit, signal_counts, signal_counts_err
 
-def fit4LH(data_hdl, mc_hdl, matter_type, n_evts, selections='', n_bins = 40, print_info = True):
+def fit4LH(data_hdl, mc_hdl, matter_type, n_evts, selections='', n_bins = 40, print_info = True, performance = False):
 
     # adapt labels and selections to matter type
     extended_selections, inv_mass_string = configureMatterType3LH(matter_type, selections, is_4lh=True)
@@ -173,9 +173,9 @@ def fit4LH(data_hdl, mc_hdl, matter_type, n_evts, selections='', n_bins = 40, pr
 
     mass_array = np.array(data_hdl['fMassH4L'].values, dtype=np.float64)
     mass_roo_data = utils.ndarray2roo(mass_array, mass)
-    
+
     frame_fit, signal_counts, signal_counts_err = utils.fit_and_plot(mass_roo_data, mass, fit_function, signal,
-                                       background, sigma, mu, f, n_ev=n_evts, matter_type=matter_type, print_info=print_info, n_bins=n_bins)
+                                       background, sigma, mu, f, n_ev=n_evts, matter_type=matter_type, print_info=print_info, n_bins=n_bins, performance = performance)
 
     return frame_fit, signal_counts, signal_counts_err
 
@@ -188,6 +188,8 @@ if __name__ == '__main__':
                         help='path to the YAML file with configuration.')
     parser.add_argument('--nbins', dest='n_bins', default=30,
                         help='number of bins in the final plot.')
+    parser.add_argument('--performance', action='store_true',
+                        help="True for performance plot", default=False)
     args = parser.parse_args()
 
     config_file = open(args.config_file, 'r')
@@ -206,6 +208,8 @@ if __name__ == '__main__':
     selections = config['preselections']
     n_bins = config['n_bins']
 
+    performance = args.performance
+
     data_hdl, mc_hdl = create_handlers(input_parquet_data, input_parquet_mc)
 
     n_evts = getNevents(input_analysis_results) / 1e9
@@ -213,9 +217,9 @@ if __name__ == '__main__':
 
     # perform fits
     if is_4lh:
-        frame_fit, signal_counts, signal_counts_err = fit4LH(data_hdl, mc_hdl, matter_type, n_evts, selections, n_bins)
+        frame_fit, signal_counts, signal_counts_err = fit4LH(data_hdl, mc_hdl, matter_type, n_evts, selections, n_bins, performance=performance)
     else:
-        frame_prefit, frame_fit, signal_counts, signal_counts_err = fit3LH(data_hdl, mc_hdl, matter_type, n_evts, selections, n_bins)
+        frame_prefit, frame_fit, signal_counts, signal_counts_err = fit3LH(data_hdl, mc_hdl, matter_type, n_evts, selections, n_bins, performance=performance)
 
     # create output file and save frames
     out_file = ROOT.TFile(f'{output_dir}/{output_file}', 'recreate')

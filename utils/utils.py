@@ -137,7 +137,7 @@ def set_style():
     ROOT.gStyle.SetEndErrorSize(0.)
     ROOT.gStyle.SetMarkerSize(1)
 
-def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, f, n_ev=300, matter_type='both', bdt_eff=None, print_info = True, n_bins = 30):
+def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, f, n_ev=300, matter_type='both', bdt_eff=None, print_info = True, n_bins=30, performance=False):
 
     fit_function.fitTo(dataset, ROOT.RooFit.Extended(False), ROOT.RooFit.Save(True))
     frame = var.frame(n_bins)
@@ -147,16 +147,28 @@ def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, f, n
     set_style()
     frame.GetYaxis().SetTitleSize(0.06)
     frame.GetYaxis().SetTitleOffset(0.9)
-    frame.GetYaxis().SetTitle(f'Events / ({bin_width:.4f} ' + 'GeV/#it{c}^{2})')
+    if performance:
+        frame.GetYaxis().SetTitle(f'Normalised counts')
+    else:
+        frame.GetYaxis().SetTitle(f'Events / ({bin_width:.4f} ' + 'GeV/#it{c}^{2})')
     frame.GetYaxis().SetMaxDigits(2)
     frame.GetXaxis().SetTitleOffset(1.1)
 
-    dataset.plotOn(frame, ROOT.RooFit.Name('data'), ROOT.RooFit.DrawOption('p'))
+    if performance:
+        dataset.plotOn(frame, ROOT.RooFit.Name('data'), ROOT.RooFit.DrawOption('p'), ROOT.RooFit.Rescale(1./(dataset.sumEntries())))
+    else:
+        dataset.plotOn(frame, ROOT.RooFit.Name('data'), ROOT.RooFit.DrawOption('p'))
+
     ## get roohist from frame
     roohist = frame.getHist('data')
     roohist.SetDrawOption('p')
-    fit_function.plotOn(frame, ROOT.RooFit.Components('bkg'), ROOT.RooFit.LineStyle(ROOT.kDashed), ROOT.RooFit.LineColor(kOrangeC))
-    fit_function.plotOn(frame, ROOT.RooFit.LineColor(kBlueC), ROOT.RooFit.Name('fit_func'))
+    if performance:
+        fit_function.plotOn(frame, ROOT.RooFit.Components('bkg'), ROOT.RooFit.LineStyle(ROOT.kDashed), ROOT.RooFit.LineColor(kOrangeC), ROOT.RooFit.Normalization(1.0, ROOT.RooAbsReal.NumEvent))
+        fit_function.plotOn(frame, ROOT.RooFit.LineColor(kBlueC), ROOT.RooFit.Name('fit_func'), ROOT.RooFit.Normalization(1.0, ROOT.RooAbsReal.NumEvent))
+        frame.GetYaxis().SetRangeUser(0., 0.108)
+    else:
+        fit_function.plotOn(frame, ROOT.RooFit.Components('bkg'), ROOT.RooFit.LineStyle(ROOT.kDashed), ROOT.RooFit.LineColor(kOrangeC))
+        fit_function.plotOn(frame, ROOT.RooFit.LineColor(kBlueC), ROOT.RooFit.Name('fit_func'))
 
     sigma_val = sigma.getVal()
     mu_val = mu.getVal()
@@ -218,7 +230,10 @@ def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, f, n
         pinfo.AddText(s)
 
     string_list = []
-    pinfo2 = ROOT.TPaveText(0.14, 0.6, 0.42, 0.85, 'NDC')
+    if performance:
+        pinfo2 = ROOT.TPaveText(0.6, 0.5, 0.93, 0.85, 'NDC')
+    else:
+        pinfo2 = ROOT.TPaveText(0.14, 0.6, 0.42, 0.85, 'NDC')
     pinfo2.SetBorderSize(0)
     pinfo2.SetFillStyle(0)
     pinfo2.SetTextAlign(11)
@@ -244,7 +259,8 @@ def fit_and_plot(dataset, var, fit_function, signal, background, sigma, mu, f, n
     for s in string_list:
         pinfo2.AddText(s)
 
-    frame.addObject(pinfo)
+    if not performance:
+        frame.addObject(pinfo)
     frame.addObject(pinfo2)
 
     fit_stats = {'signal': [signal_counts, signal_counts_error],
