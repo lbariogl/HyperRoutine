@@ -30,7 +30,7 @@ class SignalExtraction:
         self.signal_fit_func = 'dscb'
         self.bkg_fit_func = 'pol1'
         self.performance = False
-        self.additional_pave_text = ''
+        self.additional_pave_text = '' ## additional text to be added to the ALICE performance pave
 
         ## variables 
         self.pdf = None
@@ -39,7 +39,7 @@ class SignalExtraction:
         ### frames to be saved to file
         self.mc_frame_fit = None
         self.data_frame_fit = None
-        self.local_pvalue_cv = None
+        self.local_pvalue_graph = None
 
 
 
@@ -93,14 +93,15 @@ class SignalExtraction:
 
         # fix DSCB parameters to MC
         if self.mc_hdl != None:
-            mass_roo_mc = utils.ndarray2roo(np.array(mc_hdl['fMassH3L'].values, dtype=np.float64), mass, 'histo_mc')
-            signal.fitTo(mass_roo_mc, ROOT.RooFit.Range(2.97, 3.01))
+            mass_roo_mc = utils.ndarray2roo(np.array(self.mc_hdl['fMassH3L'].values, dtype=np.float64), mass, 'histo_mc')
+            signal.fitTo(mass_roo_mc, ROOT.RooFit.Range(2.97, 3.01), ROOT.RooFit.PrintLevel(-1))
             a1.setConstant()
             a2.setConstant()
             n1.setConstant()
             n2.setConstant()
             sigma.setRange(sigma.getVal(), sigma.getVal()*1.5)
             self.mc_frame_fit = mass.frame(80)
+            self.mc_frame_fit.SetName('mc_frame_fit')
             mass_roo_mc.plotOn(self.mc_frame_fit)
             signal.plotOn(self.mc_frame_fit)
             fit_param = ROOT.TPaveText(0.6, 0.6, 0.9, 0.9, 'NDC')
@@ -117,9 +118,9 @@ class SignalExtraction:
         else:
             self.pdf = ROOT.RooAddPdf('total_pdf', 'signal + background', ROOT.RooArgList(signal, background), ROOT.RooArgList(f))
 
-        mass_array = np.array(data_hdl[tree_var_name].values, dtype=np.float64)
+        mass_array = np.array(self.data_hdl[tree_var_name].values, dtype=np.float64)
         self.roo_dataset = utils.ndarray2roo(mass_array, mass)
-        self.pdf.fitTo(self.roo_dataset, ROOT.RooFit.Extended(extended_likelihood), ROOT.RooFit.Save(True))
+        self.pdf.fitTo(self.roo_dataset, ROOT.RooFit.Extended(extended_likelihood), ROOT.RooFit.Save(True), ROOT.RooFit.PrintLevel(-1))
         ## get fit parameters
         fit_pars = self.pdf.getParameters(self.roo_dataset)
         sigma_val = fit_pars.find('sigma').getVal()
@@ -190,8 +191,10 @@ class SignalExtraction:
         pinfo_alice.AddText('Run 3, pp #sqrt{#it{s}} = 13.6 TeV')
         pinfo_alice.AddText('N_{ev} = ' f'{self.n_evts:.0f} '  '#times 10^{9}')
         pinfo_alice.AddText(decay_string)
+        if self.additional_pave_text != '':
+            pinfo_alice.AddText(self.additional_pave_text)
 
-        if not performance:
+        if not self.performance:
             self.data_frame_fit.addObject(pinfo_vals)
         self.data_frame_fit.addObject(pinfo_alice)
 
@@ -206,8 +209,6 @@ class SignalExtraction:
             sb_model.SetObservables(ROOT.RooArgSet(mass))
             getattr(w, 'import')(sb_model)
             getattr(w, 'import')(self.roo_dataset)
-            ### create model config and save to file
-            sb_model.Print()
             w.writeToFile(rooworkspace_path + '/rooworkspace.root', True)
 
         return fit_stats
@@ -216,10 +217,7 @@ class SignalExtraction:
 
     def compute_significance_asymptotic_calc(self, rooworkspace_path, do_local_p0plot=False):
         print("-----------------------------------------------")
-        ## create a RooWorkspace for the model
-        if self.pdf == None:
-            raise ValueError('No fit function defined. Run process_fit() first.')
-
+        print("Computing significance with asymptotic calculator")
         ## get saved workspace
         workspace_file = ROOT.TFile(rooworkspace_path + '/rooworkspace.root', 'READ')
         w = workspace_file.Get('w')
@@ -237,16 +235,14 @@ class SignalExtraction:
         w.var('sigma').setConstant(True)
         w.var('n_background').setConstant(True)
         w.var('mu').setConstant(True)
+
         asymp_calc = ROOT.RooStats.AsymptoticCalculator(roo_abs_data, sb_model, b_model)
+        asymp_calc.SetPrintLevel(0)
         asymp_calc_result = asymp_calc.GetHypoTest()
         null_p_value = asymp_calc_result.NullPValue()
         null_p_value_err = asymp_calc_result.NullPValueError()
         significance = asymp_calc_result.Significance()
         significance_err = asymp_calc_result.SignificanceError()
-
-
-        ## transform p0 to significance
-
 
         if do_local_p0plot:
             ### perform a scan in mass and compute the significance
@@ -273,6 +269,7 @@ class SignalExtraction:
 
         print(f'p0: {null_p_value:.5f} +/- {null_p_value_err:.5f}')
         print(f'significance: {significance:.5f} +/- {significance_err:.5f}')
+        print("-----------------------------------------------")
 
 
         
