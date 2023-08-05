@@ -32,7 +32,7 @@ class SignalExtraction:
         self.performance = False
         self.additional_pave_text = '' ## additional text to be added to the ALICE performance pave
 
-        ## variables 
+        ## variables
         self.pdf = None
         self.roo_dataset = None
 
@@ -146,7 +146,7 @@ class SignalExtraction:
         self.roo_dataset.plotOn(self.data_frame_fit, ROOT.RooFit.Name('data'), ROOT.RooFit.DrawOption('p'))
         self.pdf.plotOn(self.data_frame_fit, ROOT.RooFit.Components('bkg'), ROOT.RooFit.LineStyle(ROOT.kDashed), ROOT.RooFit.LineColor(kOrangeC))
         self.pdf.plotOn(self.data_frame_fit, ROOT.RooFit.LineColor(kBlueC), ROOT.RooFit.Name('fit_func'))
-        
+
         self.data_frame_fit.GetYaxis().SetTitleSize(0.06)
         self.data_frame_fit.GetYaxis().SetTitleOffset(0.9)
         self.data_frame_fit.GetYaxis().SetMaxDigits(2)
@@ -189,7 +189,8 @@ class SignalExtraction:
         pinfo_alice.SetTextFont(42)
         pinfo_alice.AddText('ALICE Performance')
         pinfo_alice.AddText('Run 3, pp #sqrt{#it{s}} = 13.6 TeV')
-        pinfo_alice.AddText('N_{ev} = ' f'{self.n_evts:.0f} '  '#times 10^{9}')
+        if not performance:
+            pinfo_alice.AddText('N_{ev} = ' f'{self.n_evts:.0f} '  '#times 10^{9}')
         pinfo_alice.AddText(decay_string)
         if self.additional_pave_text != '':
             pinfo_alice.AddText(self.additional_pave_text)
@@ -200,7 +201,7 @@ class SignalExtraction:
 
         fit_stats = {'signal': [signal_counts, signal_counts_error],
                      'significance': [significance, significance_err], 's_b_ratio': [signal_int_val_3s/bkg_int_val_3s, s_b_ratio_err]}
-        
+
         if rooworkspace_path != None:
             w = ROOT.RooWorkspace('w')
             sb_model = ROOT.RooStats.ModelConfig('sb_model', w)
@@ -263,7 +264,7 @@ class SignalExtraction:
             ## create a graph with the p0 values
             self.local_pvalue_graph = ROOT.TGraph(len(masses), np.array(masses), np.array(p0_values))
             self.local_pvalue_graph.SetName('p0_values')
-            self.local_pvalue_graph.GetXaxis().SetTitle('mass [GeV/c^{2}]')
+            self.local_pvalue_graph.GetXaxis().SetTitle('M (GeV/#it{c}^{2})')
             self.local_pvalue_graph.GetYaxis().SetTitle('Local p_{0}')
             self.local_pvalue_graph.SetMarkerStyle(20)
 
@@ -272,7 +273,7 @@ class SignalExtraction:
         print("-----------------------------------------------")
 
 
-        
+
 
 
 
@@ -333,4 +334,12 @@ if __name__ == '__main__':
     signal_extraction.local_pvalue_graph.Write()
     out_file.Close()
 
+    if is_4lh:
+        state_label = '4lh'
+    else:
+        state_label = '3lh'
 
+    cSignalExtraction = ROOT.TCanvas('cSignalExtraction', 'cSignalExtraction', 800, 600)
+    signal_extraction.data_frame_fit.SetTitle('')
+    signal_extraction.data_frame_fit.Draw()
+    cSignalExtraction.SaveAs(f'{output_dir}/cSignalExtraction_{matter_type}_{state_label}.pdf')
