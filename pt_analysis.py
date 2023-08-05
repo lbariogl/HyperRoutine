@@ -9,7 +9,7 @@ from hipe4ml.tree_handler import TreeHandler
 import sys
 sys.path.append('utils')
 import utils as utils
-import signal_extraction as signal_extraction
+from signal_extraction import SignalExtraction
 
 
 parser = argparse.ArgumentParser(description='Configure the parameters of the script.')
@@ -65,7 +65,7 @@ utils.correct_and_convert_df(mcH, correction_hist)
 
 
 ### get number of events, branching ratio and delta rapidity
-n_ev = signal_extraction.getNevents(input_analysis_results_file)
+n_ev = uproot.open(input_analysis_results_file)['hyper-reco-task']['hZvtx'].values().sum()
 n_ev_plot = n_ev / 1e9
 n_ev_plot = round(n_ev, 0)
 branching_ratio = 0.25
@@ -126,12 +126,19 @@ for ibin in range(0, len(pt_bins) - 1):
     output_file.mkdir(f'pt_{pt_bin[0]}_{pt_bin[1]}')
     output_file.cd(f'pt_{pt_bin[0]}_{pt_bin[1]}')
 
-    frame_prefit, frame_fit, signal_counts, signal_counts_err = signal_extraction.fit3LH(pt_dataH, pt_mcH, is_matter, n_ev_plot, selections='', bkg_fit_func=bkg_fit_func, n_bins=35, print_info=False)
-    frame_prefit.Write(f'frame_mc')
-    frame_fit.Write(f'frame_data')
+    signal_extraction = SignalExtraction(pt_dataH, pt_mcH)
+    signal_extraction.n_bins = 30
+    signal_extraction.n_evts = n_ev_plot
+    signal_extraction.matter_type = is_matter
+    signal_extraction.performance = False
+    signal_extraction.is_3lh = True
+    signal_extraction.additional_pave_text = f'{pt_bin[0]} #leq #it{{p}}_{{T}} < {pt_bin[1]} GeV/#it{{c}}'
+    fit_stats = signal_extraction.process_fit()
+    signal_extraction.data_frame_fit.Write()
+    signal_extraction.mc_frame_fit.Write()
 
-    raw_counts.append(signal_counts)
-    raw_counts_err.append(signal_counts_err)
+    raw_counts.append(fit_stats['signal'][0])
+    raw_counts_err.append(fit_stats['signal'][1])
 
 
 ### create and fill yield histogram
