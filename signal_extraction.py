@@ -46,21 +46,21 @@ class SignalExtraction:
     def process_fit(self, extended_likelihood=True, rooworkspace_path=None):
 
         if self.is_3lh:
-            inv_mass_string = '#it{M}_{^{3}He+#pi^{-}}' if self.is_matter else '#it{M}_{^{3}#bar{He}+#pi^{+}}'
+            self.inv_mass_string = '#it{M}_{^{3}He+#pi^{-}}' if self.is_matter else '#it{M}_{^{3}#bar{He}+#pi^{+}}'
             decay_string = '{}^{3}_{#Lambda}H #rightarrow ^{3}He+#pi^{-}' if self.is_matter else '{}^{3}_{#bar{#Lambda}}#bar{H} #rightarrow ^{3}#bar{He}+#pi^{+}'
             tree_var_name = 'fMassH3L'
         else:
-            inv_mass_string = '#it{M}_{^{4}He+#pi^{-}}' if self.is_matter else '#it{M}_{^{4}#bar{He}+#pi^{+}}'
+            self.inv_mass_string = '#it{M}_{^{4}He+#pi^{-}}' if self.is_matter else '#it{M}_{^{4}#bar{He}+#pi^{+}}'
             decay_string = '{}^{4}_{#Lambda}H #rightarrow ^{4}He+#pi^{-}' if self.is_matter else '{}^{4}_{#bar{#Lambda}}#bar{H} #rightarrow ^{4}#bar{He}+#pi^{+}'
             tree_var_name = 'fMassH4L'
 
         # define signal and bkg variables
         if self.is_3lh:
-            mass = ROOT.RooRealVar('m', inv_mass_string, 2.96, 3.04, 'GeV/c^{2}')
-            mu = ROOT.RooRealVar('mu', 'hypernucl mass', 2.98, 3.0, 'GeV/c^{2}')
+            mass = ROOT.RooRealVar('m', self.inv_mass_string, 2.96, 3.04, 'GeV/c^{2}')
+            mu = ROOT.RooRealVar('mu', 'hypernucl mass', 2.97, 3.03, 'GeV/c^{2}')
         else:
-            mass = ROOT.RooRealVar('m', inv_mass_string, 3.89, 3.97, 'GeV/c^{2}')
-            mu = ROOT.RooRealVar('mu', 'hypernucl mass', 3.91, 3.93, 'GeV/c^{2}')
+            mass = ROOT.RooRealVar('m', self.inv_mass_string, 3.89, 3.97, 'GeV/c^{2}')
+            mu = ROOT.RooRealVar('mu', 'hypernucl mass', 3.9, 3.95, 'GeV/c^{2}')
 
         sigma = ROOT.RooRealVar('sigma', 'hypernucl width', 0.001, 0.004, 'GeV/c^{2}')
         a1 = ROOT.RooRealVar('a1', 'a1', 0, 5.)
@@ -232,9 +232,7 @@ class SignalExtraction:
         poi.setVal(0)
         b_model.SetSnapshot(poi)
         b_model.Print()
-        w.var('c0').setConstant(True)
-        w.var('sigma').setConstant(True)
-        w.var('n_background').setConstant(True)
+        # w.var('sigma').setConstant(True)
         w.var('mu').setConstant(True)
 
         asymp_calc = ROOT.RooStats.AsymptoticCalculator(roo_abs_data, sb_model, b_model)
@@ -250,23 +248,31 @@ class SignalExtraction:
             masses = []
             p0_values = []
             p0_values_expected = []
-            mass_array = np.linspace(2.96, 3.04, self.n_bins) if self.is_3lh else np.linspace(3.89, 3.97, self.n_bins)
+            mass_array = np.linspace(w.var('mu').getMin(), w.var('mu').getMax(), 100)
             for mass in mass_array:
 
                 w.var('mu').setVal(mass)
                 w.var('mu').setConstant(True)
                 asymp_calc = ROOT.RooStats.AsymptoticCalculator(roo_abs_data, sb_model, b_model)
+                asymp_calc.SetOneSidedDiscovery(True)
                 asym_calc_result = asymp_calc.GetHypoTest()
                 null_p_value = asym_calc_result.NullPValue()
                 masses.append(mass)
                 p0_values.append(null_p_value)
 
+                print(f"Mass: {mass} MeV/c^2, p0: {null_p_value:.5f}")
+
             ## create a graph with the p0 values
             self.local_pvalue_graph = ROOT.TGraph(len(masses), np.array(masses), np.array(p0_values))
             self.local_pvalue_graph.SetName('p0_values')
-            self.local_pvalue_graph.GetXaxis().SetTitle('M (GeV/#it{c}^{2})')
-            self.local_pvalue_graph.GetYaxis().SetTitle('Local p_{0}')
+            self.local_pvalue_graph.GetXaxis().SetTitle(self.inv_mass_string)
+            self.local_pvalue_graph.GetYaxis().SetTitle('Local p-value')
+            # log Y axis
             self.local_pvalue_graph.SetMarkerStyle(20)
+            self.local_pvalue_graph.SetMarkerColor(kBlueC)
+            self.local_pvalue_graph.SetMarkerSize(0)
+            self.local_pvalue_graph.SetLineColor(kBlueC)
+            self.local_pvalue_graph.SetLineWidth(2)
 
         print(f'p0: {null_p_value:.5f} +/- {null_p_value_err:.5f}')
         print(f'significance: {significance:.5f} +/- {significance_err:.5f}')
@@ -321,6 +327,7 @@ if __name__ == '__main__':
     signal_extraction.matter_type = matter_type
     signal_extraction.performance = performance
     signal_extraction.is_3lh = not is_4lh
+    signal_extraction.bkg_fit_func = 'pol1'
 
     signal_extraction.process_fit(extended_likelihood=True, rooworkspace_path="../results")
     signal_extraction.compute_significance_asymptotic_calc(rooworkspace_path="../results", do_local_p0plot=True)
