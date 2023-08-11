@@ -243,6 +243,8 @@ class SignalExtraction:
         significance = asymp_calc_result.Significance()
         significance_err = asymp_calc_result.SignificanceError()
 
+
+
         if do_local_p0plot:
             ### perform a scan in mass and compute the significance
             masses = []
@@ -253,14 +255,14 @@ class SignalExtraction:
 
                 w.var('mu').setVal(mass)
                 w.var('mu').setConstant(True)
-                asymp_calc = ROOT.RooStats.AsymptoticCalculator(roo_abs_data, sb_model, b_model)
-                asymp_calc.SetOneSidedDiscovery(True)
-                asym_calc_result = asymp_calc.GetHypoTest()
-                null_p_value = asym_calc_result.NullPValue()
+                asymp_calc_scan = ROOT.RooStats.AsymptoticCalculator(roo_abs_data, sb_model, b_model)
+                asymp_calc_scan.SetOneSidedDiscovery(True)
+                asym_calc_result_scan = asymp_calc_scan.GetHypoTest()
+                null_p_value_scan = asym_calc_result_scan.NullPValue()
                 masses.append(mass)
-                p0_values.append(null_p_value)
+                p0_values.append(null_p_value_scan)
 
-                print(f"Mass: {mass} MeV/c^2, p0: {null_p_value:.5f}")
+                print(f"Mass: {mass} MeV/c^2, p0: {null_p_value_scan:.10f}")
 
             ## create a graph with the p0 values
             self.local_pvalue_graph = ROOT.TGraph(len(masses), np.array(masses), np.array(p0_values))
@@ -274,9 +276,10 @@ class SignalExtraction:
             self.local_pvalue_graph.SetLineColor(kBlueC)
             self.local_pvalue_graph.SetLineWidth(2)
 
-        print(f'p0: {null_p_value:.5f} +/- {null_p_value_err:.5f}')
+        print("****************************************************")
+        print(f'p0: {null_p_value:.3E} +/- {null_p_value_err:.3E}')
         print(f'significance: {significance:.5f} +/- {significance_err:.5f}')
-        print("-----------------------------------------------")
+        print("****************************************************")
 
 
 
