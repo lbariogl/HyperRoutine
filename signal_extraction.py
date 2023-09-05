@@ -13,8 +13,6 @@ import utils as utils
 utils.set_style()
 kBlueC = ROOT.TColor.GetColor('#1f78b4')
 kOrangeC  = ROOT.TColor.GetColor('#ff7f00')
-
-ROOT.gROOT.LoadMacro('utils/RooCustomPdfs/RooDSCBShape.cxx++')
 ROOT.gROOT.SetBatch()
 
 ## create signal extraction class
@@ -71,7 +69,7 @@ class SignalExtraction:
         c1 = ROOT.RooRealVar('c1', 'constant c1', -1., 1)
 
         if self.signal_fit_func == 'dscb':
-            signal = ROOT.RooDSCBShape('cb', 'cb', mass, mu, sigma, a1, n1, a2, n2)
+            signal = ROOT.RooCrystalBall('cb', 'cb', mass, mu, sigma, a1, n1, a2, n2)
         elif self.signal_fit_func == 'gaus':
             signal = ROOT.RooGaussian('gaus', 'gaus', mass, mu, sigma)
         else:
