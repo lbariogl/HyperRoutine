@@ -1,7 +1,8 @@
-import signal_extraction
+from signal_extraction import SignalExtraction
 import argparse
 import yaml
 import numpy as np
+import copy
 import ROOT
 import uproot
 from hipe4ml.tree_handler import TreeHandler
@@ -17,51 +18,82 @@ parser = argparse.ArgumentParser(
     description='Configure the parameters of the script.')
 parser.add_argument('--config-file', dest='config_file', default='configs/signal_extraction/config_signal_extraction_antimat.yaml',
                     help="path to the YAML file with configuration.")
+parser.add_argument('--nbins', dest='n_bins', default=30,
+                        help='number of bins in the final plot.')
 args = parser.parse_args()
 
 config_file = open(args.config_file, 'r')
 config = yaml.full_load(config_file)
 
-matter_type = config['matter_type']
 input_parquet_data = config['input_parquet_data']
 input_analysis_results = config['input_analysis_results']
+
 input_parquet_mc = config['input_parquet_mc']
 
-output_file = ROOT.TFile('../results/systematic_study.root', 'recreate')
+output_dir = config['output_dir']
+output_file = ROOT.TFile('../results/systematic_study.root', 'recreate') #config['output_file']
 
-# common info for MC
-tree_hdl = TreeHandler(input_parquet_mc)
+is_4lh = config['is_4lh']
+matter_type = config['matter_type']
+n_bins = config['n_bins']
 
-##apply pT rejection
+# create base parquet data
+data_hdl = TreeHandler(input_parquet_data)
+mc_hdl =  TreeHandler(input_parquet_mc)
+
+## import objects for pT rejection
 spectra_file = ROOT.TFile.Open('utils/heliumSpectraMB.root')
 he3_spectrum = spectra_file.Get('fCombineHeliumSpecLevyFit_0-100')
 spectra_file.Close()
-tree_hdl.eval_data_frame("fAbsGenPt = abs(fGenPt)")
-utils.reweight_pt_spectrum(tree_hdl, 'fAbsGenPt', he3_spectrum)
-tree_hdl.apply_preselections("rej==True and fIsReco==True")
 
-df = tree_hdl.get_data_frame()
+# apply pt rejection to MC
+mc_hdl.eval_data_frame("fAbsGenPt = abs(fGenPt)")
+utils.reweight_pt_spectrum(mc_hdl, 'fAbsGenPt', he3_spectrum)
+mc_hdl.apply_preselections("rej==True and fIsReco==True")
+
+# get number of events
+an_vtx_z = uproot.open(input_analysis_results)['hyper-reco-task']['hZvtx']
+n_evts = an_vtx_z.values().sum() / 1e9
+n_evts = round(n_evts, 0)
 
 # silent mode for fits
 ROOT.RooMsgService.instance().setSilentMode(True)
 ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.ERROR)
 
-def systematic_routine(input_parquet_data, input_parquet_mc, var, arr, sel_string, histo_data, histo_mc, canvas, normalise_to_first=True):
+def systematic_routine(data_hdl, mc_hdl, var, arr, sel_string, histo_data, histo_mc, canvas, normalise_to_first=True):
     ## for each variable, create a directory and save the fits
     output_file.mkdir(var)
     output_file.cd(var)
+
     for i, val in enumerate(arr):
-        # data
-        data_hdl, mc_hdl = signal_extraction.create_handlers(input_parquet_data, input_parquet_mc)
+
+        data_hdl_local = copy.deepcopy(data_hdl)
+        mc_hdl_local =  copy.deepcopy(mc_hdl)
+
+        # define selections and apply to handlers
         presel = sel_string.format(var, val)
-        _, frame_fit, signal_counts, signal_counts_err = signal_extraction.fit3LH(data_hdl, mc_hdl, matter_type, input_analysis_results, selections=presel, print_info=False)
-        frame_fit.Write(f'fit_{np.round(val,2)}')
+        data_hdl_local.apply_preselections(presel, inplace=True)
+        mc_hdl_local.apply_preselections(presel, inplace=True)
+
+        # create signal-extraction object
+        signal_extraction = SignalExtraction(data_hdl_local, mc_hdl_local)
+        signal_extraction.n_bins = n_bins
+        signal_extraction.n_evts = n_evts
+        signal_extraction.matter_type = matter_type
+        signal_extraction.is_3lh = not is_4lh
+        signal_extraction.bkg_fit_func = 'pol1'
+
+        # fit data
+        fit_stats = signal_extraction.process_fit(extended_likelihood=True)
+        signal_extraction.data_frame_fit.Write(f'fit_{np.round(val,4)}')
+        signal_extraction.mc_frame_fit.Write(f'mc_{np.round(val,4)}')
+        signal_counts = fit_stats['signal'][0]
         histo_data.SetBinContent(i+1, signal_counts)
+        signal_counts_err = fit_stats['signal'][1]
         histo_data.SetBinError(i+1, signal_counts_err)
 
         # mc
-        df_filtered = df.query(presel)
-        signal_counts = df_filtered.shape[0]
+        signal_counts = mc_hdl_local.get_n_cand()
         signal_counts_err = np.sqrt(signal_counts)
         histo_mc.SetBinContent(i+1, signal_counts)
         histo_mc.SetBinError(i+1, signal_counts_err)
@@ -95,7 +127,7 @@ def systematic_routine(input_parquet_data, input_parquet_mc, var, arr, sel_strin
 
 print('Checking cosPA')
 
-cosPA_arr = np.linspace(0.99, 1., 50, dtype=np.float64)
+cosPA_arr = np.linspace(0.995, 1., 25, dtype=np.float64)
 nCosPa_bins = len(cosPA_arr) - 1
 
 hDataSigCosPA = ROOT.TH1F('hDataSigCosPA', ';cos(#theta_{PA}); signal fraction', nCosPa_bins, cosPA_arr)
@@ -108,7 +140,7 @@ cCosPAcomparison = ROOT.TCanvas('cCosPAcomparison', 'cCosPAcomparison', 800, 600
 
 sel_string = r'{} > {}'
 
-systematic_routine(input_parquet_data, input_parquet_mc, 'fCosPA', cosPA_arr[:-1], sel_string, hDataSigCosPA, hMcSigCosPA, cCosPAcomparison)
+systematic_routine(data_hdl, mc_hdl, 'fCosPA', cosPA_arr[:-1], sel_string, hDataSigCosPA, hMcSigCosPA, cCosPAcomparison)
 
 ##########################
 ##      DcaV0Daug       ##
@@ -129,7 +161,7 @@ cDcaV0Daugcomparison = ROOT.TCanvas('cDcaV0Daugcomparison', 'cDcaV0Daugcompariso
 
 sel_string = r'abs({}) < {}'
 
-systematic_routine(input_parquet_data, input_parquet_mc, 'fDcaV0Daug', DcaV0Daug_arr[1:], sel_string, hDataSigDcaV0Daug, hMcSigDcaV0Daug, cDcaV0Daugcomparison, normalise_to_first=False)
+systematic_routine(data_hdl, mc_hdl, 'fDcaV0Daug', DcaV0Daug_arr[1:], sel_string, hDataSigDcaV0Daug, hMcSigDcaV0Daug, cDcaV0Daugcomparison, normalise_to_first=False)
 
 ##########################
 ##         DcaHe        ##
@@ -150,7 +182,7 @@ cDcaHecomparison = ROOT.TCanvas('cDcaHecomparison', 'cDcaHecomparison', 800, 600
 
 sel_string = r'abs({}) > {}'
 
-systematic_routine(input_parquet_data, input_parquet_mc, 'fDcaHe', DcaHe_arr[1:], sel_string, hDataSigDcaHe, hMcSigDcaHe, cDcaHecomparison)
+systematic_routine(data_hdl, mc_hdl, 'fDcaHe', DcaHe_arr[1:], sel_string, hDataSigDcaHe, hMcSigDcaHe, cDcaHecomparison)
 
 ##########################
 ##         DcaPi        ##
@@ -171,5 +203,5 @@ cDcaPicomparison = ROOT.TCanvas('cDcaPicomparison', 'cDcaPicomparison', 800, 600
 
 sel_string = r'abs({}) > {}'
 
-systematic_routine(input_parquet_data, input_parquet_mc, 'fDcaPi', DcaPi_arr[1:], sel_string, hDataSigDcaPi, hMcSigDcaPi, cDcaPicomparison)
+systematic_routine(data_hdl, mc_hdl, 'fDcaPi', DcaPi_arr[1:], sel_string, hDataSigDcaPi, hMcSigDcaPi, cDcaPicomparison)
 

@@ -187,7 +187,7 @@ class SignalExtraction:
         pinfo_alice.SetTextFont(42)
         pinfo_alice.AddText('ALICE Performance')
         pinfo_alice.AddText('Run 3, pp #sqrt{#it{s}} = 13.6 TeV')
-        if not performance:
+        if not self.performance:
             pinfo_alice.AddText('N_{ev} = ' f'{self.n_evts:.0f} '  '#times 10^{9}')
         pinfo_alice.AddText(decay_string)
         if self.additional_pave_text != '':
@@ -311,7 +311,6 @@ if __name__ == '__main__':
 
     is_4lh = config['is_4lh']
     matter_type = config['matter_type']
-    selections = config['preselections']
     n_bins = config['n_bins']
 
     performance = args.performance
