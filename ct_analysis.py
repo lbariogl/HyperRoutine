@@ -1,5 +1,3 @@
-from signal_extraction import SignalExtraction
-from spectra import SpectraMaker
 import ROOT
 import uproot
 import argparse
@@ -10,6 +8,8 @@ from hipe4ml.tree_handler import TreeHandler
 import sys
 sys.path.append('utils')
 import utils as utils
+
+from spectra import SpectraMaker
 
 if __name__ == '__main__':
 
@@ -132,6 +132,7 @@ if __name__ == '__main__':
         start_bin, end_bin, "width"))
     expo.FixParameter(2, fit_range[0])
     expo.FixParameter(3, fit_range[1])
+    expo.SetLineColor(ROOT.kRed)
 
     spectra_maker.fit_func = expo
     spectra_maker.fit_options = 'MI+'
