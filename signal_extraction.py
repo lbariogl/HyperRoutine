@@ -55,7 +55,7 @@ class SignalExtraction:
         # define signal and bkg variables
         if self.is_3lh:
             mass = ROOT.RooRealVar('m', self.inv_mass_string, 2.96, 3.04, 'GeV/c^{2}')
-            mu = ROOT.RooRealVar('mu', 'hypernucl mass', 2.97, 3.03, 'GeV/c^{2}')
+            mu = ROOT.RooRealVar('mu', 'hypernucl mass', 2.97, 2.992, 'GeV/c^{2}')
         else:
             mass = ROOT.RooRealVar('m', self.inv_mass_string, 3.89, 3.97, 'GeV/c^{2}')
             mu = ROOT.RooRealVar('mu', 'hypernucl mass', 3.9, 3.95, 'GeV/c^{2}')

@@ -1,10 +1,6 @@
 from signal_extraction import SignalExtraction
 import ROOT
-import uproot
-import argparse
-import yaml
 import numpy as np
-from hipe4ml.tree_handler import TreeHandler
 
 import sys
 sys.path.append('utils')
@@ -100,6 +96,14 @@ class SpectraMaker:
             signal_extraction.performance = False
             signal_extraction.is_3lh = True
             fit_stats = signal_extraction.process_fit()
+
+            if self.var == 'fPt':
+                bin_label = f'{bin[0]} #leq #it{{p}}_{{T}} < {bin[1]} GeV/#it{{c}}'
+            else:
+                bin_label = f'{bin[0]} #leq #it{{ct}} < {bin[1]} cm'
+
+            signal_extraction.additional_pave_text = bin_label
+
             signal_extraction.data_frame_fit.Write()
             signal_extraction.mc_frame_fit.Write()
 
@@ -120,10 +124,10 @@ class SpectraMaker:
             y_eff_label = '#epsilon #times acc.'
             y_corr_label = '#frac{d#it{N}}{d(#it{ct})} (cm^{-1})'
         else:
-            x_label = '#it{p}_{T} (GeV/{c})'
+            x_label = '#it{p}_{T} (GeV/#it{c})'
             y_raw_label = '#it{N}{_{raw}'
             y_eff_label = '#epsilon #times acc.'
-            y_corr_label = '#frac{d#it{N}}{d#it{p}_{T}} (GeV/{c})^{-1}'
+            y_corr_label = '#frac{d#it{N}}{d#it{p}_{T}} (GeV/#it{c})^{-1}'
 
         self.h_raw_counts = ROOT.TH1D('h_raw_counts', f';{x_label};{y_raw_label}', len(
             self.bins) - 1, np.array(self.bins, dtype=np.float64))
