@@ -66,20 +66,27 @@ class SpectraMaker:
             bin = [self.bins[ibin], self.bins[ibin + 1]]
             bin_sel = f'{self.var} > {bin[0]} & {self.var} < {bin[1]}'
 
+            if self.var == 'fCt' :
+                mc_bin_sel = f'fGenCt > {bin[0]} & fGenCt < {bin[1]}'
+            else :
+                mc_bin_sel = f'abs(fGenPt) > {bin[0]} & abs(fGenPt) < {bin[1]}'
+
             # count generated per ct bin
             bin_mc_hdl = self.mc_hdl.apply_preselections(
-                bin_sel, inplace=False)
+                mc_bin_sel, inplace=False)
 
             if type(self.selections) == str:
-                bin_sel = f'{self.selections}'
+                bin_sel = f'{bin_sel} & {self.selections}'
+                mc_bin_sel = f'{mc_bin_sel} & {self.selections}'
             else:
                 bin_sel = f'{bin_sel} & {self.selections[ibin]}'
+                mc_bin_sel = f'{mc_bin_sel} & {self.selections[ibin]}'
 
             # select reconstructed in data and mc
             bin_data_hdl = self.data_hdl.apply_preselections(
                 bin_sel, inplace=False)
             bin_mc_reco_hdl = self.mc_reco_hdl.apply_preselections(
-                bin_sel, inplace=False)
+                mc_bin_sel, inplace=False)
 
             # compute efficiency
             eff = len(bin_mc_reco_hdl) / len(bin_mc_hdl)
