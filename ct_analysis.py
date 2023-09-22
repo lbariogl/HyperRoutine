@@ -218,9 +218,10 @@ if __name__ == '__main__':
             expo.FixParameter(3, fit_range[1])
             expo.SetLineColor(ROOT.kRed)
 
-            spectra_maker.fit_func = expo
+            spectra_maker.fit_func = copy.deepcopy(expo)
             spectra_maker.fit_options = 'MI+'
             spectra_maker.fit()
 
+            del spectra_maker
 
     output_file.Close()
