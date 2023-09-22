@@ -2,7 +2,7 @@ import ROOT
 import uproot
 import argparse
 import yaml
-import numpy as np
+import copy
 from hipe4ml.tree_handler import TreeHandler
 
 import sys
@@ -12,6 +12,11 @@ import utils as utils
 from spectra import SpectraMaker
 
 if __name__ == '__main__':
+
+    ROOT.gROOT.SetBatch(True)
+    # silent mode for fits
+    ROOT.RooMsgService.instance().setSilentMode(True)
+    ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.ERROR)
 
     parser = argparse.ArgumentParser(
         description='Configure the parameters of the script.')
@@ -59,7 +64,6 @@ if __name__ == '__main__':
     # declare output file
     output_file = ROOT.TFile.Open(
         f'{output_dir_name}/{output_file_name}', 'recreate')
-    output_dir_std = output_file.mkdir('std')
 
     # Add columns to the handlers
     utils.correct_and_convert_df(data_hdl, correction_hist)
@@ -93,13 +97,19 @@ if __name__ == '__main__':
     print("** Data loaded. ** \n")
     print("** Starting pt analysis **")
 
+    #########################
+    #     standard cuts
+    #########################
+
+    output_dir_std = output_file.mkdir('std')
+
     # Spectra routine
 
     spectra_maker = SpectraMaker()
 
-    spectra_maker.data_hdl = data_hdl
-    spectra_maker.mc_hdl = mc_hdl
-    spectra_maker.mc_reco_hdl = mc_reco_hdl
+    spectra_maker.data_hdl = copy.deepcopy(data_hdl)
+    spectra_maker.mc_hdl = copy.deepcopy(mc_hdl)
+    spectra_maker.mc_reco_hdl = copy.deepcopy(mc_reco_hdl)
 
     spectra_maker.n_ev = uproot.open(input_analysis_results_file)[
         'hyper-reco-task']['hZvtx'].values().sum()
@@ -129,5 +139,72 @@ if __name__ == '__main__':
 
     spectra_maker.fit_func = he3_spectrum
     spectra_maker.fit()
+
+    del spectra_maker
+
+    #########################
+    #     varied cuts
+    #########################
+
+    cut_dict = {
+        'fCosPA' : [0.996, 0.997, 0.998, 0.999],
+        'fNSigmaHe' : [-1.99, -1.98, 1.97]
+    }
+
+    sel_kind_dict = {
+        'fCosPA' : r'fCosPA > {}',
+        'fNSigmaHe' : r'fNSigmaHe > {}'
+    }
+
+    print("** Starting systematic variations **")
+
+    for var, cuts in cut_dict.items():
+
+        for i, val in enumerate(cuts):
+
+            print(f'{var}: {i} / {len(cuts)}')
+
+            output_dir_varied = output_file.mkdir(f'{var}_{val}')
+
+            spectra_maker = SpectraMaker()
+
+            spectra_maker.data_hdl = copy.deepcopy(data_hdl)
+            spectra_maker.mc_hdl = copy.deepcopy(mc_hdl)
+            spectra_maker.mc_reco_hdl = copy.deepcopy(mc_reco_hdl)
+
+            spectra_maker.n_ev = uproot.open(input_analysis_results_file)[
+                'hyper-reco-task']['hZvtx'].values().sum()
+            spectra_maker.branching_ratio = 0.25
+            spectra_maker.delta_rap = 2.0
+
+            spectra_maker.var = 'fPt'
+            spectra_maker.bins = pt_bins
+            local_sel = sel_kind_dict[var].format(val)
+            if type(selections) == str:
+                selections + ' and ' + local_sel
+            else:
+                for sel in selections:
+                    sel = sel + ' and ' + local_sel
+            spectra_maker.selections = selections
+            spectra_maker.is_matter = is_matter
+
+            spectra_maker.output_dir = output_dir_varied
+
+            # create raw spectra
+            spectra_maker.make_spectra()
+
+            # create corrected spectra
+            spectra_maker.make_histos()
+
+            he3_spectrum.SetParameter(0, he3_spectrum.GetParameter(0))
+            he3_spectrum.FixParameter(1, he3_spectrum.GetParameter(1))
+            he3_spectrum.FixParameter(2, he3_spectrum.GetParameter(2))
+            he3_spectrum.FixParameter(3, 2.99131)
+            he3_spectrum.SetLineColor(ROOT.kRed)
+
+            spectra_maker.fit_func = copy.deepcopy(he3_spectrum)
+            spectra_maker.fit()
+
+            del spectra_maker
 
     output_file.Close()
