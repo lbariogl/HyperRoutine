@@ -40,7 +40,7 @@ skip_out_tree = args.skip_out_tree
 input_file_name = args.input_files
 output_dir_name = args.output_dir
 output_file_name = args.output_file
-selections = args.selection
+selections_string = args.selection
 is_matter = args.is_matter
 correction_file = args.correction_file
 
@@ -52,6 +52,7 @@ if args.config_file != "":
     output_dir_name = config['output_dir']
     output_file_name = config['output_file']
     selections = config['selection']
+    selections_string = utils.convert_sel_to_string(selections)
     is_matter = config['is_matter']
     correction_file = config['correction_file']
 
@@ -89,7 +90,7 @@ h2MassPt = ROOT.TH2F(
     "h2MassPt", ";#it{p}_{T} (GeV/#it{c}); m({}^{3}_{#Lambda}H) (GeV/#it{c})", 50, 0, 7, 50, 2.96, 3.04)
 h2Mass4LHnSigmaHe = ROOT.TH2F(
     "h2Mass4LHnSigmaHe", ";n_{#sigma}^{TPC}({}^{3}He); m({}^{4}_{#Lambda}H) (GeV/#it{c})", 50, -4, 4, 30, 3.89, 3.97)
- 
+
 
 # for MC only
 hPtGen = ROOT.TH1F("hPtGen", "; Pt gen", 50, 0, 5)
@@ -159,20 +160,20 @@ if mc:
     n_reco = len(df)
     print("MC, integrated efficiency: ", n_reco/n_gen)
 
-if selections == '':
+if selections_string == '':
     if is_matter == 'matter':
-        selections = 'fIsMatter == True'
+        selections_string = 'fIsMatter == True'
     elif is_matter == 'antimatter':
-        selections = 'fIsMatter == False'
+        selections_string = 'fIsMatter == False'
 else:
     if is_matter == 'matter':
-        selections = selections + ' & fIsMatter == True'
+        selections_string = selections_string + ' & fIsMatter == True'
     elif is_matter == 'antimatter':
-        selections = selections + ' & fIsMatter == False'
+        selections_string = selections_string + ' & fIsMatter == False'
 
 # filtering
-if selections != '':
-    df_filtered = df.query(selections)
+if selections_string != '':
+    df_filtered = df.query(selections_string)
 else:
     df_filtered = df
 

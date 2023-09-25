@@ -36,7 +36,7 @@ if __name__ == '__main__':
     output_dir_name = config['output_dir']
     output_file_name = config['output_file']
     ct_bins = config['ct_bins']
-    selections = config['selection']
+    selections_std = config['selection']
     is_matter = config['is_matter']
     pt_correction_file = config['pt_correction_file']
 
@@ -118,7 +118,7 @@ if __name__ == '__main__':
 
     spectra_maker.var = 'fCt'
     spectra_maker.bins = ct_bins
-    spectra_maker.selections = selections
+    spectra_maker.selections = selections_std
     spectra_maker.is_matter = is_matter
 
     spectra_maker.output_dir = output_dir_std
@@ -154,25 +154,22 @@ if __name__ == '__main__':
     #     varied cuts
     #########################
 
-    cut_dict = {
-        'fCosPA' : [0.996, 0.997, 0.998, 0.999],
-        'fNSigmaHe' : [-1.99, -1.98, 1.97]
-    }
+    cut_fCosPA = [f'fCosPA > {0.98 + i * 0.001}' for i in range(0, 20)]
+    cut_fNSigmaHe = [f'fNSigmaHe > {-3.5 + i * 0.25}' for i in range(0, 9)]
 
-    sel_kind_dict = {
-        'fCosPA' : r'fCosPA > {}',
-        'fNSigmaHe' : r'fNSigmaHe > {}'
-    }
+    cut_dict = {'fCosPA': cut_fCosPA,
+                'fNSigmaHe': cut_fNSigmaHe}
 
     print("** Starting systematic variations **")
 
-    for var, cuts in cut_dict.items():
+    print("  ** separated cuts **")
 
-        for i, val in enumerate(cuts):
+    for var, cuts in cut_dict.items():
+        for i, cut in enumerate(cuts):
 
             print(f'{var}: {i} / {len(cuts)}')
 
-            output_dir_varied = output_file.mkdir(f'{var}_{val}')
+            output_dir_varied = output_file.mkdir(f'{var}_{i}')
 
             spectra_maker = SpectraMaker()
 
@@ -187,13 +184,8 @@ if __name__ == '__main__':
 
             spectra_maker.var = 'fCt'
             spectra_maker.bins = ct_bins
-            local_sel = sel_kind_dict[var].format(val)
-            if type(selections) == str:
-                selections + ' and ' + local_sel
-            else:
-                for sel in selections:
-                    sel = sel + ' and ' + local_sel
-            spectra_maker.selections = selections
+            spectra_maker.selections = copy.deepcopy(selections_std)
+            spectra_maker.vary_selection(var, cut)
             spectra_maker.is_matter = is_matter
 
             spectra_maker.output_dir = output_dir_varied

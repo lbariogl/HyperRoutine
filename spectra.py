@@ -22,7 +22,8 @@ class SpectraMaker:
         # variable related members
         self.var = ''
         self.bins = []
-        self.selections = ''
+        self.selections = None
+        self.selections_string = ''
         self.is_matter = ''
 
         self.raw_counts = []
@@ -75,12 +76,17 @@ class SpectraMaker:
             bin_mc_hdl = self.mc_hdl.apply_preselections(
                 mc_bin_sel, inplace=False)
 
-            if type(self.selections) == str:
-                bin_sel = f'{bin_sel} & {self.selections}'
-                mc_bin_sel = f'{mc_bin_sel} & {self.selections}'
+            if isinstance(self.selections, list):
+                self.selections_string = [utils.convert_sel_to_string(sel) for sel in self.selections]
             else:
-                bin_sel = f'{bin_sel} & {self.selections[ibin]}'
-                mc_bin_sel = f'{mc_bin_sel} & {self.selections[ibin]}'
+                self.selections_string = utils.convert_sel_to_string(self.selections)
+
+            if isinstance(self.selections_string, list):
+                bin_sel = f'{bin_sel} and {self.selections_string[ibin]}'
+                mc_bin_sel = f'{mc_bin_sel} and {self.selections_string[ibin]}'
+            else:
+                bin_sel = f'{bin_sel} and {self.selections_string}'
+                mc_bin_sel = f'{mc_bin_sel} and {self.selections_string}'
 
             # select reconstructed in data and mc
             bin_data_hdl = self.data_hdl.apply_preselections(
@@ -192,3 +198,12 @@ class SpectraMaker:
         self.output_dir.cd()
         self.h_corrected_counts.Write()
         self.fit_func.Write()
+
+    def vary_selection(self, var, sel):
+        if not self.selections:
+            raise RuntimeError('selections have not been sel yet.')
+        if isinstance(self.selections, list):
+            for i in range (0, len(self.selections)):
+                self.selections[i][var] = sel
+        else:
+            self.selections[var] = sel
