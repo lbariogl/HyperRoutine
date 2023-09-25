@@ -3,6 +3,7 @@ import uproot
 import argparse
 import yaml
 import copy
+from itertools import product
 from hipe4ml.tree_handler import TreeHandler
 
 import sys
@@ -22,11 +23,15 @@ if __name__ == '__main__':
         description='Configure the parameters of the script.')
     parser.add_argument('--config-file', dest='config_file',
                         help="path to the YAML file with configuration.", default='')
+    parser.add_argument('--separated', dest='separated', action='store_true',
+                    help="if True one variable a time is varied.", default=False)
 
     args = parser.parse_args()
     if args.config_file == "":
         print('** No config file provided. Exiting. **')
         exit()
+
+    separated = args.separated
 
     config_file = open(args.config_file, 'r')
     config = yaml.full_load(config_file)
@@ -162,14 +167,73 @@ if __name__ == '__main__':
 
     print("** Starting systematic variations **")
 
-    print("  ** separated cuts **")
+    if separated:
 
-    for var, cuts in cut_dict.items():
-        for i, cut in enumerate(cuts):
+        print("  ** separated cuts **")
 
-            print(f'{var}: {i} / {len(cuts)}')
+        for var, cuts in cut_dict.items():
+            for i, cut in enumerate(cuts):
 
-            output_dir_varied = output_file.mkdir(f'{var}_{i}')
+                print(f'{var}: {i} / {len(cuts)}')
+
+                output_dir_varied = output_file.mkdir(f'{var}_{i}')
+
+                spectra_maker = SpectraMaker()
+
+                spectra_maker.data_hdl = copy.deepcopy(data_hdl)
+                spectra_maker.mc_hdl = copy.deepcopy(mc_hdl)
+                spectra_maker.mc_reco_hdl = copy.deepcopy(mc_reco_hdl)
+
+                spectra_maker.n_ev = uproot.open(input_analysis_results_file)[
+                    'hyper-reco-task']['hZvtx'].values().sum()
+                spectra_maker.branching_ratio = 0.25
+                spectra_maker.delta_rap = 2.0
+
+                spectra_maker.var = 'fCt'
+                spectra_maker.bins = ct_bins
+                spectra_maker.selections = copy.deepcopy(selections_std)
+                spectra_maker.vary_selection(var, cut)
+                spectra_maker.is_matter = is_matter
+
+                spectra_maker.output_dir = output_dir_varied
+
+                fit_range = [ct_bins[0], ct_bins[-1]]
+                spectra_maker.fit_range = fit_range
+
+                # create raw spectra
+                spectra_maker.make_spectra()
+
+                # create corrected spectra
+                spectra_maker.make_histos()
+
+                expo = ROOT.TF1(
+                    'myexpo', '[0]*exp(-x/([1]*0.029979245800))/((exp(-[2]/([1]*0.029979245800)) - exp(-[3]/([1]*0.029979245800))) * [1]*0.029979245800)', fit_range[0], fit_range[1])
+                expo.SetParLimits(1, 230, 500)
+                start_bin = spectra_maker.h_corrected_counts.FindBin(fit_range[0])
+                end_bin = spectra_maker.h_corrected_counts.FindBin(fit_range[1])
+                expo.FixParameter(0, spectra_maker.h_corrected_counts.Integral(
+                    start_bin, end_bin, "width"))
+                expo.FixParameter(2, fit_range[0])
+                expo.FixParameter(3, fit_range[1])
+                expo.SetLineColor(ROOT.kRed)
+
+                spectra_maker.fit_func = copy.deepcopy(expo)
+                spectra_maker.fit_options = 'MI+'
+                spectra_maker.fit()
+
+                del spectra_maker
+    else:
+
+        print("  ** mixed cuts **")
+
+        # create all possible combinations within cut_dict
+        combos = list(product(*list(cut_dict.values())))
+
+        for i, combo in enumerate(combos):
+
+            print(f'mixed: {i} / {len(combos)}')
+
+            output_dir_varied = output_file.mkdir(f'mixed_{i}')
 
             spectra_maker = SpectraMaker()
 
@@ -185,7 +249,8 @@ if __name__ == '__main__':
             spectra_maker.var = 'fCt'
             spectra_maker.bins = ct_bins
             spectra_maker.selections = copy.deepcopy(selections_std)
-            spectra_maker.vary_selection(var, cut)
+            for i, var in enumerate(cut_dict.keys()):
+                spectra_maker.vary_selection(var, combo[i])
             spectra_maker.is_matter = is_matter
 
             spectra_maker.output_dir = output_dir_varied
