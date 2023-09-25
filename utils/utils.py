@@ -240,3 +240,10 @@ def correct_and_convert_df(df, histo=None, isMC=False):
 
 def compute_pvalue_from_sign(significance):
     return ROOT.Math.chisquared_cdf_c(significance**2, 1) / 2
+
+def convert_sel_to_string(selection):
+    sel_string = ''
+    conj = ' and '
+    for _, val in selection.items():
+        sel_string = sel_string + val + conj
+    return sel_string[:-len(conj)]
