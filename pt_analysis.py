@@ -41,6 +41,7 @@ if __name__ == '__main__':
     output_dir_name = config['output_dir']
     output_file_name = config['output_file']
     pt_bins = config['pt_bins']
+    cut_dict = config['cut_dict']
     selections_std = config['selection']
     is_matter = config['is_matter']
     pt_correction_file = config['pt_correction_file']
@@ -154,12 +155,6 @@ if __name__ == '__main__':
     #########################
     #     varied cuts
     #########################
-
-    cut_fCosPA = [f'fCosPA > {0.98 + i * 0.001}' for i in range(0, 20)]
-    cut_fNSigmaHe = [f'fNSigmaHe > {-3.5 + i * 0.25}' for i in range(0, 9)]
-
-    cut_dict = {'fCosPA': cut_fCosPA,
-                'fNSigmaHe': cut_fNSigmaHe}
 
     yield_histos = []
     bin_labels = []

@@ -36,6 +36,46 @@ selection:
       "fTPCsignalPi": "fTPCsignalPi < 1000."
     },
   ]
+
+cut_dict:
+  {
+    "fCosPA":
+      [
+        "fCosPA > 0.98",
+        "fCosPA > 0.981",
+        "fCosPA > 0.982",
+        "fCosPA > 0.983",
+        "fCosPA > 0.984",
+        "fCosPA > 0.985",
+        "fCosPA > 0.986",
+        "fCosPA > 0.987",
+        "fCosPA > 0.988",
+        "fCosPA > 0.989",
+        "fCosPA > 0.99",
+        "fCosPA > 0.991",
+        "fCosPA > 0.992",
+        "fCosPA > 0.993",
+        "fCosPA > 0.994",
+        "fCosPA > 0.995",
+        "fCosPA > 0.996",
+        "fCosPA > 0.997",
+        "fCosPA > 0.998",
+        "fCosPA > 0.999",
+      ],
+    "fNSigmaHe":
+      [
+        "fNSigmaHe > -3.5",
+        "fNSigmaHe > -3.25",
+        "fNSigmaHe > -3.0",
+        "fNSigmaHe > -2.75",
+        "fNSigmaHe > -2.5",
+        "fNSigmaHe > -2.25",
+        "fNSigmaHe > -2.0",
+        "fNSigmaHe > -1.75",
+        "fNSigmaHe > -1.5",
+      ],
+  }
+
 bkg_fit_func: "pol1" ## choose between pol1 and pol2 (To be expanded)
 is_matter: "antimatter"
 pt_correction_file: "utils/he3_pt_calibration.root"
