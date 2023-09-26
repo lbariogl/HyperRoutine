@@ -16,7 +16,7 @@ pt_bins: [1.5, 2., 2.5, 3, 5]
 selection:
   [
     {
-      "fCosPA": "fCosPA > 0.995",
+      "fCosPA": "fCosPA > 0.99",
       "fNSigmaHe": "fNSigmaHe > -2.",
       "fTPCsignalPi": "fTPCsignalPi < 1000."
     },

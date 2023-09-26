@@ -24,7 +24,7 @@ if __name__ == '__main__':
     parser.add_argument('--config-file', dest='config_file',
                         help="path to the YAML file with configuration.", default='')
     parser.add_argument('--separated', dest='separated', action='store_true',
-                    help="if True one variable a time is varied.", default=False)
+                        help="if True one variable a time is varied.", default=False)
 
     args = parser.parse_args()
     if args.config_file == "":
@@ -146,20 +146,10 @@ if __name__ == '__main__':
     spectra_maker.fit()
 
     corrected_counts_std = copy.deepcopy(spectra_maker.corrected_counts)
-    corrected_counts_err_std = copy.deepcopy(spectra_maker.corrected_counts_err)
+    corrected_counts_err_std = copy.deepcopy(
+        spectra_maker.corrected_counts_err)
 
     del spectra_maker
-
-    yield_histos = []
-    bin_labels = []
-
-    for ibin in range(0, len(pt_bins) - 1):
-        bin = [pt_bins[ibin], pt_bins[ibin + 1]]
-        bin_label = f'fPt_{bin[0]}_{bin[1]}'
-        histo_title = str(bin[0]) + r' < #it{p}_{T} < ' + str(bin[1]) + r' GeV/#it{c}; #frac{d#it{N}}{d#it{p}_{T}} (GeV/#it{c})^{-1}'
-        histo = ROOT.TH1D(f'hYield_{bin_label}', histo_title, 50, 0.5 * corrected_counts_std[ibin], 1.5 * corrected_counts_std[ibin])
-        yield_histos.append(histo)
-        bin_labels.append(bin_label)
 
     #########################
     #     varied cuts
@@ -171,9 +161,40 @@ if __name__ == '__main__':
     cut_dict = {'fCosPA': cut_fCosPA,
                 'fNSigmaHe': cut_fNSigmaHe}
 
+    yield_histos = []
+    bin_labels = []
+
+    for ibin in range(0, len(pt_bins) - 1):
+        bin = [pt_bins[ibin], pt_bins[ibin + 1]]
+        bin_label = f'fPt_{bin[0]}_{bin[1]}'
+        histo_title = str(bin[0]) + r' < #it{p}_{T} < ' + str(
+            bin[1]) + r' GeV/#it{c}; #frac{d#it{N}}{d#it{p}_{T}} (GeV/#it{c})^{-1}'
+        histo = ROOT.TH1D(f'hYield_{bin_label}', histo_title, 50, 0.5 *
+                          corrected_counts_std[ibin], 1.5 * corrected_counts_std[ibin])
+        yield_histos.append(histo)
+        bin_labels.append(bin_label)
+
     print("** Starting systematic variations **")
 
     if separated:
+
+        # study dependence on specific cut
+
+        cut_histos = {}
+
+        for var in cut_dict:
+            cut_histos[var] = []
+
+            for ibin in range(0, len(pt_bins) - 1):
+                bin = [pt_bins[ibin], pt_bins[ibin + 1]]
+                bin_label = f'fPt_{bin[0]}_{bin[1]}'
+                histo_title = str(bin[0]) + r' < #it{p}_{T} < ' + str(
+                    bin[1]) + r' GeV/#it{c}; ; #frac{d#it{N}}{d#it{p}_{T}} (GeV/#it{c})^{-1};'
+                histo = ROOT.TH1D(f'h{var}_{bin_label}', histo_title, len(
+                    cut_dict[var]), -0.5, len(cut_dict[var]) - 0.5)
+                for i, cut in enumerate(cut_dict[var]):
+                    histo.GetXaxis().SetBinLabel(i+1, cut)
+                cut_histos[var].append(histo)
 
         print("  ** separated cuts **")
 
@@ -211,7 +232,16 @@ if __name__ == '__main__':
                 spectra_maker.make_histos()
 
                 for ibin in range(0, len(pt_bins) - 1):
-                    yield_histos[ibin].Fill(spectra_maker.corrected_counts[ibin])
+                    yield_histos[ibin].Fill(
+                        spectra_maker.corrected_counts[ibin])
+                    cut_histos[var][ibin].SetBinContent(
+                        i_cut+1, spectra_maker.corrected_counts[ibin])
+                    cut_histos[var][ibin].SetBinError(
+                        i_cut+1, spectra_maker.corrected_counts_err[ibin])
+
+                for ibin in range(0, len(pt_bins) - 1):
+                    yield_histos[ibin].Fill(
+                        spectra_maker.corrected_counts[ibin])
 
                 he3_spectrum.SetParameter(0, he3_spectrum.GetParameter(0))
                 he3_spectrum.FixParameter(1, he3_spectrum.GetParameter(1))
@@ -223,6 +253,11 @@ if __name__ == '__main__':
                 spectra_maker.fit()
 
                 del spectra_maker
+
+        for ibin in range(0, len(pt_bins) - 1):
+            output_dir_std.cd(bin_labels[ibin])
+            for var in cut_dict:
+                cut_histos[var][ibin].Write()
 
     else:
 
@@ -279,7 +314,8 @@ if __name__ == '__main__':
 
     for ibin in range(0, len(pt_bins) - 1):
         output_dir_std.cd(bin_labels[ibin])
-        line = ROOT.TLine(corrected_counts_std[ibin], 0, corrected_counts_std[ibin], yield_histos[ibin].GetMaximum())
+        line = ROOT.TLine(
+            corrected_counts_std[ibin], 0, corrected_counts_std[ibin], yield_histos[ibin].GetMaximum())
         line.SetLineStyle(ROOT.kDashed)
         line.SetLineColor(ROOT.kRed)
         line.SetLineWidth(2)
