@@ -165,11 +165,11 @@ if __name__ == '__main__':
 
         for var, cuts in cut_dict.items():
 
-            for i, cut in enumerate(cuts):
+            for i_cut, cut in enumerate(cuts):
 
-                print(f'{var}: {i} / {len(cuts)}')
+                print(f'{var}: {i_cut} / {len(cuts)}')
 
-                output_dir_varied = output_file.mkdir(f'{var}_{i}')
+                output_dir_varied = output_file.mkdir(f'{var}_{i_cut}')
 
                 spectra_maker = SpectraMaker()
 
@@ -214,11 +214,11 @@ if __name__ == '__main__':
         # create all possible combinations within cut_dict
         combos = list(product(*list(cut_dict.values())))
 
-        for i, combo in enumerate(combos):
+        for i_combo, combo in enumerate(combos):
 
-            print(f'mixed: {i} / {len(combos)}')
+            print(f'mixed: {i_combo} / {len(combos)}')
 
-            output_dir_varied = output_file.mkdir(f'mixed_{i}')
+            output_dir_varied = output_file.mkdir(f'mixed_{i_combo}')
 
             spectra_maker = SpectraMaker()
 
@@ -234,8 +234,8 @@ if __name__ == '__main__':
             spectra_maker.var = 'fPt'
             spectra_maker.bins = pt_bins
             spectra_maker.selections = copy.deepcopy(selections_std)
-            for i, var in enumerate(cut_dict.keys()):
-                spectra_maker.vary_selection(var, combo[i])
+            for i_var, var in enumerate(cut_dict.keys()):
+                spectra_maker.vary_selection(var, combo[i_var])
             spectra_maker.is_matter = is_matter
 
             spectra_maker.output_dir = output_dir_varied
