@@ -156,7 +156,7 @@ if __name__ == '__main__':
     for ibin in range(0, len(pt_bins) - 1):
         bin = [pt_bins[ibin], pt_bins[ibin + 1]]
         bin_label = f'fPt_{bin[0]}_{bin[1]}'
-        histo_title = str(bin[0]) + r' < #it{{ct}} < ' + str(bin[1]) + r'GeV/#it{c}; #frac{d#it{N}}{d#it{p}_{T}} (GeV/#it{c})^{-1}'
+        histo_title = str(bin[0]) + r' < #it{p}_{T} < ' + str(bin[1]) + r' GeV/#it{c}; #frac{d#it{N}}{d#it{p}_{T}} (GeV/#it{c})^{-1}'
         histo = ROOT.TH1D(f'hYield_{bin_label}', histo_title, 50, 0.5 * corrected_counts_std[ibin], 1.5 * corrected_counts_std[ibin])
         yield_histos.append(histo)
         bin_labels.append(bin_label)
@@ -279,6 +279,11 @@ if __name__ == '__main__':
 
     for ibin in range(0, len(pt_bins) - 1):
         output_dir_std.cd(bin_labels[ibin])
+        line = ROOT.TLine(corrected_counts_std[ibin], 0, corrected_counts_std[ibin], yield_histos[ibin].GetMaximum())
+        line.SetLineStyle(ROOT.kDashed)
+        line.SetLineColor(ROOT.kRed)
+        line.SetLineWidth(2)
+        yield_histos[ibin].GetListOfFunctions().Add(line)
         yield_histos[ibin].Write()
 
     output_file.Close()

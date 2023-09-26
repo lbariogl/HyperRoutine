@@ -303,6 +303,11 @@ if __name__ == '__main__':
 
     for ibin in range(0, len(ct_bins) - 1):
         output_dir_std.cd(bin_labels[ibin])
+        line = ROOT.TLine(corrected_counts_std[ibin], 0, corrected_counts_std[ibin], yield_histos[ibin].GetMaximum())
+        line.SetLineStyle(ROOT.kDashed)
+        line.SetLineColor(ROOT.kRed)
+        line.SetLineWidth(2)
+        yield_histos[ibin].GetListOfFunctions().Add(line)
         yield_histos[ibin].Write()
 
     output_file.Close()
