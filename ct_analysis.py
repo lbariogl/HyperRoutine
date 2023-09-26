@@ -153,7 +153,21 @@ if __name__ == '__main__':
     spectra_maker.fit_options = 'MI+'
     spectra_maker.fit()
 
+    corrected_counts_std = copy.deepcopy(spectra_maker.corrected_counts)
+    corrected_counts_err_std = copy.deepcopy(spectra_maker.corrected_counts_err)
+
     del spectra_maker
+
+    yield_histos = []
+    bin_labels = []
+
+    for ibin in range(0, len(ct_bins) - 1):
+        bin = [ct_bins[ibin], ct_bins[ibin + 1]]
+        bin_label = f'fCt_{bin[0]}_{bin[1]}'
+        histo_title = str(bin[0]) + r' < #it{{ct}} < ' + str(bin[1]) + r' cm; #frac{d#it{N}}{d(#it{ct})} (cm^{-1});'
+        histo = ROOT.TH1D(f'hYield_{bin_label}', histo_title, 50, 0.5 * corrected_counts_std[ibin], 1.5 * corrected_counts_std[ibin])
+        yield_histos.append(histo)
+        bin_labels.append(bin_label)
 
     #########################
     #     varied cuts
@@ -205,6 +219,9 @@ if __name__ == '__main__':
 
                 # create corrected spectra
                 spectra_maker.make_histos()
+
+                for ibin in range(0, len(ct_bins) - 1):
+                    yield_histos[ibin].Fill(spectra_maker.corrected_counts[ibin])
 
                 expo = ROOT.TF1(
                     'myexpo', '[0]*exp(-x/([1]*0.029979245800))/((exp(-[2]/([1]*0.029979245800)) - exp(-[3]/([1]*0.029979245800))) * [1]*0.029979245800)', fit_range[0], fit_range[1])
@@ -264,6 +281,9 @@ if __name__ == '__main__':
             # create corrected spectra
             spectra_maker.make_histos()
 
+            for ibin in range(0, len(ct_bins) - 1):
+                yield_histos[ibin].Fill(spectra_maker.corrected_counts[ibin])
+
             expo = ROOT.TF1(
                 'myexpo', '[0]*exp(-x/([1]*0.029979245800))/((exp(-[2]/([1]*0.029979245800)) - exp(-[3]/([1]*0.029979245800))) * [1]*0.029979245800)', fit_range[0], fit_range[1])
             expo.SetParLimits(1, 230, 500)
@@ -280,5 +300,9 @@ if __name__ == '__main__':
             spectra_maker.fit()
 
             del spectra_maker
+
+    for ibin in range(0, len(ct_bins) - 1):
+        output_dir_std.cd(bin_labels[ibin])
+        yield_histos[ibin].Write()
 
     output_file.Close()

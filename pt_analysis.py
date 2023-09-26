@@ -145,7 +145,21 @@ if __name__ == '__main__':
     spectra_maker.fit_func = he3_spectrum
     spectra_maker.fit()
 
+    corrected_counts_std = copy.deepcopy(spectra_maker.corrected_counts)
+    corrected_counts_err_std = copy.deepcopy(spectra_maker.corrected_counts_err)
+
     del spectra_maker
+
+    yield_histos = []
+    bin_labels = []
+
+    for ibin in range(0, len(pt_bins) - 1):
+        bin = [pt_bins[ibin], pt_bins[ibin + 1]]
+        bin_label = f'fPt_{bin[0]}_{bin[1]}'
+        histo_title = str(bin[0]) + r' < #it{{ct}} < ' + str(bin[1]) + r'GeV/#it{c}; #frac{d#it{N}}{d#it{p}_{T}} (GeV/#it{c})^{-1}'
+        histo = ROOT.TH1D(f'hYield_{bin_label}', histo_title, 50, 0.5 * corrected_counts_std[ibin], 1.5 * corrected_counts_std[ibin])
+        yield_histos.append(histo)
+        bin_labels.append(bin_label)
 
     #########################
     #     varied cuts
@@ -195,6 +209,9 @@ if __name__ == '__main__':
 
                 # create corrected spectra
                 spectra_maker.make_histos()
+
+                for ibin in range(0, len(pt_bins) - 1):
+                    yield_histos[ibin].Fill(spectra_maker.corrected_counts[ibin])
 
                 he3_spectrum.SetParameter(0, he3_spectrum.GetParameter(0))
                 he3_spectrum.FixParameter(1, he3_spectrum.GetParameter(1))
@@ -246,6 +263,9 @@ if __name__ == '__main__':
             # create corrected spectra
             spectra_maker.make_histos()
 
+            for ibin in range(0, len(pt_bins) - 1):
+                yield_histos[ibin].Fill(spectra_maker.corrected_counts[ibin])
+
             he3_spectrum.SetParameter(0, he3_spectrum.GetParameter(0))
             he3_spectrum.FixParameter(1, he3_spectrum.GetParameter(1))
             he3_spectrum.FixParameter(2, he3_spectrum.GetParameter(2))
@@ -256,5 +276,9 @@ if __name__ == '__main__':
             spectra_maker.fit()
 
             del spectra_maker
+
+    for ibin in range(0, len(pt_bins) - 1):
+        output_dir_std.cd(bin_labels[ibin])
+        yield_histos[ibin].Write()
 
     output_file.Close()
