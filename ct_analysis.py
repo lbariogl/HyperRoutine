@@ -40,6 +40,8 @@ if __name__ == '__main__':
     input_analysis_results_file = config['input_analysis_results_file']
     output_dir_name = config['output_dir']
     output_file_name = config['output_file']
+    if separated:
+        output_file_name = output_file_name[:-5] + '_separated.root'
     ct_bins = config['ct_bins']
     cut_dict = config['cut_dict']
     selections_std = config['selection']
