@@ -9,7 +9,7 @@ input_files_data:
 input_files_mc: ["/data/shared/hyp_run_3/mc/AO2D_anch.root"]
 input_analysis_results_file: "/data/shared/hyp_run_3/apass4/new_dataformat/AnalysisResults.root"
 output_dir: "../results/"
-output_file: "ct_analysis.root"
+output_file: "ct_analysis"
 
 ct_bins: [2, 4, 6, 8, 20]
 bkg_fit_func: "pol1"
@@ -46,11 +46,13 @@ selection:
 
 
 do_syst: True
-bkg_fit_func_syst: ["pol1", "pol2", "expo"]
-signal_fit_func_syst: ["gaus", "dscb"]
+n_trials: 50
+bkg_fit_func_syst: ["pol1", "pol2"]
+signal_fit_func_syst: ["dscb"]
 cut_dict_syst:
   {
     "fCosPA": {"cut_greater": True, "cut_list": [0.98, 0.999, 20]},
-     "fPt": {"cut_greater": True, "cut_list": [0.8, 1.3, 10]}
+     "fPt": {"cut_greater": True, "cut_list": [0.9, 1.3, 20]},
+     "fDcaV0Daug": {"cut_greater": False, "cut_list": [0.1, 0.5, 20]}
   }
 
