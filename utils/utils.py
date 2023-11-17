@@ -186,16 +186,12 @@ def create_pt_shift_histo(df):
 
 # put dataframe in the correct format
 
-def correct_and_convert_df(df, histo=None, isMC=False):
+def correct_and_convert_df(df, calibrate_he3_pt = False, isMC=False):
     if not type(df) == pd.DataFrame:
         df = df._full_data_frame
     # correct 3He momentum
-    if not histo == None:
-        cloned_pt_arr = np.array(df['fPtHe3'])
-        for i in range(len(cloned_pt_arr)):
-            pt_shift = histo.GetBinContent(histo.FindBin(cloned_pt_arr[i]))
-            cloned_pt_arr[i] -= pt_shift
-        df['fPtHe3'] = cloned_pt_arr
+    if calibrate_he3_pt:
+        df["fPtHe3"] += 2.98019e-02 + 7.66100e-01 * np.exp(-1.31641e+00 * df["fPtHe3"]) ### functional form given by mpuccio
 
     # 3He momentum
     df.eval('fPxHe3 = fPtHe3 * cos(fPhiHe3)', inplace=True)
@@ -224,16 +220,18 @@ def correct_and_convert_df(df, histo=None, isMC=False):
     # Variables of interest
     df.eval('fDecLen = sqrt(fXDecVtx**2 + fYDecVtx**2 + fZDecVtx**2)', inplace=True)
     df.eval('fCt = fDecLen * 2.99131 / fP', inplace=True)
+    df.eval('fDecRad = sqrt(fXDecVtx**2 + fYDecVtx**2)', inplace=True)
+    df.eval('fCosPA = (fPx * fXDecVtx + fPy * fYDecVtx + fPz * fZDecVtx) / (fP * fDecLen)', inplace=True)
+    df.eval('fMassH3L = sqrt(fEn**2 - fP**2)', inplace=True)
+    df.eval('fMassH4L = sqrt(fEn4**2 - fP**2)', inplace=True)
 
     if isMC:
         df.eval('fGenDecLen = sqrt(fGenXDecVtx**2 + fGenYDecVtx**2 + fGenZDecVtx**2)', inplace=True)
         df.eval('fGenPz = fGenPt * sinh(fGenEta)', inplace=True)
         df.eval('fGenP = sqrt(fGenPt**2 + fGenPz**2)', inplace=True)
         df.eval('fGenCt = fGenDecLen * 2.99131 / fGenP', inplace=True)
+        df.eval("fAbsGenPt = abs(fGenPt)", inplace=True)
 
-    df.eval('fCosPA = (fPx * fXDecVtx + fPy * fYDecVtx + fPz * fZDecVtx) / (fP * fDecLen)', inplace=True)
-    df.eval('fMassH3L = sqrt(fEn**2 - fP**2)', inplace=True)
-    df.eval('fMassH4L = sqrt(fEn4**2 - fP**2)', inplace=True)
     # remove useless columns
     df.drop(columns=['fPxHe3', 'fPyHe3', 'fPzHe3', 'fPHe3', 'fEnHe3', 'fPxPi', 'fPyPi', 'fPzPi', 'fPPi', 'fEnPi', 'fPx', 'fPy', 'fPz', 'fP', 'fEn'])
 

@@ -6,13 +6,16 @@ input_files_data:
     "/data/shared/hyp_run_3/apass4/new_dataformat/LHC22r/AO2D_merged.root",
     "/data/shared/hyp_run_3/apass4/new_dataformat/LHC22t/AO2D_merged.root",
   ]
-
-input_files_mc: ["/data/shared/hyp_run_3/mc/AO2D_MC.root"]
+input_files_mc: ["/data/shared/hyp_run_3/mc/AO2D_anch.root"]
 input_analysis_results_file: "/data/shared/hyp_run_3/apass4/new_dataformat/AnalysisResults.root"
 output_dir: "../results/"
 output_file: "ct_analysis.root"
 
 ct_bins: [2, 4, 6, 8, 20]
+bkg_fit_func: "pol1"
+signal_fit_function: "dscb"
+is_matter: "antimatter"
+
 selection:
   [
     {
@@ -41,45 +44,13 @@ selection:
     },
   ]
 
-cut_dict:
+
+do_syst: True
+bkg_fit_func_syst: ["pol1", "pol2", "expo"]
+signal_fit_func_syst: ["gaus", "dscb"]
+cut_dict_syst:
   {
-    "fCosPA":
-      [
-        "fCosPA > 0.98",
-        "fCosPA > 0.981",
-        "fCosPA > 0.982",
-        "fCosPA > 0.983",
-        "fCosPA > 0.984",
-        "fCosPA > 0.985",
-        "fCosPA > 0.986",
-        "fCosPA > 0.987",
-        "fCosPA > 0.988",
-        "fCosPA > 0.989",
-        "fCosPA > 0.99",
-        "fCosPA > 0.991",
-        "fCosPA > 0.992",
-        "fCosPA > 0.993",
-        "fCosPA > 0.994",
-        "fCosPA > 0.995",
-        "fCosPA > 0.996",
-        "fCosPA > 0.997",
-        "fCosPA > 0.998",
-        "fCosPA > 0.999",
-      ],
-    "fNSigmaHe":
-      [
-        "fNSigmaHe > -3.5",
-        "fNSigmaHe > -3.25",
-        "fNSigmaHe > -3.0",
-        "fNSigmaHe > -2.75",
-        "fNSigmaHe > -2.5",
-        "fNSigmaHe > -2.25",
-        "fNSigmaHe > -2.0",
-        "fNSigmaHe > -1.75",
-        "fNSigmaHe > -1.5",
-      ],
+    "fCosPA": {"cut_greater": True, "cut_list": [0.98, 0.999, 20]},
+     "fPt": {"cut_greater": True, "cut_list": [0.8, 1.3, 10]}
   }
 
-bkg_fit_func: "pol1" ## choose between pol1 and pol2 (To be expanded)
-is_matter: "antimatter"
-pt_correction_file: "utils/he3_pt_calibration.root"
