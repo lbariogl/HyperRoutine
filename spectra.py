@@ -22,8 +22,7 @@ class SpectraMaker:
         # variable related members
         self.var = ''
         self.bins = []
-        self.selections = None
-        self.selections_string = ''
+        self.selection_string = '' # could be either a string or a list of strings
         self.is_matter = ''
 
         self.raw_counts = []
@@ -33,12 +32,16 @@ class SpectraMaker:
         self.corrected_counts = []
         self.corrected_counts_err = []
 
+        self.inv_mass_signal_func = "dscb" ## could be either a string or a list of strings
+        self.inv_mass_bkg_func = "pol1" ## could be either a string or a list of strings
         self.fit_func = None
         self.fit_options = None
         self.fit_range = []
 
         self.output_dir = None
 
+        self.h_signal_extractions_data = []
+        self.h_signal_extractions_mc = []
         self.h_raw_counts = None
         self.h_efficiency = None
         self.h_corrected_counts = None
@@ -73,35 +76,39 @@ class SpectraMaker:
                 mc_bin_sel = f'abs(fGenPt) > {bin[0]} & abs(fGenPt) < {bin[1]}'
 
             # count generated per ct bin
-            bin_mc_hdl = self.mc_hdl.apply_preselections(
-                mc_bin_sel, inplace=False)
+            bin_mc_hdl = self.mc_hdl.apply_preselections(mc_bin_sel, inplace=False)
 
-            if isinstance(self.selections, list):
-                self.selections_string = [utils.convert_sel_to_string(sel) for sel in self.selections]
+            if isinstance(self.selection_string, list):
+                bin_sel = f'{bin_sel} and {self.selection_string[ibin]}'
+                mc_bin_sel = f'{mc_bin_sel} and {self.selection_string[ibin]}'
             else:
-                self.selections_string = utils.convert_sel_to_string(self.selections)
-
-            if isinstance(self.selections_string, list):
-                bin_sel = f'{bin_sel} and {self.selections_string[ibin]}'
-                mc_bin_sel = f'{mc_bin_sel} and {self.selections_string[ibin]}'
-            else:
-                bin_sel = f'{bin_sel} and {self.selections_string}'
-                mc_bin_sel = f'{mc_bin_sel} and {self.selections_string}'
+                bin_sel = f'{bin_sel} and {self.selection_string}'
+                mc_bin_sel = f'{mc_bin_sel} and {self.selection_string}'
 
             # select reconstructed in data and mc
-            bin_data_hdl = self.data_hdl.apply_preselections(
-                bin_sel, inplace=False)
-            bin_mc_reco_hdl = self.mc_reco_hdl.apply_preselections(
-                mc_bin_sel, inplace=False)
+            bin_data_hdl = self.data_hdl.apply_preselections(bin_sel, inplace=False)
+            bin_mc_reco_hdl = self.mc_reco_hdl.apply_preselections(mc_bin_sel, inplace=False)
 
             # compute efficiency
             eff = len(bin_mc_reco_hdl) / len(bin_mc_hdl)
             self.efficiency.append(eff)
 
-            self.output_dir.mkdir(f'{self.var}_{bin[0]}_{bin[1]}')
-            self.output_dir.cd(f'{self.var}_{bin[0]}_{bin[1]}')
-
             signal_extraction = SignalExtraction(bin_data_hdl, bin_mc_hdl)
+
+            bkg_mass_fit_func = None
+            if isinstance(self.inv_mass_bkg_func, list):
+                bkg_mass_fit_func = self.inv_mass_bkg_func[ibin]
+            else:
+                bkg_mass_fit_func = self.inv_mass_bkg_func
+            
+            sgn_mass_fit_func = None
+            if isinstance(self.inv_mass_signal_func, list):
+                sgn_mass_fit_func = self.inv_mass_signal_func[ibin]
+            else:
+                sgn_mass_fit_func = self.inv_mass_signal_func
+
+            signal_extraction.bkg_fit_func = bkg_mass_fit_func
+            signal_extraction.signal_fit_func = sgn_mass_fit_func
             signal_extraction.n_bins = 30
             n_ev_plot = round(self.n_ev / 1e9, 0)
             signal_extraction.n_evts = n_ev_plot
@@ -117,9 +124,8 @@ class SpectraMaker:
 
             signal_extraction.additional_pave_text = bin_label
 
-            signal_extraction.data_frame_fit.Write()
-            signal_extraction.mc_frame_fit.Write()
-
+            self.h_signal_extractions_data.append(signal_extraction.data_frame_fit)
+            self.h_signal_extractions_mc.append(signal_extraction.mc_frame_fit)
             self.raw_counts.append(fit_stats['signal'][0])
             self.raw_counts_err.append(fit_stats['signal'][1])
 
@@ -142,13 +148,10 @@ class SpectraMaker:
             y_eff_label = '#epsilon #times acc.'
             y_corr_label = '#frac{d#it{N}}{d#it{p}_{T}} (GeV/#it{c})^{-1}'
 
-        self.h_raw_counts = ROOT.TH1D('h_raw_counts', f';{x_label};{y_raw_label}', len(
-            self.bins) - 1, np.array(self.bins, dtype=np.float64))
-        self.h_efficiency = ROOT.TH1D('h_efficiency', f';{x_label};{y_eff_label}', len(
-            self.bins) - 1, np.array(self.bins, dtype=np.float64))
+        self.h_raw_counts = ROOT.TH1D('h_raw_counts', f';{x_label};{y_raw_label}', len(self.bins) - 1, np.array(self.bins, dtype=np.float64))
+        self.h_efficiency = ROOT.TH1D('h_efficiency', f';{x_label};{y_eff_label}', len(self.bins) - 1, np.array(self.bins, dtype=np.float64))
 
-        self.h_corrected_counts = ROOT.TH1D('h_corrected_counts', f';{x_label};{y_corr_label}', len(
-            self.bins) - 1, np.array(self.bins, dtype=np.float64))
+        self.h_corrected_counts = ROOT.TH1D('h_corrected_counts', f';{x_label};{y_corr_label}', len( self.bins) - 1, np.array(self.bins, dtype=np.float64))
         self.h_corrected_counts.GetXaxis().SetTitleSize(0.05)
         self.h_corrected_counts.GetYaxis().SetTitleSize(0.05)
 
@@ -159,28 +162,18 @@ class SpectraMaker:
             self.h_raw_counts.SetBinError(ibin + 1, self.raw_counts_err[ibin]/bin_width)
             self.h_efficiency.SetBinContent(ibin + 1, self.efficiency[ibin])
 
-            local_corrected_counts = self.raw_counts[ibin] / \
-                self.efficiency[ibin] / bin_width
-            local_corrected_counts_err = self.raw_counts_err[ibin] / \
-                self.efficiency[ibin] / bin_width
+            local_corrected_counts = self.raw_counts[ibin] / self.efficiency[ibin] / bin_width
+            local_corrected_counts_err = self.raw_counts_err[ibin] / self.efficiency[ibin] / bin_width
 
             if self.var == 'fPt':
-                local_corrected_counts = local_corrected_counts / \
-                    self.n_ev / self.branching_ratio / self.delta_rap
-                local_corrected_counts_err = local_corrected_counts_err / \
-                    self.n_ev / self.branching_ratio / self.delta_rap
+                local_corrected_counts = local_corrected_counts / self.n_ev / self.branching_ratio / self.delta_rap
+                local_corrected_counts_err = local_corrected_counts_err / self.n_ev / self.branching_ratio / self.delta_rap
 
-            self.h_corrected_counts.SetBinContent(
-                ibin + 1, local_corrected_counts)
-            self.h_corrected_counts.SetBinError(
-                ibin + 1, local_corrected_counts_err)
+            self.h_corrected_counts.SetBinContent(ibin + 1, local_corrected_counts)
+            self.h_corrected_counts.SetBinError(ibin + 1, local_corrected_counts_err)
 
             self.corrected_counts.append(local_corrected_counts)
             self.corrected_counts_err.append(local_corrected_counts_err)
-
-        self.output_dir.cd()
-        self.h_raw_counts.Write()
-        self.h_efficiency.Write()
 
     def fit(self):
 
@@ -195,15 +188,40 @@ class SpectraMaker:
         else:
             self.h_corrected_counts.Fit(self.fit_func, 'R')
 
-        self.output_dir.cd()
-        self.h_corrected_counts.Write()
-        self.fit_func.Write()
 
-    def vary_selection(self, var, sel):
-        if not self.selections:
-            raise RuntimeError('selections have not been sel yet.')
-        if isinstance(self.selections, list):
-            for i in range (0, len(self.selections)):
-                self.selections[i][var] = sel
-        else:
-            self.selections[var] = sel
+    
+    def del_dyn_members(self):
+        self.raw_counts = []
+        self.raw_counts_err = []
+        self.efficiency = []
+        self.corrected_counts = []
+        self.corrected_counts_err = []
+        self.h_signal_extractions_data = []
+        self.h_signal_extractions_mc = []
+
+        
+        self.h_raw_counts = None
+        self.h_efficiency = None
+        self.h_corrected_counts = None
+        
+
+
+    def dump_to_output_dir(self):
+        self.output_dir.cd()
+        self.h_raw_counts.Write()
+        self.h_efficiency.Write()
+        self.h_corrected_counts.Write()
+        for ibin in range(0, len(self.bins) - 1):
+            bin = [self.bins[ibin], self.bins[ibin + 1]]
+            self.output_dir.mkdir(f'{self.var}_{bin[0]}_{bin[1]}')
+            self.output_dir.cd(f'{self.var}_{bin[0]}_{bin[1]}')
+            h_data = self.h_signal_extractions_data[ibin]
+            h_mc = self.h_signal_extractions_mc[ibin]
+            bin_string_data = f'{self.var}_{self.bins[ibin]}_{self.bins[ibin + 1]}_data'
+            bin_string_mc = f'{self.var}_{self.bins[ibin]}_{self.bins[ibin + 1]}_mc'
+            h_data.SetName(bin_string_data)
+            h_mc.SetName(bin_string_mc)
+            h_data.Write()
+            h_mc.Write()
+        
+
