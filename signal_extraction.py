@@ -80,8 +80,10 @@ class SignalExtraction:
             background = ROOT.RooChebychev('bkg', 'pol1 bkg', mass, ROOT.RooArgList(c0))
         elif self.bkg_fit_func == 'pol2':
             background = ROOT.RooChebychev('bkg', 'pol2 bkg', mass, ROOT.RooArgList(c0, c1))
+        elif self.bkg_fit_func == 'expo':
+            background = ROOT.RooExponential('bkg', 'expo bkg', mass, c0)
         else:
-            raise ValueError(f'Invalid background fit function. Expected one of: pol1, pol2')
+            raise ValueError(f'Invalid background fit function. Expected one of: pol1, pol2, expo')
 
         if extended_likelihood:
             n_signal = ROOT.RooRealVar('n_signal', 'n_signal', 10., 1e6)

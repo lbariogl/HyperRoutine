@@ -36,6 +36,8 @@ if __name__ == '__main__':
     ct_bins = config['ct_bins']
     selections_std = config['selection']
     is_matter = config['is_matter']
+    signal_fit_func = config['signal_fit_func']
+    bkg_fit_func = config['bkg_fit_func']
     do_syst = config['do_syst']
     n_trials = config['n_trials']
 
@@ -52,7 +54,7 @@ if __name__ == '__main__':
     data_hdl = TreeHandler(input_file_name_data, 'O2datahypcands')
     mc_hdl = TreeHandler(input_file_name_mc, 'O2mchypcands')
 
-    lifetime_dist = ROOT.TH1D('syst_lifetime', ';#tau ps ;counts', 40, 160, 340)
+    lifetime_dist = ROOT.TH1D('syst_lifetime', ';#tau ps ;counts', 40, 120, 380)
     lifetime_prob = ROOT.TH1D('prob_lifetime', ';prob. ;counts', 100, 0, 1)
     
     # declare output file
@@ -108,11 +110,14 @@ if __name__ == '__main__':
     sel_string_list = [utils.convert_sel_to_string(sel) for sel in selections_std]
     spectra_maker.selection_string = sel_string_list
     spectra_maker.is_matter = is_matter
+    spectra_maker.inv_mass_signal_func = signal_fit_func
+    spectra_maker.inv_mass_bkg_func = bkg_fit_func
 
     spectra_maker.output_dir = output_dir_std
 
     fit_range = [ct_bins[0], ct_bins[-1]]
     spectra_maker.fit_range = fit_range
+    
 
     # create raw spectra
     spectra_maker.make_spectra()
@@ -120,13 +125,13 @@ if __name__ == '__main__':
 
     # define fit function
     expo = ROOT.TF1('myexpo', '[0]*exp(-x/([1]*0.029979245800))/((exp(-[2]/([1]*0.029979245800)) - exp(-[3]/([1]*0.029979245800))) * [1]*0.029979245800)', fit_range[0], fit_range[1])
-    expo.SetParLimits(1, 150, 500)
+    expo.SetParLimits(1, 100, 500)
     expo.FixParameter(2, fit_range[0])
     expo.FixParameter(3, fit_range[1])
     expo.SetLineColor(ROOT.kRed)
 
     spectra_maker.fit_func = expo
-    spectra_maker.fit_options = 'MI+'
+    spectra_maker.fit_options = 'MIQ+'
     spectra_maker.fit()
     spectra_maker.dump_to_output_dir()
     spectra_maker.del_dyn_members()
@@ -141,8 +146,7 @@ if __name__ == '__main__':
         trial_strings = []
         print("----------------------------------")
         print("** Starting systematics analysis **")
-        print(f'** {n_trials} combinations will be tested **')
-
+        print(f'** {n_trials} trials will be tested **')
 
 
         cut_dict_syst = config['cut_dict_syst']
@@ -160,10 +164,22 @@ if __name__ == '__main__':
             cut_string_dict[var] = []
             for cut in cut_arr:
                 cut_string_dict[var].append(var + cut_greater_string + str(cut))
-    
-
+        
+        cut_string_dict['signal_fit_func'] = signal_fit_func_syst
+        cut_string_dict['bkg_fit_func'] = bkg_fit_func_syst
         combos = list(product(*list(cut_string_dict.values())))
-        combo_random_indices = np.random.randint(len(combos), size=(n_trials, len(ct_bins) - 1))
+
+        if n_trials < len(combos):
+            combo_random_indices = np.random.randint(len(combos), size=(n_trials, len(ct_bins) - 1))
+        else:
+            print(f"** Warning: n_trials > n_combinations ({n_trials}, {len(combos)}), taking all the possible combinations **")
+            indices = np.arange(len(combos))
+            ## create a (len(combos), len(ct_bins) - 1) array with the indices repeated for each ct bin
+            combo_random_indices = np.repeat(indices[:, np.newaxis], len(ct_bins) - 1, axis=1)
+            ## now shuffle each column of the array
+            for i in range(combo_random_indices.shape[1]):
+                np.random.shuffle(combo_random_indices[:, i])       
+
 
         combo_check_map = {}
 
@@ -180,14 +196,13 @@ if __name__ == '__main__':
             for ict in range(len(ct_bins) - 1):
                 combo = combos[combo_indices[ict]]
                 ct_bin = [ct_bins[ict], ct_bins[ict + 1]]
-                sel_string = " & ".join(combo)
                 full_combo_string = f'ct {ct_bin[0]}_{ct_bin[1]} | '
-                full_combo_string += sel_string
+                full_combo_string += " & ".join(combo)
 
                 ### extract a signal and a background fit function
-                signal_fit_func = signal_fit_func_syst[np.random.randint(len(signal_fit_func_syst))]
-                bkg_fit_func = bkg_fit_func_syst[np.random.randint(len(bkg_fit_func_syst))]
-                full_combo_string += " & " + signal_fit_func + " & " + bkg_fit_func
+                sel_string = " & ".join(combo[: -2])
+                signal_fit_func = combo[-2]
+                bkg_fit_func = combo[-1]
 
                 if full_combo_string in combo_check_map:
                     break
