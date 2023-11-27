@@ -33,7 +33,17 @@ if __name__ == '__main__':
     input_analysis_results_file = config['input_analysis_results_file']
     output_dir_name = config['output_dir']
     output_file_name = config['output_file'] + '_separated.root'
-    ct_bins = config['ct_bins']
+
+    if 'ct_bins' in config:
+        analysis_var = 'fCt'
+    else:
+        analysis_var = 'fPt'
+
+    if analysis_var == 'fCt':
+        analysis_bins = config['ct_bins']
+    else:
+        analysis_bins = config['pt_bins']
+
     selections_std = config['selection']
     is_matter = config['is_matter']
     cut_dict_syst = config['cut_dict_syst']
@@ -48,7 +58,10 @@ if __name__ == '__main__':
         raise ValueError(f'Invalid is-matter option. Expected one of: {matter_options}')
 
     print('**********************************')
-    print('    Running ct_analysis.py')
+    if analysis_var == 'fCt':
+        print('    Running ct_analysis.py')
+    else:
+        print('    Running pt_analysis.py')
     print('**********************************\n')
     print("----------------------------------")
     print("** Loading data and apply preselections **")
@@ -90,7 +103,11 @@ if __name__ == '__main__':
 
     print("** Data loaded. ** \n")
     print("----------------------------------")
-    print("** Starting ct analysis **")
+
+    if analysis_var == 'fCt':
+        print("** Starting ct analysis **")
+    else:
+        print("** Starting pt analysis **")
 
     # get number of events
     n_ev = uproot.open(input_analysis_results_file)['hyper-reco-task']['hZvtx'].values().sum()
@@ -143,8 +160,8 @@ if __name__ == '__main__':
             spectra_maker.branching_ratio = 0.25
             spectra_maker.delta_rap = 2.0
 
-            spectra_maker.var = 'fCt'
-            spectra_maker.bins = ct_bins
+            spectra_maker.var = analysis_var
+            spectra_maker.bins = analysis_bins
             # varying the standard selections with the cut of interest
             selections_new = copy.deepcopy(selections_std)
             for element in selections_new:
@@ -155,7 +172,7 @@ if __name__ == '__main__':
 
             spectra_maker.output_dir = output_dir_varied
 
-            fit_range = [ct_bins[0], ct_bins[-1]]
+            fit_range = [analysis_bins[0], analysis_bins[-1]]
             spectra_maker.fit_range = fit_range
 
             # create raw spectra
@@ -169,7 +186,10 @@ if __name__ == '__main__':
             # create corrected spectra
             spectra_maker.make_histos()
             histo = copy.deepcopy(spectra_maker.h_corrected_counts)
-            histo.SetName(f'hCt{var}_{i}')
+            if analysis_var == 'fCt':
+                histo.SetName(f'hCt{var}_{i}')
+            else:
+                histo.SetName(f'hPt{var}_{i}')
             spectra_dict[var].append(histo)
 
             del spectra_maker
@@ -180,11 +200,12 @@ if __name__ == '__main__':
     for var, histos in spectra_dict.items():
         output_file.cd(f'{var}')
         canvas_dict[var].cd()
-        canvas_dict[var].DrawFrame(0., 0., 20., 3000., r';#it{ct} (cm);#frac{d#it{N}}{d(#it{ct})} (cm^{-1})')
+        if analysis_var == 'fCt':
+            canvas_dict[var].DrawFrame(0., 0., 20., 3000., r';#it{ct} (cm);#frac{d#it{N}}{d(#it{ct})} (cm^{-1})')
+        else:
+            canvas_dict[var].DrawFrame(1., 0., 5., 1.5e-8, r';#it{p}_{T} (GeV/#it{c});#frac{d#it{N}}{d#it{p}_{T}} (GeV/#it{c})^{-1}')
         for i_histo, histo in enumerate(histos):
             utils.setHistStyle(histo, cols.At(i_histo*4))
-            print(f'cut:{cut_string_dict[var][i_histo]}')
-            print(f'color:{cols.At(i_histo)}')
             legend_dict[var].AddEntry(histo, f'{cut_string_dict[var][i_histo]}', 'PE')
             histo.Draw('PE SAME')
         legend_dict[var].Draw()
