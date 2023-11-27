@@ -55,12 +55,12 @@ class SignalExtraction:
         # define signal and bkg variables
         if self.is_3lh:
             mass = ROOT.RooRealVar('m', self.inv_mass_string, 2.96, 3.04, 'GeV/c^{2}')
-            mu = ROOT.RooRealVar('mu', 'hypernucl mass', 2.97, 2.992, 'GeV/c^{2}')
+            mu = ROOT.RooRealVar('mu', 'hypernucl mass', 2.985, 2.992, 'GeV/c^{2}')
         else:
             mass = ROOT.RooRealVar('m', self.inv_mass_string, 3.89, 3.97, 'GeV/c^{2}')
             mu = ROOT.RooRealVar('mu', 'hypernucl mass', 3.9, 3.95, 'GeV/c^{2}')
 
-        sigma = ROOT.RooRealVar('sigma', 'hypernucl width', 0.001, 0.004, 'GeV/c^{2}')
+        sigma = ROOT.RooRealVar('sigma', 'hypernucl width', 0.001, 0.0024, 'GeV/c^{2}')
         a1 = ROOT.RooRealVar('a1', 'a1', 0, 5.)
         a2 = ROOT.RooRealVar('a2', 'a2', 0, 5.)
         n1 = ROOT.RooRealVar('n1', 'n1', 1, 5.)
@@ -86,7 +86,7 @@ class SignalExtraction:
             raise ValueError(f'Invalid background fit function. Expected one of: pol1, pol2, expo')
 
         if extended_likelihood:
-            n_signal = ROOT.RooRealVar('n_signal', 'n_signal', 10., 1e6)
+            n_signal = ROOT.RooRealVar('n_signal', 'n_signal', 12., 1e4)
             n_background = ROOT.RooRealVar('n_background', 'n_background', 0., 1e6)
         else:
             f = ROOT.RooRealVar('f', 'fraction of signal', 0., 0.4)

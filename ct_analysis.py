@@ -3,13 +3,14 @@ ROOT.gROOT.SetBatch(True)
 ROOT.RooMsgService.instance().setSilentMode(True)
 ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.ERROR)
 
+import os
 import numpy as np
 import uproot
 import argparse
 import yaml
-import copy
 from itertools import product
 from hipe4ml.tree_handler import TreeHandler
+
 
 import sys
 sys.path.append('utils')
@@ -36,6 +37,7 @@ if __name__ == '__main__':
     ct_bins = config['ct_bins']
     selections_std = config['selection']
     is_matter = config['is_matter']
+
     signal_fit_func = config['signal_fit_func']
     bkg_fit_func = config['bkg_fit_func']
     do_syst = config['do_syst']
@@ -54,8 +56,8 @@ if __name__ == '__main__':
     data_hdl = TreeHandler(input_file_name_data, 'O2datahypcands')
     mc_hdl = TreeHandler(input_file_name_mc, 'O2mchypcands')
 
-    lifetime_dist = ROOT.TH1D('syst_lifetime', ';#tau ps ;counts', 40, 120, 380)
-    lifetime_prob = ROOT.TH1D('prob_lifetime', ';prob. ;counts', 100, 0, 1)
+    lifetime_dist = ROOT.TH1D('syst_lifetime', ';#tau ps ;Counts', 40, 120, 380)
+    lifetime_prob = ROOT.TH1D('prob_lifetime', ';prob. ;Counts', 100, 0, 1)
     
     # declare output file
     output_file = ROOT.TFile.Open(f'{output_dir_name}/{output_file_name}.root', 'recreate')
@@ -121,6 +123,7 @@ if __name__ == '__main__':
 
     # create raw spectra
     spectra_maker.make_spectra()
+    # create corrected spectra
     spectra_maker.make_histos()
 
     # define fit function
@@ -255,6 +258,8 @@ if __name__ == '__main__':
     print("** Systematics analysis done. ** \n")
 
     ## write trial strings to a text file
+    if os.path.exists(f'{output_dir_name}/{output_file_name}.txt'):
+        os.remove(f'{output_dir_name}/{output_file_name}.txt')
     with open(f'{output_dir_name}/{output_file_name}.txt', 'w') as f:
         for trial_string in trial_strings:
             if isinstance(trial_string, list):
