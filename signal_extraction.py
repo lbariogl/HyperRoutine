@@ -38,6 +38,8 @@ class SignalExtraction:
         self.mc_frame_fit = None
         self.data_frame_fit = None
         self.local_pvalue_graph = None
+        self.chi2_data = None
+        self.chi2_mc = None
 
 
 
@@ -102,8 +104,8 @@ class SignalExtraction:
             sigma.setRange(sigma.getVal(), sigma.getVal()*1.5)
             self.mc_frame_fit = mass.frame(80)
             self.mc_frame_fit.SetName('mc_frame_fit')
-            mass_roo_mc.plotOn(self.mc_frame_fit)
-            signal.plotOn(self.mc_frame_fit)
+            mass_roo_mc.plotOn(self.mc_frame_fit, ROOT.RooFit.Name('mc'), ROOT.RooFit.DrawOption('p'))
+            signal.plotOn(self.mc_frame_fit, ROOT.RooFit.Name('signal'), ROOT.RooFit.DrawOption('p'))
             fit_param = ROOT.TPaveText(0.6, 0.6, 0.9, 0.9, 'NDC')
             fit_param.SetBorderSize(0)
             fit_param.SetFillStyle(0)
@@ -111,6 +113,8 @@ class SignalExtraction:
             fit_param.AddText('#mu = ' + f'{mu.getVal()*1e3:.2f} #pm {mu.getError()*1e3:.2f}' + ' MeV/#it{c}^{2}')
             fit_param.AddText('#sigma = ' + f'{sigma.getVal()*1e3:.2f} #pm {sigma.getError()*1e3:.2f}' + ' MeV/#it{c}^{2}')
             self.mc_frame_fit.addObject(fit_param)
+            self.chi2_mc = self.mc_frame_fit.chiSquare('signal', 'mc')
+            fit_param.AddText('#chi^{2} = ' + f'{self.chi2_mc}')
 
         # define the fit function and perform the actual fit
         if extended_likelihood:
@@ -147,6 +151,8 @@ class SignalExtraction:
         self.pdf.plotOn(self.data_frame_fit, ROOT.RooFit.Components('bkg'), ROOT.RooFit.LineStyle(ROOT.kDashed), ROOT.RooFit.LineColor(kOrangeC))
         self.pdf.plotOn(self.data_frame_fit, ROOT.RooFit.LineColor(kBlueC), ROOT.RooFit.Name('fit_func'))
 
+        self.chi2_data = self.data_frame_fit.chiSquare('fit_func', 'data')
+
         self.data_frame_fit.GetYaxis().SetTitleSize(0.06)
         self.data_frame_fit.GetYaxis().SetTitleOffset(0.9)
         self.data_frame_fit.GetYaxis().SetMaxDigits(2)
@@ -177,6 +183,7 @@ class SignalExtraction:
         pinfo_vals.AddText('S/#sqrt{S+B} (3 #sigma): ' + f'{significance:.1f} #pm {significance_err:.1f}')
         pinfo_vals.AddText('#mu = ' + f'{mu_val*1e3:.2f} #pm {mu.getError()*1e3:.2f}' + ' MeV/#it{c}^{2}')
         pinfo_vals.AddText('#sigma = ' + f'{sigma_val*1e3:.2f} #pm {sigma.getError()*1e3:.2f}' + ' MeV/#it{c}^{2}')
+        pinfo_vals.AddText('#chi^{2} = ' + f'{self.chi2_data}')
 
         ## add pave for ALICE performance
         if self.performance:

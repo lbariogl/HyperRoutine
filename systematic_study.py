@@ -179,18 +179,27 @@ if __name__ == '__main__':
             spectra_maker.make_spectra()
 
             # draw plot for signal extraction in each bin
-            output_dir_varied.cd()
+            data_output_dir_varied = output_dir_varied.mkdir('data')
+            mc_output_dir_varied = output_dir_varied.mkdir('mc')
+
+            data_output_dir_varied.cd()
             for i, frame in enumerate(spectra_maker.h_signal_extractions_data):
+                frame.Write(f'fInvariantMass_{i}')
+
+            mc_output_dir_varied.cd()
+            for i, frame in enumerate(spectra_maker.h_signal_extractions_mc):
                 frame.Write(f'fInvariantMass_{i}')
 
             # create corrected spectra
             spectra_maker.make_histos()
             histo = copy.deepcopy(spectra_maker.h_corrected_counts)
             if analysis_var == 'fCt':
-                histo.SetName(f'hCt{var}_{i}')
+                histo.SetName(f'hCt{var}_{i_cut}')
             else:
-                histo.SetName(f'hPt{var}_{i}')
+                histo.SetName(f'hPt{var}_{i_cut}')
             spectra_dict[var].append(histo)
+            data_output_dir_varied.cd()
+            histo.Write()
 
             del spectra_maker
 
