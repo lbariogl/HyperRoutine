@@ -1,26 +1,25 @@
+from spectra import SpectraMaker
+from hipe4ml.tree_handler import TreeHandler
+import yaml
+import argparse
+import uproot
+import numpy as np
+import copy
 import ROOT
 ROOT.gROOT.SetBatch(True)
 ROOT.RooMsgService.instance().setSilentMode(True)
 ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.ERROR)
 
-import copy
-import numpy as np
-import uproot
-import argparse
-import yaml
-from hipe4ml.tree_handler import TreeHandler
-
-
 import sys
 sys.path.append('utils')
 import utils as utils
-from spectra import SpectraMaker
-
 
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser(description='Configure the parameters of the script.')
-    parser.add_argument('--config-file', dest='config_file', help="path to the YAML file with configuration.", default='')
+    parser = argparse.ArgumentParser(
+        description='Configure the parameters of the script.')
+    parser.add_argument('--config-file', dest='config_file',
+                        help="path to the YAML file with configuration.", default='')
     args = parser.parse_args()
     if args.config_file == "":
         print('** No config file provided. Exiting. **')
@@ -52,10 +51,13 @@ if __name__ == '__main__':
     bkg_fit_func = config['bkg_fit_func']
     do_syst = config['do_syst']
     n_trials = config['n_trials']
+    n_bins_mass_data = config['n_bins_mass_data']
+    n_bins_mass_mc = config['n_bins_mass_mc']
 
     matter_options = ['matter', 'antimatter', 'both']
     if is_matter not in matter_options:
-        raise ValueError(f'Invalid is-matter option. Expected one of: {matter_options}')
+        raise ValueError(
+            f'Invalid is-matter option. Expected one of: {matter_options}')
 
     print('**********************************')
     if analysis_var == 'fCt':
@@ -70,7 +72,8 @@ if __name__ == '__main__':
     mc_hdl = TreeHandler(input_file_name_mc, 'O2mchypcands')
 
     # declare output file
-    output_file = ROOT.TFile.Open(f'{output_dir_name}/{output_file_name}', 'recreate')
+    output_file = ROOT.TFile.Open(
+        f'{output_dir_name}/{output_file_name}', 'recreate')
 
     # Add columns to the handlers
     utils.correct_and_convert_df(data_hdl, calibrate_he3_pt=True)
@@ -91,6 +94,18 @@ if __name__ == '__main__':
         data_hdl.apply_preselections(matter_sel)
         mc_hdl.apply_preselections(mc_matter_sel)
 
+    # get Standard Spectrum
+    standard_file = ROOT.TFile(
+        f"{output_dir_name}/{config['output_file']}.root")
+    std_spectrum = standard_file.Get('std/h_corrected_counts')
+    std_spectrum.SetDirectory(0)
+    utils.setHistStyle(std_spectrum, ROOT.kRed)
+    std_corrected_counts = []
+    std_corrected_counts_err = []
+    for i_bin in range(1, std_spectrum.GetNbinsX()+1):
+        std_corrected_counts.append(std_spectrum.GetBinContent(i_bin))
+        std_corrected_counts_err.append(std_spectrum.GetBinError(i_bin))
+
     # reweight MC pT spectrum
     spectra_file = ROOT.TFile.Open('utils/heliumSpectraMB.root')
     he3_spectrum = spectra_file.Get('fCombineHeliumSpecLevyFit_0-100')
@@ -98,7 +113,8 @@ if __name__ == '__main__':
     utils.reweight_pt_spectrum(mc_hdl, 'fAbsGenPt', he3_spectrum)
 
     mc_hdl.apply_preselections('rej==True')
-    mc_hdl.apply_preselections('fGenCt < 28.5 or fGenCt > 28.6') ### Needed to remove the peak at 28.5 cm in the anchored MC
+    # Needed to remove the peak at 28.5 cm in the anchored MC
+    mc_hdl.apply_preselections('fGenCt < 28.5 or fGenCt > 28.6')
     mc_reco_hdl = mc_hdl.apply_preselections('fIsReco == 1', inplace=False)
 
     print("** Data loaded. ** \n")
@@ -110,7 +126,8 @@ if __name__ == '__main__':
         print("** Starting pt analysis **")
 
     # get number of events
-    n_ev = uproot.open(input_analysis_results_file)['hyper-reco-task']['hZvtx'].values().sum()
+    n_ev = uproot.open(input_analysis_results_file)[
+        'hyper-reco-task']['hZvtx'].values().sum()
 
     #########################
     #     varied cuts
@@ -137,10 +154,17 @@ if __name__ == '__main__':
     canvas_dict = {}
     legend_dict = {}
 
+    chi2_selection_dict = {}
+    relative_error_selection_dict = {}
+    outlier_selection_dict = {}
+
     for var, cuts in cut_string_dict.items():
         var_dir = output_file.mkdir(f'{var}')
 
         spectra_dict[var] = []
+        chi2_selection_dict[var] = []
+        relative_error_selection_dict[var] = []
+        outlier_selection_dict[var] = []
         canvas_dict[var] = ROOT.TCanvas(f'c{var}', f'c{var}', 800, 600)
         legend_dict[var] = ROOT.TLegend(0.45, 0.52, 0.92, 0.86, '', 'brNDC')
 
@@ -166,9 +190,12 @@ if __name__ == '__main__':
             selections_new = copy.deepcopy(selections_std)
             for element in selections_new:
                 element[var] = cut
-            sel_string_list = [utils.convert_sel_to_string(sel) for sel in selections_new]
+            sel_string_list = [utils.convert_sel_to_string(
+                sel) for sel in selections_new]
             spectra_maker.selection_string = sel_string_list
             spectra_maker.is_matter = is_matter
+            spectra_maker.n_bins_mass_data = n_bins_mass_data
+            spectra_maker.n_bins_mass_mc = n_bins_mass_mc
 
             spectra_maker.output_dir = output_dir_varied
 
@@ -177,6 +204,11 @@ if __name__ == '__main__':
 
             # create raw spectra
             spectra_maker.make_spectra()
+            chi2_check = spectra_maker.chi2_selection()
+            chi2_selection_dict[var].append(chi2_check)
+
+            if not chi2_check:
+                print('   Rejeted for chi2')
 
             # draw plot for signal extraction in each bin
             data_output_dir_varied = output_dir_varied.mkdir('data')
@@ -193,6 +225,12 @@ if __name__ == '__main__':
             # create corrected spectra
             spectra_maker.make_histos()
             histo = copy.deepcopy(spectra_maker.h_corrected_counts)
+
+            relative_error_check = spectra_maker.relative_error_selection()
+            relative_error_selection_dict[var].append(relative_error_check)
+            if not relative_error_check:
+                print('   Rejeted for large relative error of corrected counts')
+
             if analysis_var == 'fCt':
                 histo.SetName(f'hCt{var}_{i_cut}')
             else:
@@ -201,22 +239,48 @@ if __name__ == '__main__':
             data_output_dir_varied.cd()
             histo.Write()
 
+            outlier_check = spectra_maker.outlier_selection(
+                std_corrected_counts, std_corrected_counts_err)
+            outlier_selection_dict[var].append(outlier_check)
+            if not outlier_check:
+                print('   Rejeted for outlier')
+
             del spectra_maker
 
     # get color paletter
     cols = ROOT.TColor.GetPalette()
 
+    output_file.cd()
+    output_file.mkdir('std')
+    # std_spectrum.Write()
+
     for var, histos in spectra_dict.items():
         output_file.cd(f'{var}')
         canvas_dict[var].cd()
         if analysis_var == 'fCt':
-            canvas_dict[var].DrawFrame(0., 0., 20., 3000., r';#it{ct} (cm);#frac{d#it{N}}{d(#it{ct})} (cm^{-1})')
+            canvas_dict[var].DrawFrame(
+                0., 0., 20., 3000., r';#it{ct} (cm);#frac{d#it{N}}{d(#it{ct})} (cm^{-1})')
         else:
-            canvas_dict[var].DrawFrame(1., 0., 5., 1.5e-8, r';#it{p}_{T} (GeV/#it{c});#frac{d#it{N}}{d#it{p}_{T}} (GeV/#it{c})^{-1}')
+            canvas_dict[var].DrawFrame(
+                1., 0., 5., 1.5e-8, r';#it{p}_{T} (GeV/#it{c});#frac{d#it{N}}{d#it{p}_{T}} (GeV/#it{c})^{-1}')
         for i_histo, histo in enumerate(histos):
+
+            if not chi2_selection_dict[var][i_histo]:
+                continue
+
+            if not relative_error_selection_dict[var][i_histo]:
+                continue
+
+            if not outlier_selection_dict[var][i_histo]:
+                continue
+
             utils.setHistStyle(histo, cols.At(i_histo*4))
-            legend_dict[var].AddEntry(histo, f'{cut_string_dict[var][i_histo]}', 'PE')
+            legend_dict[var].AddEntry(
+                histo, f'{cut_string_dict[var][i_histo]}', 'PE')
             histo.Draw('PE SAME')
+        legend_dict[var].AddEntry(
+            std_spectrum, 'std', 'PE')
+        std_spectrum.Draw('PE SAME')
         legend_dict[var].Draw()
         legend_dict[var].SetNColumns(5)
         canvas_dict[var].Write()
