@@ -2,6 +2,8 @@ import ROOT
 ROOT.gROOT.SetBatch(True)
 ROOT.RooMsgService.instance().setSilentMode(True)
 ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.ERROR)
+ROOT.gStyle.SetOptStat(0)
+ROOT.gStyle.SetOptFit(0)
 
 import os
 import numpy as np
@@ -277,15 +279,13 @@ if __name__ == '__main__':
     std_errorbox = ROOT.TBox(std_lifetime - std_lifetime_err, 0, std_lifetime + std_lifetime_err, 1.1 * lifetime_dist.GetMaximum())
     std_errorbox.SetFillColorAlpha(ROOT.kRed, 0.5)
     std_errorbox.SetLineWidth(0)
-    #draw histogram with systematic variations
-    lifetime_dist.Draw('SAME')
-    fit_func.Draw('SAME')
-    fit_param.Draw()
 
     cLifetime.cd()
     lifetime_dist.Draw('HISTO SAME')
+    fit_func.Draw('SAME')
     std_errorbox.Draw()
     std_line.Draw()
+    fit_param.Draw()
 
     output_dir_std.cd()
     lifetime_dist.Write()
@@ -297,12 +297,13 @@ if __name__ == '__main__':
     print("** Systematics analysis done. ** \n")
 
     ## write trial strings to a text file
-    if os.path.exists(f'{output_dir_name}/{output_file_name}.txt'):
-        os.remove(f'{output_dir_name}/{output_file_name}.txt')
-    with open(f'{output_dir_name}/{output_file_name}.txt', 'w') as f:
-        for trial_string in trial_strings:
-            if isinstance(trial_string, list):
-                for line in trial_string:
-                    f.write("%s\n" % line)
-            else:
-                f.write("%s\n" % trial_string)
+    if do_syst:
+        if os.path.exists(f'{output_dir_name}/{output_file_name}.txt'):
+            os.remove(f'{output_dir_name}/{output_file_name}.txt')
+        with open(f'{output_dir_name}/{output_file_name}.txt', 'w') as f:
+            for trial_string in trial_strings:
+                if isinstance(trial_string, list):
+                    for line in trial_string:
+                        f.write("%s\n" % line)
+                else:
+                    f.write("%s\n" % trial_string)
