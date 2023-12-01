@@ -10,6 +10,7 @@ import argparse
 import yaml
 from itertools import product
 from hipe4ml.tree_handler import TreeHandler
+import copy
 
 
 import sys
@@ -58,7 +59,7 @@ if __name__ == '__main__':
 
     lifetime_dist = ROOT.TH1D('syst_lifetime', ';#tau ps ;Counts', 40, 120, 380)
     lifetime_prob = ROOT.TH1D('prob_lifetime', ';prob. ;Counts', 100, 0, 1)
-    
+
     # declare output file
     output_file = ROOT.TFile.Open(f'{output_dir_name}/{output_file_name}.root', 'recreate')
 
@@ -119,7 +120,6 @@ if __name__ == '__main__':
 
     fit_range = [ct_bins[0], ct_bins[-1]]
     spectra_maker.fit_range = fit_range
-    
 
     # create raw spectra
     spectra_maker.make_spectra()
@@ -137,6 +137,8 @@ if __name__ == '__main__':
     spectra_maker.fit_options = 'MIQ+'
     spectra_maker.fit()
     spectra_maker.dump_to_output_dir()
+    std_lifetime = spectra_maker.fit_func.GetParameter(1)
+    std_lifetime_err = spectra_maker.fit_func.GetParError(1)
     spectra_maker.del_dyn_members()
 
     print("** ct analysis done. ** \n")
@@ -167,7 +169,7 @@ if __name__ == '__main__':
             cut_string_dict[var] = []
             for cut in cut_arr:
                 cut_string_dict[var].append(var + cut_greater_string + str(cut))
-        
+
         cut_string_dict['signal_fit_func'] = signal_fit_func_syst
         cut_string_dict['bkg_fit_func'] = bkg_fit_func_syst
         combos = list(product(*list(cut_string_dict.values())))
@@ -181,8 +183,7 @@ if __name__ == '__main__':
             combo_random_indices = np.repeat(indices[:, np.newaxis], len(ct_bins) - 1, axis=1)
             ## now shuffle each column of the array
             for i in range(combo_random_indices.shape[1]):
-                np.random.shuffle(combo_random_indices[:, i])       
-
+                np.random.shuffle(combo_random_indices[:, i])
 
         combo_check_map = {}
 
@@ -209,13 +210,13 @@ if __name__ == '__main__':
 
                 if full_combo_string in combo_check_map:
                     break
-                
+
                 combo_check_map[full_combo_string] = True
-                
+
                 cut_selection_list.append(sel_string)
                 bkg_fit_func_list.append(bkg_fit_func)
                 signal_fit_func_list.append(signal_fit_func)
-            
+
             if len(cut_selection_list) != len(ct_bins) - 1:
                 continue
 
@@ -248,11 +249,49 @@ if __name__ == '__main__':
                 lifetime_prob.Fill(spectra_maker.fit_func.GetProb())
 
             spectra_maker.del_dyn_members()
-    
-    
+
+    # fitting lifetime distributions
+    fit_func = ROOT.TF1('fit_func', 'gaus', 120, 380)
+    fit_func.SetLineColor(ROOT.kGreen+3)
+    lifetime_dist.Fit(fit_func, 'Q')
+    syst_mu = fit_func.GetParameter(1)
+    syst_mu_err = fit_func.GetParError(1)
+    syst_sigma = fit_func.GetParameter(2)
+    syst_sigma_err = fit_func.GetParError(2)
+    fit_param = ROOT.TPaveText(0.7, 0.6, 0.9, 0.82, 'NDC')
+    fit_param.SetBorderSize(0)
+    fit_param.SetFillStyle(0)
+    fit_param.SetTextAlign(12)
+    fit_param.SetTextFont(42)
+    fit_param.AddText('#mu = ' + f'{syst_mu:.2f} #pm {syst_mu_err:.2f}' + ' ps')
+    fit_param.AddText('#sigma = ' + f'{syst_sigma:.2f} #pm {syst_sigma_err:.2f}' + ' ps')
+    fit_param.AddText('standard  #tau = ' + f'{std_lifetime:.2f} #pm {std_lifetime_err:.2f}' + ' ps')
+
+    cLifetime = ROOT.TCanvas('cLifetime', 'cLifetime', 800, 600)
+    cLifetime.DrawFrame(120, 0, 380, 1.1 * lifetime_dist.GetMaximum(), r';#tau (ps);')
+    # create a line for the standard value of lifetime
+    std_line = ROOT.TLine(std_lifetime, 0, std_lifetime, 1.1 * lifetime_dist.GetMaximum())
+    std_line.SetLineColor(ROOT.kRed)
+    std_line.SetLineWidth(2)
+    # create box for statistical uncertainty
+    std_errorbox = ROOT.TBox(std_lifetime - std_lifetime_err, 0, std_lifetime + std_lifetime_err, 1.1 * lifetime_dist.GetMaximum())
+    std_errorbox.SetFillColorAlpha(ROOT.kRed, 0.5)
+    std_errorbox.SetLineWidth(0)
+    #draw histogram with systematic variations
+    lifetime_dist.Draw('SAME')
+    fit_func.Draw('SAME')
+    fit_param.Draw()
+
+    cLifetime.cd()
+    lifetime_dist.Draw('HISTO SAME')
+    std_errorbox.Draw()
+    std_line.Draw()
+
     output_dir_std.cd()
     lifetime_dist.Write()
     lifetime_prob.Write()
+    cLifetime.Write()
+    cLifetime.SaveAs(f'{output_dir_name}/cLifetime.pdf')
     output_file.Close()
 
     print("** Systematics analysis done. ** \n")
