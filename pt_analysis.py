@@ -156,7 +156,7 @@ if __name__ == '__main__':
     h_pt_syst = []
     for i_bin in range(0, len(spectra_maker.bins) - 1):
 
-        bin_label = f'{spectra_maker.bins[i_bin]} #leq #it{{p}}_{{T}} < {spectra_maker.bins[i_bin + 1]} GeV/#it{{c}}'
+        bin_label = f'{spectra_maker.bins[i_bin]}' + r' #leq #it{p}_{T} < ' f'{spectra_maker.bins[i_bin + 1]}' + r' GeV/#it{c}'
 
         histo = ROOT.TH1D(f'hPtSyst_{i_bin}', f'{bin_label}' + r';#frac{d#it{N}}{d#it{p}_{T}} (GeV/#it{c})^{-1};',
                           50, 0.5 * std_corrected_counts[i_bin], 1.5 * std_corrected_counts[i_bin])
@@ -287,12 +287,12 @@ if __name__ == '__main__':
                          1.1 * h_pt_syst[i_bin].GetMaximum(), r';d#it{N}} / d#it{p}_{T} (GeV/#it{c})^{-1};')
         # create a line for the standard value of lifetime
         std_line = ROOT.TLine(
-            std_corrected_counts[i_bin], 0, std_corrected_counts[i_bin], 1.1 * h_pt_syst[i_bin].GetMaximum())
+            std_corrected_counts[i_bin], 0, std_corrected_counts[i_bin], 1.05 * h_pt_syst[i_bin].GetMaximum())
         std_line.SetLineColor(ROOT.kRed)
         std_line.SetLineWidth(2)
         # create box for statistical uncertainty
         std_errorbox = ROOT.TBox(std_corrected_counts[i_bin] - std_corrected_counts_err[i_bin], 0,
-                                 std_corrected_counts[i_bin] + std_corrected_counts_err[i_bin], 1.1 * h_pt_syst[i_bin].GetMaximum())
+                                 std_corrected_counts[i_bin] + std_corrected_counts_err[i_bin], 1.05 * h_pt_syst[i_bin].GetMaximum())
         std_errorbox.SetFillColorAlpha(ROOT.kRed, 0.5)
         std_errorbox.SetLineWidth(0)
         # fitting histogram with systematic variations
@@ -316,7 +316,7 @@ if __name__ == '__main__':
         fit_param.AddText(
             '#sigma = ' + f'{syst_sigma:.2f} #pm {syst_sigma_err:.2f}' + ' ps')
         fit_param.AddText(
-            'standard value = ' + f'{std_corrected_counts[i_bin]:.2f} #pm {std_corrected_counts_err[i_bin]:.2f}' + r'GeV^{-1}')
+            'standard value = ' + f'{std_corrected_counts[i_bin]:.2f} #pm {std_corrected_counts_err[i_bin]:.2f}' + r' (GeV/#it{c})^{-1}')
         # draw histogram with systematic variations
         canvas.cd()
         h_pt_syst[i_bin].Draw('HISTO SAME')
