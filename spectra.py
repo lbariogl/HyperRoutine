@@ -153,15 +153,15 @@ class SpectraMaker:
                 'raw_counts is empty. You must run make_spectra first.')
 
         if self.var == 'fCt':
-            x_label = '#it{ct} (cm)'
-            y_raw_label = '#it{N}_{raw}'
-            y_eff_label = '#epsilon #times acc.'
-            y_corr_label = '#frac{d#it{N}}{d(#it{ct})} (cm^{-1})'
+            x_label = r'#it{ct} (cm)'
+            y_raw_label = r'#it{N}_{raw}'
+            y_eff_label = r'#epsilon #times acc.'
+            y_corr_label = r'#frac{d#it{N}}{d(#it{ct})} (cm^{-1})'
         else:
-            x_label = '#it{p}_{T} (GeV/#it{c})'
-            y_raw_label = '#it{N}{_{raw}'
-            y_eff_label = '#epsilon #times acc.'
-            y_corr_label = '#frac{d#it{N}}{d#it{p}_{T}} (GeV/#it{c})^{-1}'
+            x_label = r'#it{p}_{T} (GeV/#it{c})'
+            y_raw_label = r'#it{N}_{raw}'
+            y_eff_label = r'#epsilon #times acc.'
+            y_corr_label = r'#frac{d#it{N}}{d#it{p}_{T}} (GeV/#it{c})^{-1}'
 
         self.h_raw_counts = ROOT.TH1D('h_raw_counts', f';{x_label};{y_raw_label}', len(
             self.bins) - 1, np.array(self.bins, dtype=np.float64))
