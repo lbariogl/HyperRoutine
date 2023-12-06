@@ -147,6 +147,9 @@ if __name__ == '__main__':
     final_stat.SetName('hStat')
     utils.setHistStyle(final_stat, ROOT.kBlack)
     final_syst = final_stat.Clone('hSyst')
+    final_syst_rms = final_stat.Clone('hSystRMS')
+    final_syst_rms.SetLineColor(ROOT.kAzure+1)
+
     # std_yield = spectra_maker.fit_func.GetParameter(0)
     # std_yield_err = spectra_maker.fit_func.GetParError(0)
 
@@ -280,6 +283,7 @@ if __name__ == '__main__':
 
     # systematic uncetrainty fo each pt bin
     std_corrected_counts_err_syst = []
+    std_corrected_counts_err_rms = []
     for i_bin in range(0, len(spectra_maker.bins) - 1):
 
         canvas = ROOT.TCanvas(f'cYield_{i_bin}', f'cYield_{i_bin}', 800, 600)
@@ -305,6 +309,9 @@ if __name__ == '__main__':
         syst_sigma = fit_func.GetParameter(2)
         final_syst.SetBinError(i_bin, syst_sigma)
         std_corrected_counts_err_syst.append(syst_sigma)
+        syst_rms = h_pt_syst[i_bin].GetRMS()
+        final_syst_rms.SetBinError(i_bin, syst_rms)
+        std_corrected_counts_err_rms.append(syst_rms)
         syst_sigma_err = fit_func.GetParError(2)
         fit_param = ROOT.TPaveText(0.7, 0.6, 0.9, 0.82, 'NDC')
         fit_param.SetBorderSize(0)
@@ -312,11 +319,13 @@ if __name__ == '__main__':
         fit_param.SetTextAlign(12)
         fit_param.SetTextFont(42)
         fit_param.AddText(
-            '#mu = ' + f'{syst_mu:.2f} #pm {syst_mu_err:.2f}' + ' ps')
+            '#mu = ' + f'{syst_mu:.2e} #pm {syst_mu_err:.2e}' + r' (GeV/#it{c})^{-1}')
         fit_param.AddText(
-            '#sigma = ' + f'{syst_sigma:.2f} #pm {syst_sigma_err:.2f}' + ' ps')
+            '#sigma = ' + f'{syst_sigma:.2e} #pm {syst_sigma_err:.2e}' + r' (GeV/#it{c})^{-1}')
         fit_param.AddText(
-            'standard value = ' + f'{std_corrected_counts[i_bin]:.2f} #pm {std_corrected_counts_err[i_bin]:.2f}' + r' (GeV/#it{c})^{-1}')
+            'RMS = ' + f'{syst_rms:.2e} #pm {h_pt_syst[i_bin].GetRMSError():.2e}' + r' (GeV/#it{c})^{-1}')
+        fit_param.AddText(
+            'standard value = ' + f'{std_corrected_counts[i_bin]:.2e} #pm {std_corrected_counts_err[i_bin]:.2e}' + r' (GeV/#it{c})^{-1}')
         # draw histogram with systematic variations
         canvas.cd()
         h_pt_syst[i_bin].Draw('HISTO SAME')
@@ -329,6 +338,7 @@ if __name__ == '__main__':
 
     cFinalSpectrum = ROOT.TCanvas('cFinalSpectrum', 'cFinalSpectrum', 800, 600)
     final_stat.Draw('PE')
+    final_syst_rms.Draw('PE2 SAME')
     final_syst.Draw('PE2 SAME')
     cFinalSpectrum.Write()
     cFinalSpectrum.SaveAs(f'{output_dir_name}/cFinalSpectrum.pdf')
