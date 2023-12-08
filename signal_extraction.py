@@ -65,8 +65,8 @@ class SignalExtraction:
         sigma = ROOT.RooRealVar('sigma', 'hypernucl width', 0.001, 0.0024, 'GeV/c^{2}')
         a1 = ROOT.RooRealVar('a1', 'a1', 0.7, 5.)
         a2 = ROOT.RooRealVar('a2', 'a2', 0.7, 5.)
-        n1 = ROOT.RooRealVar('n1', 'n1', 0., 10.)
-        n2 = ROOT.RooRealVar('n2', 'n2', 0., 10.)
+        n1 = ROOT.RooRealVar('n1', 'n1', 0., 5.)
+        n2 = ROOT.RooRealVar('n2', 'n2', 0., 5.)
         c0 = ROOT.RooRealVar('c0', 'constant c0', -1., 1)
         c1 = ROOT.RooRealVar('c1', 'constant c1', -1., 1)
 
