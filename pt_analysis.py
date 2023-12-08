@@ -42,6 +42,7 @@ if __name__ == '__main__':
 
     signal_fit_func = config['signal_fit_func']
     bkg_fit_func = config['bkg_fit_func']
+    sigma_range_mc_to_data = config['sigma_range_mc_to_data']
     do_syst = config['do_syst']
     n_trials = config['n_trials']
 
@@ -161,7 +162,7 @@ if __name__ == '__main__':
 
         bin_label = f'{spectra_maker.bins[i_bin]}' + r' #leq #it{p}_{T} < ' f'{spectra_maker.bins[i_bin + 1]}' + r' GeV/#it{c}'
 
-        histo = ROOT.TH1D(f'hPtSyst_{i_bin}', f'{bin_label}' + r';#frac{d#it{N}}{d#it{p}_{T}} (GeV/#it{c})^{-1};',
+        histo = ROOT.TH1D(f'hPtSyst_{i_bin}', f'{bin_label}' + r';d#it{N} / d#it{p}_{T} (GeV/#it{c})^{-1};',
                           50, 0.5 * std_corrected_counts[i_bin], 1.5 * std_corrected_counts[i_bin])
         h_pt_syst.append(histo)
 
@@ -258,6 +259,7 @@ if __name__ == '__main__':
             spectra_maker.selection_string = cut_selection_list
             spectra_maker.inv_mass_signal_func = signal_fit_func_list
             spectra_maker.inv_mass_bkg_func = bkg_fit_func_list
+            spectra_maker.sigma_range_mc_to_data = sigma_range_mc_to_data
 
             spectra_maker.make_spectra()
             spectra_maker.make_histos()
@@ -287,8 +289,12 @@ if __name__ == '__main__':
     for i_bin in range(0, len(spectra_maker.bins) - 1):
 
         canvas = ROOT.TCanvas(f'cYield_{i_bin}', f'cYield_{i_bin}', 800, 600)
+        canvas.SetTopMargin(0.1)
+        canvas.SetBottomMargin(0.15)
+        canvas.SetLeftMargin(0.08)
+        canvas.SetRightMargin(0.08)
         canvas.DrawFrame(0.5 * std_corrected_counts[i_bin], 0, 1.5 * std_corrected_counts[i_bin],
-                         1.1 * h_pt_syst[i_bin].GetMaximum(), r';d#it{N}} / d#it{p}_{T} (GeV/#it{c})^{-1};')
+                         1.1 * h_pt_syst[i_bin].GetMaximum(), r';d#it{N} / d#it{p}_{T} (GeV/#it{c})^{-1};')
         # create a line for the standard value of lifetime
         std_line = ROOT.TLine(
             std_corrected_counts[i_bin], 0, std_corrected_counts[i_bin], 1.05 * h_pt_syst[i_bin].GetMaximum())
@@ -307,10 +313,10 @@ if __name__ == '__main__':
         syst_mu = fit_func.GetParameter(1)
         syst_mu_err = fit_func.GetParError(1)
         syst_sigma = fit_func.GetParameter(2)
-        final_syst.SetBinError(i_bin, syst_sigma)
+        final_syst.SetBinError(i_bin+1, syst_sigma)
         std_corrected_counts_err_syst.append(syst_sigma)
         syst_rms = h_pt_syst[i_bin].GetRMS()
-        final_syst_rms.SetBinError(i_bin, syst_rms)
+        final_syst_rms.SetBinError(i_bin+1, syst_rms)
         std_corrected_counts_err_rms.append(syst_rms)
         syst_sigma_err = fit_func.GetParError(2)
         fit_param = ROOT.TPaveText(0.7, 0.6, 0.9, 0.82, 'NDC')
@@ -337,7 +343,7 @@ if __name__ == '__main__':
         canvas.SaveAs(f'{output_dir_name}/cYield_{i_bin}.pdf')
 
     cFinalSpectrum = ROOT.TCanvas('cFinalSpectrum', 'cFinalSpectrum', 800, 600)
-    final_stat.Draw('PE')
+    final_stat.Draw('PEX0')
     final_syst_rms.Draw('PE2 SAME')
     final_syst.Draw('PE2 SAME')
     cFinalSpectrum.Write()

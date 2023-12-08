@@ -40,6 +40,8 @@ selection:
     },
   ]
 
+sigma_range_mc_to_data: [[1., 1.5], [1., 1.5], [1., 1.5], [1., 1.5]]
+
 do_syst: True
 n_trials: 1000
 bkg_fit_func_syst: ["pol1", "expo"]

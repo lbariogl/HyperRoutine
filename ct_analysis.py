@@ -43,6 +43,7 @@ if __name__ == '__main__':
 
     signal_fit_func = config['signal_fit_func']
     bkg_fit_func = config['bkg_fit_func']
+    sigma_range_mc_to_data = config['sigma_range_mc_to_data']
     do_syst = config['do_syst']
     n_trials = config['n_trials']
 
@@ -117,6 +118,7 @@ if __name__ == '__main__':
     spectra_maker.is_matter = is_matter
     spectra_maker.inv_mass_signal_func = signal_fit_func
     spectra_maker.inv_mass_bkg_func = bkg_fit_func
+    spectra_maker.sigma_range_mc_to_data = sigma_range_mc_to_data
 
     spectra_maker.output_dir = output_dir_std
 
