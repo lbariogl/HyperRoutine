@@ -46,6 +46,8 @@ if __name__ == '__main__':
     sigma_range_mc_to_data = config['sigma_range_mc_to_data']
     do_syst = config['do_syst']
     n_trials = config['n_trials']
+    n_bins_mass_data = config['n_bins_mass_data']
+    n_bins_mass_mc = config['n_bins_mass_mc']
 
     matter_options = ['matter', 'antimatter', 'both']
     if is_matter not in matter_options:
@@ -118,6 +120,8 @@ if __name__ == '__main__':
     spectra_maker.is_matter = is_matter
     spectra_maker.inv_mass_signal_func = signal_fit_func
     spectra_maker.inv_mass_bkg_func = bkg_fit_func
+    spectra_maker.n_bins_mass_data = n_bins_mass_data
+    spectra_maker.n_bins_mass_mc = n_bins_mass_mc
     spectra_maker.sigma_range_mc_to_data = sigma_range_mc_to_data
 
     spectra_maker.output_dir = output_dir_std
