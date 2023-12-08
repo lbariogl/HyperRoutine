@@ -22,18 +22,19 @@ class SignalExtraction:
         self.data_hdl = input_data_hdl
         self.mc_hdl = input_mc_hdl
         self.is_3lh = True
-        self.n_bins_data = 40
-        self.n_bins_mc = 80
         self.n_evts = 1e9
         self.is_matter = False
-        self.signal_fit_func = 'dscb'
-        self.bkg_fit_func = 'pol1'
         self.performance = False
         self.additional_pave_text = '' ## additional text to be added to the ALICE performance pave
 
-        ## variables
+        ## fit-related variables
         self.pdf = None
         self.roo_dataset = None
+        self.n_bins_data = 40
+        self.n_bins_mc = 80
+        self.signal_fit_func = 'dscb'
+        self.sigma_range_mc_to_data = [1, 1.5]
+        self.bkg_fit_func = 'pol1'
 
         ### frames to be saved to file
         self.mc_frame_fit = None
@@ -62,10 +63,10 @@ class SignalExtraction:
             mu = ROOT.RooRealVar('mu', 'hypernucl mass', 3.9, 3.95, 'GeV/c^{2}')
 
         sigma = ROOT.RooRealVar('sigma', 'hypernucl width', 0.001, 0.0024, 'GeV/c^{2}')
-        a1 = ROOT.RooRealVar('a1', 'a1', 0, 5.)
-        a2 = ROOT.RooRealVar('a2', 'a2', 0, 5.)
-        n1 = ROOT.RooRealVar('n1', 'n1', 1, 5.)
-        n2 = ROOT.RooRealVar('n2', 'n2', 1, 5.)
+        a1 = ROOT.RooRealVar('a1', 'a1', 0.7, 5.)
+        a2 = ROOT.RooRealVar('a2', 'a2', 0.7, 5.)
+        n1 = ROOT.RooRealVar('n1', 'n1', 0., 10.)
+        n2 = ROOT.RooRealVar('n2', 'n2', 0., 10.)
         c0 = ROOT.RooRealVar('c0', 'constant c0', -1., 1)
         c1 = ROOT.RooRealVar('c1', 'constant c1', -1., 1)
 
@@ -95,25 +96,30 @@ class SignalExtraction:
         # fix DSCB parameters to MC
         if self.mc_hdl != None:
             mass_roo_mc = utils.ndarray2roo(np.array(self.mc_hdl['fMassH3L'].values, dtype=np.float64), mass, 'histo_mc')
-            signal.fitTo(mass_roo_mc, ROOT.RooFit.Range(2.97, 3.01), ROOT.RooFit.PrintLevel(-1))
+            fit_results_mc = signal.fitTo(mass_roo_mc, ROOT.RooFit.Range(2.97, 3.01), ROOT.RooFit.Save(True), ROOT.RooFit.PrintLevel(-1))
             a1.setConstant()
             a2.setConstant()
             n1.setConstant()
             n2.setConstant()
-            sigma.setRange(sigma.getVal(), sigma.getVal()*1.75)
+            sigma.setRange(self.sigma_range_mc_to_data[0]*sigma.getVal(), self.sigma_range_mc_to_data[1]*sigma.getVal())
             self.mc_frame_fit = mass.frame(self.n_bins_mc)
             self.mc_frame_fit.SetName('mc_frame_fit')
             mass_roo_mc.plotOn(self.mc_frame_fit, ROOT.RooFit.Name('mc'), ROOT.RooFit.DrawOption('p'))
             signal.plotOn(self.mc_frame_fit, ROOT.RooFit.Name('signal'), ROOT.RooFit.DrawOption('p'))
-            fit_param = ROOT.TPaveText(0.6, 0.6, 0.9, 0.9, 'NDC')
+            fit_param = ROOT.TPaveText(0.6, 0.43, 0.9, 0.85, 'NDC')
             fit_param.SetBorderSize(0)
             fit_param.SetFillStyle(0)
             fit_param.SetTextAlign(12)
-            fit_param.AddText('#mu = ' + f'{mu.getVal()*1e3:.2f} #pm {mu.getError()*1e3:.2f}' + ' MeV/#it{c}^{2}')
-            fit_param.AddText('#sigma = ' + f'{sigma.getVal()*1e3:.2f} #pm {sigma.getError()*1e3:.2f}' + ' MeV/#it{c}^{2}')
+            fit_param.AddText(r'#mu = ' + f'{mu.getVal()*1e3:.2f} #pm {mu.getError()*1e3:.2f}' + ' MeV/#it{c}^{2}')
+            fit_param.AddText(r'#sigma = ' + f'{sigma.getVal()*1e3:.2f} #pm {sigma.getError()*1e3:.2f}' + ' MeV/#it{c}^{2}')
+            fit_param.AddText(r'alpha_{L} = ' + f'{a1.getVal():.2f} #pm {a1.getError():.2f}')
+            fit_param.AddText(r'alpha_{R} = ' + f'{a2.getVal():.2f} #pm {a2.getError():.2f}')
+            fit_param.AddText(r'n_{L} = ' + f'{n1.getVal():.2f} #pm {n1.getError():.2f}')
+            fit_param.AddText(r'n_{R} = ' + f'{n2.getVal():.2f} #pm {n2.getError():.2f}')
             self.mc_frame_fit.addObject(fit_param)
             chi2_mc = self.mc_frame_fit.chiSquare('signal', 'mc')
-            fit_param.AddText('#chi^{2} / NDF = ' + f'{chi2_mc:.3f}')
+            ndf_mc = self.n_bins_mc - fit_results_mc.floatParsFinal().getSize()
+            fit_param.AddText('#chi^{2} / NDF = ' + f'{chi2_mc:.3f} (NDF: {ndf_mc})')
 
         # define the fit function and perform the actual fit
         if extended_likelihood:
@@ -123,7 +129,7 @@ class SignalExtraction:
 
         mass_array = np.array(self.data_hdl[tree_var_name].values, dtype=np.float64)
         self.roo_dataset = utils.ndarray2roo(mass_array, mass)
-        fit_results = self.pdf.fitTo(self.roo_dataset, ROOT.RooFit.Extended(extended_likelihood), ROOT.RooFit.Save(True), ROOT.RooFit.PrintLevel(-1))
+        fit_results_data = self.pdf.fitTo(self.roo_dataset, ROOT.RooFit.Extended(extended_likelihood), ROOT.RooFit.Save(True), ROOT.RooFit.PrintLevel(-1))
 
         ## get fit parameters
         fit_pars = self.pdf.getParameters(self.roo_dataset)
@@ -152,7 +158,7 @@ class SignalExtraction:
         self.pdf.plotOn(self.data_frame_fit, ROOT.RooFit.LineColor(kBlueC), ROOT.RooFit.Name('fit_func'))
 
         chi2_data = self.data_frame_fit.chiSquare('fit_func', 'data')
-        ndf_data = self.n_bins_data - fit_results.floatParsFinal().getSize()
+        ndf_data = self.n_bins_data - fit_results_data.floatParsFinal().getSize()
 
         self.data_frame_fit.GetYaxis().SetTitleSize(0.06)
         self.data_frame_fit.GetYaxis().SetTitleOffset(0.9)

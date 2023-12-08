@@ -41,6 +41,7 @@ class SpectraMaker:
         self.fit_func = None
         self.fit_options = None
         self.fit_range = []
+        self.sigma_range_mc_to_data = [1., 1.5]
 
         self.output_dir = None
 
@@ -128,6 +129,12 @@ class SpectraMaker:
             signal_extraction.matter_type = self.is_matter
             signal_extraction.performance = False
             signal_extraction.is_3lh = True
+
+            if isinstance(self.sigma_range_mc_to_data[0], list):
+                signal_extraction.sigma_range_mc_to_data = self.sigma_range_mc_to_data[ibin]
+            else:
+                signal_extraction.sigma_range_mc_to_data = self.sigma_range_mc_to_data
+
             fit_stats = signal_extraction.process_fit()
 
             if self.var == 'fPt':

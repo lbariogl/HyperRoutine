@@ -16,7 +16,7 @@ bkg_fit_func: "expo"
 signal_fit_func: "dscb"
 is_matter: "antimatter"
 n_bins_mass_data: 20
-n_bins_mass_mc: 80
+n_bins_mass_mc: 100
 
 selection:
   [
@@ -45,6 +45,8 @@ selection:
       "fTPCsignalPi": "fTPCsignalPi < 1000.",
     },
   ]
+
+sigma_range_mc_to_data: [[1., 1.5], [1., 1.5], [1., 1.75], [1., 1.5]]
 
 do_syst: True
 n_trials: 1000
