@@ -1,207 +1,286 @@
-from signal_extraction import SignalExtraction
-import argparse
+from spectra import SpectraMaker
+from hipe4ml.tree_handler import TreeHandler
 import yaml
+import argparse
+import uproot
 import numpy as np
 import copy
 import ROOT
-import uproot
-from hipe4ml.tree_handler import TreeHandler
+ROOT.gROOT.SetBatch(True)
+ROOT.RooMsgService.instance().setSilentMode(True)
+ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.ERROR)
 
 import sys
 sys.path.append('utils')
 import utils as utils
 
-## ROOT batch mode
-ROOT.gROOT.SetBatch(True)
+if __name__ == '__main__':
 
-parser = argparse.ArgumentParser(
-    description='Configure the parameters of the script.')
-parser.add_argument('--config-file', dest='config_file', default='configs/signal_extraction/config_signal_extraction_antimat.yaml',
-                    help="path to the YAML file with configuration.")
-parser.add_argument('--nbins', dest='n_bins', default=30,
-                        help='number of bins in the final plot.')
-args = parser.parse_args()
+    parser = argparse.ArgumentParser(
+        description='Configure the parameters of the script.')
+    parser.add_argument('--config-file', dest='config_file',
+                        help="path to the YAML file with configuration.", default='')
+    args = parser.parse_args()
+    if args.config_file == "":
+        print('** No config file provided. Exiting. **')
+        exit()
 
-config_file = open(args.config_file, 'r')
-config = yaml.full_load(config_file)
+    config_file = open(args.config_file, 'r')
+    config = yaml.full_load(config_file)
+    input_file_name_data = config['input_files_data']
+    input_file_name_mc = config['input_files_mc']
+    input_analysis_results_file = config['input_analysis_results_file']
+    output_dir_name = config['output_dir']
+    output_file_name = config['output_file'] + '_separated.root'
 
-input_parquet_data = config['input_parquet_data']
-input_analysis_results = config['input_analysis_results']
-
-input_parquet_mc = config['input_parquet_mc']
-
-output_dir = config['output_dir']
-output_file = ROOT.TFile('../results/systematic_study.root', 'recreate') #config['output_file']
-
-is_4lh = config['is_4lh']
-matter_type = config['matter_type']
-n_bins = config['n_bins']
-
-# create base parquet data
-data_hdl = TreeHandler(input_parquet_data)
-mc_hdl =  TreeHandler(input_parquet_mc)
-
-## import objects for pT rejection
-spectra_file = ROOT.TFile.Open('utils/heliumSpectraMB.root')
-he3_spectrum = spectra_file.Get('fCombineHeliumSpecLevyFit_0-100')
-spectra_file.Close()
-
-# apply pt rejection to MC
-mc_hdl.eval_data_frame("fAbsGenPt = abs(fGenPt)")
-utils.reweight_pt_spectrum(mc_hdl, 'fAbsGenPt', he3_spectrum)
-mc_hdl.apply_preselections("rej==True and fIsReco==True")
-
-# get number of events
-an_vtx_z = uproot.open(input_analysis_results)['hyper-reco-task']['hZvtx']
-n_evts = an_vtx_z.values().sum() / 1e9
-n_evts = round(n_evts, 0)
-
-# silent mode for fits
-ROOT.RooMsgService.instance().setSilentMode(True)
-ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.ERROR)
-
-def systematic_routine(data_hdl, mc_hdl, var, arr, sel_string, histo_data, histo_mc, canvas, normalise_to_first=True):
-    ## for each variable, create a directory and save the fits
-    output_file.mkdir(var)
-    output_file.cd(var)
-
-    for i, val in enumerate(arr):
-
-        data_hdl_local = copy.deepcopy(data_hdl)
-        mc_hdl_local =  copy.deepcopy(mc_hdl)
-
-        # define selections and apply to handlers
-        presel = sel_string.format(var, val)
-        data_hdl_local.apply_preselections(presel, inplace=True)
-        mc_hdl_local.apply_preselections(presel, inplace=True)
-
-        # create signal-extraction object
-        signal_extraction = SignalExtraction(data_hdl_local, mc_hdl_local)
-        signal_extraction.n_bins = n_bins
-        signal_extraction.n_evts = n_evts
-        signal_extraction.matter_type = matter_type
-        signal_extraction.is_3lh = not is_4lh
-        signal_extraction.bkg_fit_func = 'pol1'
-
-        # fit data
-        fit_stats = signal_extraction.process_fit(extended_likelihood=True)
-        signal_extraction.data_frame_fit.Write(f'fit_{np.round(val,4)}')
-        signal_extraction.mc_frame_fit.Write(f'mc_{np.round(val,4)}')
-        signal_counts = fit_stats['signal'][0]
-        histo_data.SetBinContent(i+1, signal_counts)
-        signal_counts_err = fit_stats['signal'][1]
-        histo_data.SetBinError(i+1, signal_counts_err)
-
-        # mc
-        signal_counts = mc_hdl_local.get_n_cand()
-        signal_counts_err = np.sqrt(signal_counts)
-        histo_mc.SetBinContent(i+1, signal_counts)
-        histo_mc.SetBinError(i+1, signal_counts_err)
-
-    if normalise_to_first:
-        histo_mc.Scale(1./histo_mc.GetBinContent(1))
-        histo_data.Scale(1./histo_data.GetBinContent(1))
+    if 'ct_bins' in config:
+        analysis_var = 'fCt'
     else:
-        histo_mc.Scale(1./histo_mc.GetBinContent(histo_mc.GetNbinsX()))
-        histo_data.Scale(1./histo_data.GetBinContent(histo_data.GetNbinsX()))
+        analysis_var = 'fPt'
+
+    if analysis_var == 'fCt':
+        analysis_bins = config['ct_bins']
+    else:
+        analysis_bins = config['pt_bins']
+
+    selections_std = config['selection']
+    is_matter = config['is_matter']
+    cut_dict_syst = config['cut_dict_syst']
+
+    signal_fit_func = config['signal_fit_func']
+    bkg_fit_func = config['bkg_fit_func']
+    do_syst = config['do_syst']
+    n_trials = config['n_trials']
+    n_bins_mass_data = config['n_bins_mass_data']
+    n_bins_mass_mc = config['n_bins_mass_mc']
+
+    matter_options = ['matter', 'antimatter', 'both']
+    if is_matter not in matter_options:
+        raise ValueError(
+            f'Invalid is-matter option. Expected one of: {matter_options}')
+
+    print('**********************************')
+    if analysis_var == 'fCt':
+        print('    Running ct_analysis.py')
+    else:
+        print('    Running pt_analysis.py')
+    print('**********************************\n')
+    print("----------------------------------")
+    print("** Loading data and apply preselections **")
+
+    data_hdl = TreeHandler(input_file_name_data, 'O2datahypcands')
+    mc_hdl = TreeHandler(input_file_name_mc, 'O2mchypcands')
+
+    # declare output file
+    output_file = ROOT.TFile.Open(
+        f'{output_dir_name}/{output_file_name}', 'recreate')
+
+    # Add columns to the handlers
+    utils.correct_and_convert_df(data_hdl, calibrate_he3_pt=True)
+    utils.correct_and_convert_df(mc_hdl, calibrate_he3_pt=True, isMC=True)
+
+    # apply preselections
+    matter_sel = ''
+    mc_matter_sel = ''
+    if is_matter == 'matter':
+        matter_sel = 'fIsMatter == True'
+        mc_matter_sel = 'fGenPt > 0'
+
+    elif is_matter == 'antimatter':
+        matter_sel = 'fIsMatter == False'
+        mc_matter_sel = 'fGenPt < 0'
+
+    if matter_sel != '':
+        data_hdl.apply_preselections(matter_sel)
+        mc_hdl.apply_preselections(mc_matter_sel)
+
+    # get Standard Spectrum
+    standard_file = ROOT.TFile(
+        f"{output_dir_name}/{config['output_file']}.root")
+    std_spectrum = standard_file.Get('std/h_corrected_counts')
+    std_spectrum.SetDirectory(0)
+    utils.setHistStyle(std_spectrum, ROOT.kRed)
+    std_corrected_counts = []
+    std_corrected_counts_err = []
+    for i_bin in range(1, std_spectrum.GetNbinsX()+1):
+        std_corrected_counts.append(std_spectrum.GetBinContent(i_bin))
+        std_corrected_counts_err.append(std_spectrum.GetBinError(i_bin))
+
+    # reweight MC pT spectrum
+    spectra_file = ROOT.TFile.Open('utils/heliumSpectraMB.root')
+    he3_spectrum = spectra_file.Get('fCombineHeliumSpecLevyFit_0-100')
+    spectra_file.Close()
+    utils.reweight_pt_spectrum(mc_hdl, 'fAbsGenPt', he3_spectrum)
+
+    mc_hdl.apply_preselections('rej==True')
+    # Needed to remove the peak at 28.5 cm in the anchored MC
+    mc_hdl.apply_preselections('fGenCt < 28.5 or fGenCt > 28.6')
+    mc_reco_hdl = mc_hdl.apply_preselections('fIsReco == 1', inplace=False)
+
+    print("** Data loaded. ** \n")
+    print("----------------------------------")
+
+    if analysis_var == 'fCt':
+        print("** Starting ct analysis **")
+    else:
+        print("** Starting pt analysis **")
+
+    # get number of events
+    n_ev = uproot.open(input_analysis_results_file)[
+        'hyper-reco-task']['hZvtx'].values().sum()
+
+    #########################
+    #     varied cuts
+    #########################
+
+    print("** Starting systematic variations **")
+
+    # create a dictionary with all the possible selections for a specific variable
+    cut_string_dict = {}
+    for var in cut_dict_syst:
+        var_dict = cut_dict_syst[var]
+        cut_greater = var_dict['cut_greater']
+        cut_greater_string = " > " if cut_greater else " < "
+
+        cut_list = var_dict['cut_list']
+        cut_arr = np.linspace(cut_list[0], cut_list[1], cut_list[2])
+        cut_string_dict[var] = []
+        for cut in cut_arr:
+            cut_string_dict[var].append(var + cut_greater_string + str(cut))
+
+    print("  ** separated cuts **")
+
+    spectra_dict = {}
+    canvas_dict = {}
+    legend_dict = {}
+
+    chi2_selection_dict = {}
+    relative_error_selection_dict = {}
+    outlier_selection_dict = {}
+
+    for var, cuts in cut_string_dict.items():
+        var_dir = output_file.mkdir(f'{var}')
+
+        spectra_dict[var] = []
+        chi2_selection_dict[var] = []
+        relative_error_selection_dict[var] = []
+        outlier_selection_dict[var] = []
+        canvas_dict[var] = ROOT.TCanvas(f'c{var}', f'c{var}', 800, 600)
+        legend_dict[var] = ROOT.TLegend(0.45, 0.52, 0.92, 0.86, '', 'brNDC')
+
+        for i_cut, cut in enumerate(cuts):
+
+            print(f'{var}: {i_cut} / {len(cuts)} ==> {cut}')
+
+            output_dir_varied = var_dir.mkdir(f'{i_cut}')
+
+            spectra_maker = SpectraMaker()
+
+            spectra_maker.data_hdl = data_hdl
+            spectra_maker.mc_hdl = mc_hdl
+            spectra_maker.mc_reco_hdl = mc_reco_hdl
+
+            spectra_maker.n_ev = n_ev
+            spectra_maker.branching_ratio = 0.25
+            spectra_maker.delta_rap = 2.0
+
+            spectra_maker.var = analysis_var
+            spectra_maker.bins = analysis_bins
+            # varying the standard selections with the cut of interest
+            selections_new = copy.deepcopy(selections_std)
+            for element in selections_new:
+                element[var] = cut
+            sel_string_list = [utils.convert_sel_to_string(
+                sel) for sel in selections_new]
+            spectra_maker.selection_string = sel_string_list
+            spectra_maker.is_matter = is_matter
+            spectra_maker.n_bins_mass_data = n_bins_mass_data
+            spectra_maker.n_bins_mass_mc = n_bins_mass_mc
+
+            spectra_maker.output_dir = output_dir_varied
+
+            fit_range = [analysis_bins[0], analysis_bins[-1]]
+            spectra_maker.fit_range = fit_range
+
+            # create raw spectra
+            spectra_maker.make_spectra()
+            chi2_check = spectra_maker.chi2_selection()
+            chi2_selection_dict[var].append(chi2_check)
+
+            if not chi2_check:
+                print('   Rejeted for chi2')
+
+            # draw plot for signal extraction in each bin
+            data_output_dir_varied = output_dir_varied.mkdir('data')
+            mc_output_dir_varied = output_dir_varied.mkdir('mc')
+
+            data_output_dir_varied.cd()
+            for i, frame in enumerate(spectra_maker.h_signal_extractions_data):
+                frame.Write(f'fInvariantMass_{i}')
+
+            mc_output_dir_varied.cd()
+            for i, frame in enumerate(spectra_maker.h_signal_extractions_mc):
+                frame.Write(f'fInvariantMass_{i}')
+
+            # create corrected spectra
+            spectra_maker.make_histos()
+            histo = copy.deepcopy(spectra_maker.h_corrected_counts)
+
+            relative_error_check = spectra_maker.relative_error_selection()
+            relative_error_selection_dict[var].append(relative_error_check)
+            if not relative_error_check:
+                print('   Rejeted for large relative error of corrected counts')
+
+            if analysis_var == 'fCt':
+                histo.SetName(f'hCt{var}_{i_cut}')
+            else:
+                histo.SetName(f'hPt{var}_{i_cut}')
+            spectra_dict[var].append(histo)
+            data_output_dir_varied.cd()
+            histo.Write()
+
+            outlier_check = spectra_maker.outlier_selection(
+                std_corrected_counts, std_corrected_counts_err)
+            outlier_selection_dict[var].append(outlier_check)
+            if not outlier_check:
+                print('   Rejeted for outlier')
+
+            del spectra_maker
+
+    # get color paletter
+    cols = ROOT.TColor.GetPalette()
 
     output_file.cd()
-    histo_data.Write()
-    histo_mc.Write()
+    output_file.mkdir('std')
+    # std_spectrum.Write()
 
-    canvas.cd()
-    histo_mc.Draw('PE')
-    histo_mc.GetYaxis().SetRangeUser(0.,1.2)
-    histo_data.Draw('PE SAME')
-    histo_data.GetYaxis().SetRangeUser(0.,1.2)
-    legend = ROOT.TLegend(0.4, 0.3, 0.6, 0.4, '', 'brNDC')
-    legend.SetLineWidth(0)
-    legend.AddEntry(histo_data, 'Data', 'L')
-    legend.AddEntry(histo_mc, 'MC', 'L')
-    legend.Draw()
-    canvas.Write()
+    for var, histos in spectra_dict.items():
+        output_file.cd(f'{var}')
+        canvas_dict[var].cd()
+        if analysis_var == 'fCt':
+            canvas_dict[var].DrawFrame(
+                0., 0., 20., 3000., r';#it{ct} (cm);#frac{d#it{N}}{d(#it{ct})} (cm^{-1})')
+        else:
+            canvas_dict[var].DrawFrame(
+                1., 0., 5., 1.5e-8, r';#it{p}_{T} (GeV/#it{c});#frac{d#it{N}}{d#it{p}_{T}} (GeV/#it{c})^{-1}')
+        for i_histo, histo in enumerate(histos):
 
-##########################
-##        CosPA         ##
-##########################
+            if not chi2_selection_dict[var][i_histo]:
+                continue
 
-print('Checking cosPA')
+            if not relative_error_selection_dict[var][i_histo]:
+                continue
 
-cosPA_arr = np.linspace(0.995, 1., 25, dtype=np.float64)
-nCosPa_bins = len(cosPA_arr) - 1
+            if not outlier_selection_dict[var][i_histo]:
+                continue
 
-hDataSigCosPA = ROOT.TH1F('hDataSigCosPA', ';cos(#theta_{PA}); signal fraction', nCosPa_bins, cosPA_arr)
-utils.setHistStyle(hDataSigCosPA, ROOT.kRed+1)
-
-hMcSigCosPA = ROOT.TH1D('hMcSigCosPA', ';cos(#theta_{PA}); signal fraction', nCosPa_bins, cosPA_arr)
-utils.setHistStyle(hMcSigCosPA, ROOT.kAzure+2)
-
-cCosPAcomparison = ROOT.TCanvas('cCosPAcomparison', 'cCosPAcomparison', 800, 600)
-
-sel_string = r'{} > {}'
-
-systematic_routine(data_hdl, mc_hdl, 'fCosPA', cosPA_arr[:-1], sel_string, hDataSigCosPA, hMcSigCosPA, cCosPAcomparison)
-
-##########################
-##      DcaV0Daug       ##
-##########################
-
-print('Checking DcaV0Daug')
-
-DcaV0Daug_arr = np.linspace(0., .3, 30, dtype=np.float64)
-nDcaV0Daug_bins = len(DcaV0Daug_arr) - 1
-
-hDataSigDcaV0Daug = ROOT.TH1F('hDataSigDcaV0Daug', ';DCA_{V0 daughters} (cm); signal fraction', nDcaV0Daug_bins, DcaV0Daug_arr)
-utils.setHistStyle(hDataSigDcaV0Daug, ROOT.kRed+1)
-
-hMcSigDcaV0Daug = ROOT.TH1D('hMcSigDcaV0Daug', ';DCA_{V0 daughters} (cm); signal fraction', nDcaV0Daug_bins, DcaV0Daug_arr)
-utils.setHistStyle(hMcSigDcaV0Daug, ROOT.kAzure+2)
-
-cDcaV0Daugcomparison = ROOT.TCanvas('cDcaV0Daugcomparison', 'cDcaV0Daugcomparison', 800, 600)
-
-sel_string = r'abs({}) < {}'
-
-systematic_routine(data_hdl, mc_hdl, 'fDcaV0Daug', DcaV0Daug_arr[1:], sel_string, hDataSigDcaV0Daug, hMcSigDcaV0Daug, cDcaV0Daugcomparison, normalise_to_first=False)
-
-##########################
-##         DcaHe        ##
-##########################
-
-print('Checking DcaHe')
-
-DcaHe_arr = np.linspace(0., .3, 30, dtype=np.float64)
-nDcaHe_bins = len(DcaHe_arr) - 1
-
-hDataSigDcaHe = ROOT.TH1F('hDataSigDcaHe', ';DCA({}^{3}He) (cm); signal fraction', nDcaHe_bins, DcaHe_arr)
-utils.setHistStyle(hDataSigDcaHe, ROOT.kRed+1)
-
-hMcSigDcaHe = ROOT.TH1D('hMcSigDcaHe', ';DCA({}^{3}He) (cm); signal fraction', nDcaHe_bins, DcaHe_arr)
-utils.setHistStyle(hMcSigDcaHe, ROOT.kAzure+2)
-
-cDcaHecomparison = ROOT.TCanvas('cDcaHecomparison', 'cDcaHecomparison', 800, 600)
-
-sel_string = r'abs({}) > {}'
-
-systematic_routine(data_hdl, mc_hdl, 'fDcaHe', DcaHe_arr[1:], sel_string, hDataSigDcaHe, hMcSigDcaHe, cDcaHecomparison)
-
-##########################
-##         DcaPi        ##
-##########################
-
-print('CPicking DcaPi')
-
-DcaPi_arr = np.linspace(0., 3., 30, dtype=np.float64)
-nDcaPi_bins = len(DcaPi_arr) - 1
-
-hDataSigDcaPi = ROOT.TH1F('hDataSigDcaPi', ';DCA(#pi) (cm); signal fraction', nDcaPi_bins, DcaPi_arr)
-utils.setHistStyle(hDataSigDcaPi, ROOT.kRed+1)
-
-hMcSigDcaPi = ROOT.TH1D('hMcSigDcaPi', ';DCA(#pi) (cm); signal fraction', nDcaPi_bins, DcaPi_arr)
-utils.setHistStyle(hMcSigDcaPi, ROOT.kAzure+2)
-
-cDcaPicomparison = ROOT.TCanvas('cDcaPicomparison', 'cDcaPicomparison', 800, 600)
-
-sel_string = r'abs({}) > {}'
-
-systematic_routine(data_hdl, mc_hdl, 'fDcaPi', DcaPi_arr[1:], sel_string, hDataSigDcaPi, hMcSigDcaPi, cDcaPicomparison)
-
+            utils.setHistStyle(histo, cols.At(i_histo*4))
+            legend_dict[var].AddEntry(
+                histo, f'{cut_string_dict[var][i_histo]}', 'PE')
+            histo.Draw('PE SAME')
+        legend_dict[var].AddEntry(
+            std_spectrum, 'std', 'PE')
+        std_spectrum.Draw('PE SAME')
+        legend_dict[var].Draw()
+        legend_dict[var].SetNColumns(5)
+        canvas_dict[var].Write()
