@@ -186,7 +186,7 @@ def create_pt_shift_histo(df):
 
 # put dataframe in the correct format
 
-def correct_and_convert_df(df, calibrate_he3_pt = False, isMC=False):
+def correct_and_convert_df(df, calibrate_he3_pt = False, isMC=False, isH4L=False):
     if not type(df) == pd.DataFrame:
         df = df._full_data_frame
     # correct 3He momentum
@@ -219,7 +219,12 @@ def correct_and_convert_df(df, calibrate_he3_pt = False, isMC=False):
     df.eval('fPhi = arctan(fPy/fPx)', inplace=True)
     # Variables of interest
     df.eval('fDecLen = sqrt(fXDecVtx**2 + fYDecVtx**2 + fZDecVtx**2)', inplace=True)
-    df.eval('fCt = fDecLen * 2.99131 / fP', inplace=True)
+    if not isH4L:
+        df.eval('fCt = fDecLen * 2.99131 / fP', inplace=True)
+    else:
+        print('Using H4L decay length')
+        df.eval('fCt = fDecLen * 3.922 / fP', inplace=True)
+
     df.eval('fDecRad = sqrt(fXDecVtx**2 + fYDecVtx**2)', inplace=True)
     df.eval('fCosPA = (fPx * fXDecVtx + fPy * fYDecVtx + fPz * fZDecVtx) / (fP * fDecLen)', inplace=True)
     df.eval('fMassH3L = sqrt(fEn**2 - fP**2)', inplace=True)
@@ -229,8 +234,13 @@ def correct_and_convert_df(df, calibrate_he3_pt = False, isMC=False):
         df.eval('fGenDecLen = sqrt(fGenXDecVtx**2 + fGenYDecVtx**2 + fGenZDecVtx**2)', inplace=True)
         df.eval('fGenPz = fGenPt * sinh(fGenEta)', inplace=True)
         df.eval('fGenP = sqrt(fGenPt**2 + fGenPz**2)', inplace=True)
-        df.eval('fGenCt = fGenDecLen * 2.99131 / fGenP', inplace=True)
         df.eval("fAbsGenPt = abs(fGenPt)", inplace=True)
+
+        if not isH4L:
+            df.eval('fGenCt = fGenDecLen * 2.99131 / fGenP', inplace=True)
+        else:
+            df.eval('fGenCt = fGenDecLen * 3.922 / fGenP', inplace=True)
+            
 
     # remove useless columns
     df.drop(columns=['fPxHe3', 'fPyHe3', 'fPzHe3', 'fPHe3', 'fEnHe3', 'fPxPi', 'fPyPi', 'fPzPi', 'fPPi', 'fEnPi', 'fPx', 'fPy', 'fPz', 'fP', 'fEn'])

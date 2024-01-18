@@ -2,11 +2,11 @@
 matter_type: 'antimatter'
 
 ## i/o
-input_parquet_data : ['../results/HypertritonResults_antimatter.parquet']
+input_parquet_data : ['../results/HypertritonResults_antimatter_2023.parquet']
 input_parquet_mc: '../results/mc/HypertritonResults_anch.parquet'
-input_analysis_results: '/data/shared/hyp_run_3/apass4/new_dataformat/AnalysisResults.root'
+input_analysis_results: '/data/shared/hyp_run_3/2023/AnalysisResults.root'
 output_dir : '../results'
-output_file : 'fit_results_antimat_2022.root'
+output_file : 'fit_results_antimat_2023.root'
 
 is_4lh: False
 preselections: ''
