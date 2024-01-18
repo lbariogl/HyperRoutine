@@ -37,8 +37,8 @@ using VBracket = o2::math_utils::Bracket<int>;
 using namespace o2::itsmft;
 using Vec3 = ROOT::Math::SVector<double, 3>;
 
-const int motherPDG = 1010010030;
-const int firstDaughterPDG = 1000020030;
+const int motherPDG = 1010010040;
+const int firstDaughterPDG = 1000020040;
 const int secondDaughterPDG = 211;
 
 // const int motherPDG = 3122;
@@ -58,7 +58,7 @@ double calcV0alpha(const V0 &v0);
 bool checkV0Decay(std::vector<MCTrack> *MCTracks, const MCTrack &motherTrack, int firstDauPDG, int secDauPDG);
 double calcMass(const V0 &v0, double dauMass[2], int dauCharges[2]);
 
-void v0Study(std::string path = "/data/fmazzasc/its_data/sim/hyp_gap_trig_2/")
+void v0Study(std::string path = "/data/fmazzasc/its_data/sim/hyp_gap_trig/h4l/")
 {
 
     double bins[2] = {2.96, 3.04};
@@ -84,6 +84,17 @@ void v0Study(std::string path = "/data/fmazzasc/its_data/sim/hyp_gap_trig_2/")
         dauMass[0] = 0.13957;
         dauMass[1] = 0.13957;
         dauCharges[0] = 1;
+        dauCharges[1] = 1;
+    }
+
+    if (std::abs(motherPDG) == 1010010040)
+    {
+        motherMass = 3.929;
+        bins[0] = 3.8;
+        bins[1] = 4.2;
+        dauMass[0] = 3.727;
+        dauMass[1] = 0.13957;
+        dauCharges[0] = 2;
         dauCharges[1] = 1;
     }
 
@@ -347,7 +358,7 @@ void v0Study(std::string path = "/data/fmazzasc/its_data/sim/hyp_gap_trig_2/")
                 auto he3track = he3index ? v0.getProng(1) : v0.getProng(0);
                 auto he3trackID = he3index ? v0.getProngID(1) : v0.getProngID(0);
 
-                if (motherTrack.leftTrace(0))
+                if (motherTrack.leftTrace())
                 {
                     histITScounter->Fill(0);
                     std::cout << "ITS sees mother hits! " << std::endl;

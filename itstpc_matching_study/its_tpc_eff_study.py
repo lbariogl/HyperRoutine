@@ -23,13 +23,14 @@ args = parser.parse_args()
 daughter_pdg = args.daughter_pdg
 debug = args.debug
 path_dir = "../../match_res"
-tree = uproot.open(path_dir + "/" + "DauTreeMC.root")["DauTreeMC"].arrays(library="pd")
-outfile_name = path_dir + "/" + "dau_efficiency_" + str(daughter_pdg) + ".root"
+tree = uproot.open(path_dir + "/" + "DauTreeMC_relval_fix.root")["DauTreeMC"].arrays(library="pd")
+print(tree.columns)
+outfile_name = path_dir + "/" + "dau_efficiency_" + str(daughter_pdg) + "_relval_fix.root"
 ##
-tree.query(f"abs(pdg) == {daughter_pdg}", inplace=True)
+tree.query(f"abs(pdg) == {daughter_pdg} and genPt<5", inplace=True)
 
 h_gen_radius_hist   = ROOT.TH1F("h_gen_radius", ";Radius (cm)", 50, 0, 40)
-h_gen_pt_hist = ROOT.TH1F("h_gen_pt", ";#it{p}_{T} (GeV/#it{c})", 50, 0, 10)
+h_gen_pt_hist = ROOT.TH1F("h_gen_pt", ";#it{p}_{T} (GeV/#it{c})", 20, 1, 5)
 h_rec_radius_hist_list = []
 h_rec_pt_hist_list = []
 
@@ -37,7 +38,7 @@ h_detector_list = ["ITS", "TPC", "ITS-TPC", "TPC-TOF", "TPC-TRD", "ITS-TPC-TOF",
 
 for idet, det in enumerate(h_detector_list):
     h_rec_radius_hist_list.append(ROOT.TH1F("h_rec_radius_" + det, ";Radius (cm)", 50, 0, 40))
-    h_rec_pt_hist_list.append(ROOT.TH1F("h_rec_pt_" + det, ";#it{p}_{T} (GeV/#it{c})", 50, 0, 10))
+    h_rec_pt_hist_list.append(ROOT.TH1F("h_rec_pt_" + det, ";#it{p}_{T} (GeV/#it{c})", 20, 1, 5))
 
 fill_th1_hist(h_gen_radius_hist, tree, "genRad")
 fill_th1_hist(h_gen_pt_hist, tree, "genPt")
@@ -65,54 +66,59 @@ for idet, det in enumerate(h_detector_list):
 
 
 ### filter ITS + TPC 
+
+
+h_rec_its_tpc_rad = ROOT.TH1F("h_rec_its_tpc_rad", ";Radius (cm)", 50, 0, 40)
+h_rec_its_tpc_pt = ROOT.TH1F("h_rec_its_tpc_pt", ";#it{p}_{T} (GeV/#it{c})", 20, 1, 5)
+h_rec_its_tpc_eff_rad = ROOT.TH1F("its_tpc_algo_eff_rad", "; Radius (cm); Algorithm Efficiency", 20, 1, 5)
+h_rec_its_tpc_eff_pt = ROOT.TH1F("its_tpc_algo_eff_pt", "; #it{p}_{T} (GeV/#it{c}); ITS-TPC matching efficiency", 20, 1, 5)
+h_fake_itstpc_rad = ROOT.TH1F("h_fake_itstpc_rad", ";Radius (cm)", 20, 0, 40)
+h_fake_itstpc_pt = ROOT.TH1F("h_fake_itstpc_pt", ";#it{p}_{T} (GeV/#it{c})", 20, 1, 5)
+h_fake_its_pt = ROOT.TH1F("h_fake_its_pt", ";#it{p}_{T} (GeV/#it{c})", 20, 1, 5)
+h_true_itstpc_rad = ROOT.TH1F("h_true_itstpc_rad", ";Radius (cm)", 20, 0, 40)
+h_true_itstpc_pt = ROOT.TH1F("h_true_itstpc_pt", ";#it{p}_{T} (GeV/#it{c})", 20, 1, 5)
+
+
+
+maskITS = 1 << 0
+maskTPC = 1 << 1
+maskITSTPC = 1 << 2
+### select only ITS + TPC
+bool_mask_its = (tree['detectorBMap'] & maskITS).astype(bool)
+tree_sel = tree[bool_mask_its]
+fill_th1_hist(h_fake_its_pt, tree_sel.query('isITSfake==True'), "genPt")
+h_fake_its_pt.Sumw2()
+h_fake_its_pt.Divide(h_gen_pt_hist)
+
+
+bool_mask_tpc = (tree_sel['detectorBMap'] & maskTPC).astype(bool)
+tree_sel = tree_sel[bool_mask_tpc]
+fill_th1_hist(h_rec_its_tpc_rad, tree_sel, "genRad")
+fill_th1_hist(h_rec_its_tpc_pt, tree_sel, "genPt")
+bool_mask_its_tpc = (tree_sel['detectorBMap'] & maskITSTPC).astype(bool)
+fill_th1_hist(h_rec_its_tpc_eff_rad, tree_sel[bool_mask_its_tpc], "genRad")
+fill_th1_hist(h_rec_its_tpc_eff_pt, tree_sel[bool_mask_its_tpc], "genPt")
+fill_th1_hist(h_fake_itstpc_rad, tree_sel[bool_mask_its_tpc].query('isITSTPCfake==True'), "genRad")
+fill_th1_hist(h_fake_itstpc_pt, tree_sel[bool_mask_its_tpc].query('isITSTPCfake==True'), "genPt")
+fill_th1_hist(h_true_itstpc_rad, tree_sel[bool_mask_its_tpc].query('isITSTPCfake==False'), "genRad")
+fill_th1_hist(h_true_itstpc_pt, tree_sel[bool_mask_its_tpc].query('isITSTPCfake==False'), "genPt")
+h_rec_its_tpc_eff_rad.Sumw2()
+h_rec_its_tpc_eff_pt.Sumw2()
+h_rec_its_tpc_eff_rad.Divide(h_rec_its_tpc_rad)
+h_rec_its_tpc_eff_pt.Divide(h_rec_its_tpc_pt)
+
 if debug:
+    h_rec_match_chi2 = ROOT.TH1F("h_rec_match_chi2", ";Matching #chi^{2}", 50, 0, 100)
     h_rej_flag_hist = ROOT.TH1F("h_rej_flag", ";Rejection flag", 20, -1.5, 18.5)
     h2_rej_flag_pt = ROOT.TH2F("h2_rej_flag_pt", ";#it{p}_{T} (GeV/#it{c}); Rejection flag", 50, 0, 10, 20, -1.5, 18.5)
-    h_rec_its_tpc_rad = ROOT.TH1F("h_rec_its_tpc_rad", ";Radius (cm)", 50, 0, 40)
-    h_rec_its_tpc_pt = ROOT.TH1F("h_rec_its_tpc_pt", ";#it{p}_{T} (GeV/#it{c})", 50, 0, 10)
-    h_rec_its_tpc_eff_rad = ROOT.TH1F("its_tpc_algo_eff_rad", "; Radius (cm); Algorithm Efficiency", 50, 0, 40)
-    h_rec_its_tpc_eff_pt = ROOT.TH1F("its_tpc_algo_eff_pt", "; #it{p}_{T} (GeV/#it{c}); Algorithm Efficiency", 50, 0, 10)
-    h_rec_match_chi2 = ROOT.TH1F("h_rec_match_chi2", ";Matching #chi^{2}", 50, 0, 100)
-    h_fake_itstpc_rad = ROOT.TH1F("h_fake_itstpc_rad", ";Radius (cm)", 50, 0, 40)
-    h_fake_itstpc_pt = ROOT.TH1F("h_fake_itstpc_pt", ";#it{p}_{T} (GeV/#it{c})", 50, 0, 10)
-    h_true_itstpc_rad = ROOT.TH1F("h_true_itstpc_rad", ";Radius (cm)", 50, 0, 40)
-    h_true_itstpc_pt = ROOT.TH1F("h_true_itstpc_pt", ";#it{p}_{T} (GeV/#it{c})", 50, 0, 10)
-
-
-    maskITS = 1 << 0
-    maskTPC = 1 << 1
-    maskITSTPC = 1 << 2
-
-    ### select only ITS + TPC
-    bool_mask_its = (tree['detectorBMap'] & maskITS).astype(bool)
-    tree_sel = tree[bool_mask_its]
-    bool_mask_tpc = (tree_sel['detectorBMap'] & maskTPC).astype(bool)
-    tree_sel = tree_sel[bool_mask_tpc]
-    fill_th1_hist(h_rec_its_tpc_rad, tree_sel, "genRad")
-    fill_th1_hist(h_rec_its_tpc_pt, tree_sel, "genPt")
-    fill_th1_hist(h_rec_match_chi2, tree_sel, "chi2Match")
-
-    bool_mask_its_tpc = (tree_sel['detectorBMap'] & maskITSTPC).astype(bool)
-    fill_th1_hist(h_rec_its_tpc_eff_rad, tree_sel[bool_mask_its_tpc], "genRad")
-    fill_th1_hist(h_rec_its_tpc_eff_pt, tree_sel[bool_mask_its_tpc], "genPt")
-    fill_th1_hist(h_fake_itstpc_rad, tree_sel[bool_mask_its_tpc].query('isITSTPCfake==True'), "genRad")
-    fill_th1_hist(h_fake_itstpc_pt, tree_sel[bool_mask_its_tpc].query('isITSTPCfake==True'), "genPt")
-    fill_th1_hist(h_true_itstpc_rad, tree_sel[bool_mask_its_tpc].query('isITSTPCfake==False'), "genRad")
-    fill_th1_hist(h_true_itstpc_pt, tree_sel[bool_mask_its_tpc].query('isITSTPCfake==False'), "genPt")
-    h_rec_its_tpc_eff_rad.Sumw2()
-    h_rec_its_tpc_eff_pt.Sumw2()
-    h_rec_its_tpc_eff_rad.Divide(h_rec_its_tpc_rad)
-    h_rec_its_tpc_eff_pt.Divide(h_rec_its_tpc_pt)
-
     bool_mask_not_its_tpc = np.logical_not(bool_mask_its_tpc)
     fill_th1_hist(h_rej_flag_hist, tree_sel[bool_mask_not_its_tpc], "rejFlag")
     fill_th2_hist(h2_rej_flag_pt, tree_sel[bool_mask_not_its_tpc], "genPt", "rejFlag")
+    fill_th1_hist(h_rec_match_chi2, tree_sel, "chi2Match")
 
-    # print(tree_sel[bool_mask_its_tpc].query("isITSTPCfake==False")[['tfNum', 'itsRef','tpcRef','rejFlag', 'chi2Match', 'nRefs', 'nClus','clusLayerMap','detectorBMap', 'isAB', 'isITSTPCfake', 'isITSfake', 'isTPCfake']].head(2))
 
-# print(tree_sel[bool_mask_not_its_tpc].query("tfNum==1")[['tfNum', 'itsRef','tpcRef','rejFlag', 'genPt', 'genEta']].head(20))
 
-print(tree.query("isAB==False and clRefL5!=-1 and clRefL6!=-1 and tpcRef!=-1 and itsRef==-1 ")[['tfNum', 'itsRef','tpcRef',  'clRefL5', 'clRefL6','rejFlag', 'chi2Match','clusLayerMap', 'isAB','genRad']])
+print(tree)
 
 
 n_det = 3
@@ -217,17 +223,20 @@ for h in h_rec_radius_hist_list:
 c_rad.Write()
 c_pt.Write()
 c_rad_ab.Write()
+h_fake_itstpc_pt.Write()
+h_fake_itstpc_rad.Write()
+h_fake_its_pt.Write()
+h_true_itstpc_pt.Write()
+h_true_itstpc_rad.Write()
+h_rec_its_tpc_eff_pt.Write()
+h_rec_its_tpc_eff_rad.Write()
 
 if debug:
-    h_rec_its_tpc_eff_pt.Write()
-    h_rec_its_tpc_eff_rad.Write()
+
     h_rej_flag_hist.Write()
     h2_rej_flag_pt.Write()
     h_rec_match_chi2.Write()
-    h_fake_itstpc_pt.Write()
-    h_fake_itstpc_rad.Write()
-    h_true_itstpc_pt.Write()
-    h_true_itstpc_rad.Write()
+
     
 
 outfile.Close()

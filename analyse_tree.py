@@ -1,4 +1,5 @@
 import ROOT
+import numpy as np
 import uproot
 import pandas as pd
 import argparse
@@ -40,6 +41,7 @@ if args.config_file != "":
     selections = config['selection']
     selections_string = utils.convert_sel_to_string(selections)
     is_matter = config['is_matter']
+    is_h4l = config['is_h4l']
 
 
 matter_options = ['matter', 'antimatter', 'both']
@@ -80,13 +82,15 @@ hResolutionPvsP = ROOT.TH2F("hResolutionPvsP", ";#it{p}^{gen} (GeV/#it{c});(#it{
 hResolutionDecVtxX = ROOT.TH1F("hResolutionDecVtxX", "; Resolution Dec X", 50, -0.2, 0.2)
 hResolutionDecVtxY = ROOT.TH1F("hResolutionDecVtxY", "; Resolution Dec Y", 50, -0.2, 0.2)
 hResolutionDecVtxZ = ROOT.TH1F("hResolutionDecVtxZ", "; Resolution Dec Z", 50, -0.2, 0.2)
+hHeliumPIDHypo = ROOT.TH1F("hHeliumPIDHypo", "; Hypothesis", 16, 0.5, 16.5)
+hPiPIDHypo = ROOT.TH1F("hPiPIDHypo", "; Hypothesis", 16, 0.5, 16.5)
 
 ############# Read trees #############
 tree_name = 'O2datahypcands' if not mc else 'O2mchypcands'
 tree_hdl = TreeHandler(input_files_name, tree_name)
 df = tree_hdl.get_data_frame()
 # correct and convert dataframe
-utils.correct_and_convert_df(df, True, mc)
+utils.correct_and_convert_df(df, False, mc, is_h4l)
 
 
 ############# Apply pre-selections to MC #############
@@ -103,12 +107,14 @@ if mc:
         mc_pre_sels += 'and fGenPt<0'
     
 
-    df.query(mc_pre_sels, inplace=True)
+    # df.query(mc_pre_sels, inplace=True)
     df.query("fGenCt<28.5 or fGenCt>28.6", inplace=True) ### Needed to remove the peak at 28.5 cm in the anchored MC
     ## fill histograms to be put at denominator of efficiency
     utils.fill_th1_hist(hPtGen, df, 'fAbsGenPt')
     utils.fill_th1_hist(hCtGen, df, 'fGenCt')
     ## now we select only the reconstructed particles
+    print(len(np.unique(df.round(decimals=5)["fGenCt"])))
+    print(len(df))
     df.query('fIsReco==True', inplace=True)
 
 ############# Apply pre-selections to data #############        
@@ -144,6 +150,23 @@ utils.fill_th2_hist(h2MassDCAHePv, df, 'fDcaHe', 'fMassH3L')
 utils.fill_th2_hist(h2MassPt, df, 'fPt', 'fMassH3L')
 utils.fill_th2_hist(h2Mass4LHnSigmaHe, df, 'fNSigmaHe', 'fMassH4L')
 
+if "fFlags" in df.columns:
+    df_matter = df.query('fIsMatter == True')
+    df_matter['fHePIDHypo'] = np.right_shift(df_matter['fFlags'], 4)
+    df_matter['fPiPIDHypo'] = np.bitwise_and(df_matter['fFlags'], 0b1111)
+
+    df_antimatter = df.query('fIsMatter == False')
+    df_antimatter['fPiPIDHypo'] = np.right_shift(df_antimatter['fFlags'], 4) 
+    df_antimatter['fHePIDHypo'] = np.bitwise_and(df_antimatter['fFlags'], 0b1111) 
+
+    utils.fill_th1_hist(hHeliumPIDHypo, df_matter, 'fHePIDHypo')
+    utils.fill_th1_hist(hPiPIDHypo, df_matter, 'fPiPIDHypo')
+    utils.fill_th1_hist(hHeliumPIDHypo, df_antimatter, 'fHePIDHypo')
+    utils.fill_th1_hist(hPiPIDHypo, df_antimatter, 'fPiPIDHypo')
+
+
+
+
 # for MC only
 if mc:
     df.eval('resPt = (fPt - fAbsGenPt)/fAbsGenPt', inplace=True)
@@ -177,6 +200,10 @@ h2MassDCAHePv.Write()
 h2Mass4LHnSigmaHe.Write()
 h2MassPt.Write()
 
+if "fFlags" in df.columns:
+    hHeliumPIDHypo.Write()
+    hPiPIDHypo.Write()
+
 if mc:
     f.mkdir("MC")
     f.cd("MC")
@@ -197,6 +224,9 @@ if mc:
     h_eff_ct.SetTitle(";#it{c#tau} (cm); Efficiency")
     h_eff_ct.Divide(hCtGen)
     h_eff_ct.Write()
+
+
+    ### check if the gCt values are repeated
     
 
 

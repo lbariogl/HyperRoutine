@@ -79,7 +79,7 @@ struct GPart
 double calcRadius(std::vector<MCTrack> *MCTracks, const MCTrack &motherTrack, int dauPDG);
 
 void DauTreeBuilder(int dau0PDG = 211, int dau1PDG = 1000020030, int mothPDG = 1010010030,
-                    bool debug = false, std::string path = "/data/fmazzasc/its_data/sim/hyp_gap_trig/1/", std::string outsuffix = "")
+                    bool debug = false, std::string path = "/data/fmazzasc/its_data/sim/hyp_gap_trig/relval_fix/", std::string outsuffix = "relval_fix")
 {
 
     if(outsuffix != "")
@@ -107,7 +107,7 @@ void DauTreeBuilder(int dau0PDG = 211, int dau1PDG = 1000020030, int mothPDG = 1
         if (file.substr(0, 2) == "tf")
         {
             int dirnum = stoi(file.substr(2, file.size()));
-            // if (dirnum != 3)
+            // if (dirnum > 1)
             //     continue;
             dirs.push_back(path + file);
             dirnums.push_back(dirnum);
