@@ -60,7 +60,7 @@ if __name__ == '__main__':
     print("** Loading data and apply preselections **")
 
     data_hdl = TreeHandler(input_file_name_data, 'O2datahypcands')
-    mc_hdl = TreeHandler(input_file_name_mc, 'O2mchypcands')
+    mc_hdl = TreeHandler(input_file_name_mc, 'O2mchypcands', folder_name='DF')
 
     # declare output file
     output_file = ROOT.TFile.Open(
@@ -92,9 +92,10 @@ if __name__ == '__main__':
     utils.reweight_pt_spectrum(mc_hdl, 'fAbsGenPt', he3_spectrum)
 
     mc_hdl.apply_preselections('rej==True')
-    # Needed to remove the peak at 28.5 cm in the anchored MC
-    mc_hdl.apply_preselections('fGenCt < 28.5 or fGenCt > 28.6')
     mc_reco_hdl = mc_hdl.apply_preselections('fIsReco == 1', inplace=False)
+    
+    print("reco hdl len: ", len(mc_reco_hdl))
+    print("mc hdl len: ", len(mc_hdl))
 
     print("** Data loaded. ** \n")
     print("----------------------------------")
@@ -107,15 +108,13 @@ if __name__ == '__main__':
     spectra_maker.mc_hdl = mc_hdl
     spectra_maker.mc_reco_hdl = mc_reco_hdl
 
-    spectra_maker.n_ev = uproot.open(input_analysis_results_file)[
-        'hyper-reco-task']['hZvtx'].values().sum()
+    spectra_maker.n_ev = uproot.open(input_analysis_results_file)['hyper-reco-task']['hZvtx'].values().sum()
     spectra_maker.branching_ratio = 0.25
     spectra_maker.delta_rap = 2.0
 
     spectra_maker.var = 'fPt'
     spectra_maker.bins = pt_bins
-    sel_string_list = [utils.convert_sel_to_string(
-        sel) for sel in selections_std]
+    sel_string_list = [utils.convert_sel_to_string(sel) for sel in selections_std]
     spectra_maker.selection_string = sel_string_list
     spectra_maker.is_matter = is_matter
     spectra_maker.inv_mass_signal_func = signal_fit_func

@@ -60,7 +60,7 @@ if __name__ == '__main__':
     print("** Loading data and apply preselections **")
 
     data_hdl = TreeHandler(input_file_name_data, 'O2datahypcands')
-    mc_hdl = TreeHandler(input_file_name_mc, 'O2mchypcands')
+    mc_hdl = TreeHandler(input_file_name_mc, 'O2mchypcands', folder_name='DF')
 
     lifetime_dist = ROOT.TH1D('syst_lifetime', ';#tau ps ;Counts', 40, 120, 380)
     lifetime_prob = ROOT.TH1D('prob_lifetime', ';prob. ;Counts', 100, 0, 1)

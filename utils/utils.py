@@ -217,6 +217,9 @@ def correct_and_convert_df(df, calibrate_he3_pt = False, isMC=False, isH4L=False
     df.eval('fPt = sqrt(fPx**2 + fPy**2)', inplace=True)
     df.eval('fEta = arccosh(fP/fPt)', inplace=True)
     df.eval('fPhi = arctan(fPy/fPx)', inplace=True)
+    df.eval('fCosLambda = fPz/fP', inplace=True)
+    df.eval('fCosLambdaHe = fPzHe3/fPHe3', inplace=True)
+
     # Variables of interest
     df.eval('fDecLen = sqrt(fXDecVtx**2 + fYDecVtx**2 + fZDecVtx**2)', inplace=True)
     if not isH4L:
@@ -229,6 +232,32 @@ def correct_and_convert_df(df, calibrate_he3_pt = False, isMC=False, isH4L=False
     df.eval('fCosPA = (fPx * fXDecVtx + fPy * fYDecVtx + fPz * fZDecVtx) / (fP * fDecLen)', inplace=True)
     df.eval('fMassH3L = sqrt(fEn**2 - fP**2)', inplace=True)
     df.eval('fMassH4L = sqrt(fEn4**2 - fP**2)', inplace=True)
+
+    ## signed TPC mom
+    df.eval('fTPCSignMomHe3 = fTPCmomHe * (-1 + 2*fIsMatter)', inplace=True)
+    df.eval('fGloSignMomHe3 = fPHe3 / 2 * (-1 + 2*fIsMatter)', inplace=True)
+
+    if "fITSclusterSizesHe" in df.columns:
+    ## loop over the candidates and compute the average cluster size
+        clSizesHe = df['fITSclusterSizesHe'].to_numpy()
+        clSizesPi = df['fITSclusterSizesPi'].to_numpy()
+        clSizeHeAvg = np.zeros(len(clSizesHe))
+        clSizePiAvg = np.zeros(len(clSizesPi))
+        nHitsHe = np.zeros(len(clSizesHe))
+        nHitsPi = np.zeros(len(clSizesPi))
+        for iLayer in range(7):
+            clSizeHeAvg += np.right_shift(clSizesHe, 4*iLayer) & 0b1111
+            clSizePiAvg += np.right_shift(clSizesPi, 4*iLayer) & 0b1111
+            nHitsHe += np.right_shift(clSizesHe, 4*iLayer) & 0b1111 > 0
+            nHitsPi += np.right_shift(clSizesPi, 4*iLayer) & 0b1111 > 0
+
+        clSizeHeAvg /= nHitsHe
+        clSizePiAvg /= nHitsPi
+        df['fAvgClusterSizeHe'] = clSizeHeAvg
+        df['fAvgClusterSizePi'] = clSizePiAvg
+        df['nITSHitsHe'] = nHitsHe
+        df['nITSHitsPi'] = nHitsPi
+        df.eval('fAvgClSizeCosLambda = fAvgClusterSizeHe * fCosLambdaHe', inplace=True)
 
     if isMC:
         df.eval('fGenDecLen = sqrt(fGenXDecVtx**2 + fGenYDecVtx**2 + fGenZDecVtx**2)', inplace=True)
@@ -243,7 +272,7 @@ def correct_and_convert_df(df, calibrate_he3_pt = False, isMC=False, isH4L=False
             
 
     # remove useless columns
-    df.drop(columns=['fPxHe3', 'fPyHe3', 'fPzHe3', 'fPHe3', 'fEnHe3', 'fPxPi', 'fPyPi', 'fPzPi', 'fPPi', 'fEnPi', 'fPx', 'fPy', 'fPz', 'fP', 'fEn'])
+    df.drop(columns=['fPxHe3', 'fPyHe3', 'fPzHe3', 'fEnHe3', 'fPxPi', 'fPyPi', 'fPzPi', 'fPPi', 'fEnPi', 'fPx', 'fPy', 'fPz', 'fP', 'fEn'])
 
 
 def compute_pvalue_from_sign(significance):

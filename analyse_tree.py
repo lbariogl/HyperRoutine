@@ -12,24 +12,10 @@ import utils as utils
 
 
 parser = argparse.ArgumentParser(description='Configure the parameters of the script.')
-parser.add_argument('--mc', dest='mc', action='store_true', help="if True MC information is stored.", default=False)
-parser.add_argument('--input-files', dest='input_files', help="path to the input files.", default='../data/AO2D_merged.root')
-parser.add_argument('--output-dir', dest='output_dir', help="path to the directory in which the output is stored.", default='../results/')
-parser.add_argument('--output-file', dest='output_file', help="name of the output file without extension", default='HypertritonResults')
-parser.add_argument('--selection', dest='selection', help="selections to be bassed as query.", default='fCosPA > 0.998 & fNTPCclusHe > 110 & abs(fDcaHe) > 0.1')
-parser.add_argument('--is-matter', dest='is_matter', help="path to the YAML file with configuration.", default='matter')
-parser.add_argument('--skip-out-tree', dest='skip_out_tree', action='store_true', help="if True do not save output tree.")
 parser.add_argument('--config-file', dest='config_file', help="path to the YAML file with configuration.", default='')
 args = parser.parse_args()
 
 # initialise parameters from parser (can be overwritten by external yaml file)
-mc = args.mc
-skip_out_tree = args.skip_out_tree
-input_file_name = args.input_files
-output_dir_name = args.output_dir
-output_file_name = args.output_file
-selections_string = args.selection
-is_matter = args.is_matter
 
 if args.config_file != "":
     config_file = open(args.config_file, 'r')
@@ -42,6 +28,8 @@ if args.config_file != "":
     selections_string = utils.convert_sel_to_string(selections)
     is_matter = config['is_matter']
     is_h4l = config['is_h4l']
+    skip_out_tree = config['skip_out_tree']
+    calibrate_he_momentum = config['calibrate_he_momentum']
 
 
 matter_options = ['matter', 'antimatter', 'both']
@@ -64,6 +52,14 @@ hCtRec = ROOT.TH1F("hCtRec", ";#it{c#tau} (cm)", 50, 0, 40)
 hRadius = ROOT.TH1F("hRadius", ";Radius (cm)", 100, 0, 40)
 hDecLen = ROOT.TH1F("hDecLen", ";Decay length (cm)", 100, 0, 40)
 hNSigHe = ROOT.TH1F("hNSigmaHe", ";n_{#sigma}^{TPC}({}^{3}He)", 50, -3, 3)
+h2NSigHe3VsMom = ROOT.TH2F("h2NSigHe3VsMom", ";{}^{3}He #it{p}_{T} (GeV/#it{c});n_{#sigma}^{TPC}({}^{3}He)", 50, -5, 5, 50, -3, 3)
+hClusterSizeHe = ROOT.TH1F("hClusterSizeHe", ";<Cluster size>", 15, 0.5, 15.5)
+hClusterSizeHeCosLam = ROOT.TH1F("hClusterSizeHeCosLam", ";<Cluster size> x cos(#lambda)", 15, 0.5, 15.5)
+h2NSigClusSizeHe = ROOT.TH2F("h2NSigClusSizeHe", ";n_{#sigma}^{TPC}({}^{3}He);<Cluster size>", 50, -3, 3, 15, 0.5, 15.5)
+hClusterSizePi = ROOT.TH1F("hClusterSizePi", ";<Cluster size>", 15, 0.5, 15.5)
+h2NSigClusSizePi = ROOT.TH2F("h2NSigClusSizePi", ";n_{#sigma}^{TPC}(#pi);<Cluster size>", 50, -3, 3, 15, 0.5, 15.5)
+hHeMomTPCMinusMomGlo = ROOT.TH2F("hHeMomTPCMinusMomGlo", ";#it{p}^{glo}/z (GeV/#it{c});(#it{p}^{TPC} - #it{p}^{Glo}) / z (GeV/#it{c})", 50, -5, 5, 50, -2, 2)
+
 h2MassCosPA = ROOT.TH2F("h2MassCosPA", ";cos(#theta_{PA}); m({}^{3}_{#Lambda}H) (GeV/#it{c})", 100, 0.99, 1, 50, 2.96, 3.04)
 h2MassDecLen = ROOT.TH2F("h2MassDecLen", ";Decay length (cm); m({}^{3}_{#Lambda}H) (GeV/#it{c})", 100, 0, 40, 50, 2.96, 3.04)
 h2MassDCADaughters = ROOT.TH2F("h2MassDCADaughters", ";DCA daughters (cm); m({}^{3}_{#Lambda}H) (GeV/#it{c})", 200, 0, 0.3, 50, 2.96, 3.04)
@@ -86,11 +82,19 @@ hHeliumPIDHypo = ROOT.TH1F("hHeliumPIDHypo", "; Hypothesis", 16, 0.5, 16.5)
 hPiPIDHypo = ROOT.TH1F("hPiPIDHypo", "; Hypothesis", 16, 0.5, 16.5)
 
 ############# Read trees #############
-tree_name = 'O2datahypcands' if not mc else 'O2mchypcands'
+tree_names = ['O2datahypcands','O2hypcands', 'O2hypcandsflow', 'O2mchypcands', 'O2hypcandsflow;11']
+tree_keys = uproot.open(input_files_name[0]).keys()
+for tree in tree_names:
+    for key in tree_keys:
+        if tree in key:
+            tree_name = key
+            break
+print(f"Tree name: {tree_name}")
 tree_hdl = TreeHandler(input_files_name, tree_name)
 df = tree_hdl.get_data_frame()
+print("Tree columns:", df.columns)
 # correct and convert dataframe
-utils.correct_and_convert_df(df, False, mc, is_h4l)
+utils.correct_and_convert_df(df, calibrate_he_momentum, mc, is_h4l)
 
 
 ############# Apply pre-selections to MC #############
@@ -131,7 +135,10 @@ else:
 ############# Common filtering #############
 if selections_string != '':
     df.query(selections_string, inplace=True)
+    
 
+
+# df.query('fAvgClusterSizeHe>4', inplace=True)
 
 ############# Fill output histograms #############
 utils.fill_th1_hist(hPtRec, df, 'fPt')
@@ -149,21 +156,21 @@ utils.fill_th2_hist(h2MassDCADaughters, df, 'fDcaV0Daug', 'fMassH3L')
 utils.fill_th2_hist(h2MassDCAHePv, df, 'fDcaHe', 'fMassH3L')
 utils.fill_th2_hist(h2MassPt, df, 'fPt', 'fMassH3L')
 utils.fill_th2_hist(h2Mass4LHnSigmaHe, df, 'fNSigmaHe', 'fMassH4L')
+utils.fill_th1_hist(hClusterSizeHe, df, 'fAvgClusterSizeHe')
+utils.fill_th1_hist(hClusterSizeHeCosLam, df, 'fAvgClSizeCosLambda')
+utils.fill_th1_hist(hClusterSizePi, df, 'fAvgClusterSizePi')
+utils.fill_th2_hist(h2NSigClusSizeHe, df, 'fNSigmaHe', 'fAvgClusterSizeHe')
+utils.fill_th2_hist(h2NSigHe3VsMom, df, 'fTPCSignMomHe3', 'fNSigmaHe')
+
+df.eval('MomDiffHe3 = fTPCmomHe - fPHe3/2', inplace=True)
+utils.fill_th2_hist(hHeMomTPCMinusMomGlo, df, 'fGloSignMomHe3', 'MomDiffHe3')
+
 
 if "fFlags" in df.columns:
-    df_matter = df.query('fIsMatter == True')
-    df_matter['fHePIDHypo'] = np.right_shift(df_matter['fFlags'], 4)
-    df_matter['fPiPIDHypo'] = np.bitwise_and(df_matter['fFlags'], 0b1111)
-
-    df_antimatter = df.query('fIsMatter == False')
-    df_antimatter['fPiPIDHypo'] = np.right_shift(df_antimatter['fFlags'], 4) 
-    df_antimatter['fHePIDHypo'] = np.bitwise_and(df_antimatter['fFlags'], 0b1111) 
-
-    utils.fill_th1_hist(hHeliumPIDHypo, df_matter, 'fHePIDHypo')
-    utils.fill_th1_hist(hPiPIDHypo, df_matter, 'fPiPIDHypo')
-    utils.fill_th1_hist(hHeliumPIDHypo, df_antimatter, 'fHePIDHypo')
-    utils.fill_th1_hist(hPiPIDHypo, df_antimatter, 'fPiPIDHypo')
-
+    df['fHePIDHypo'] = np.right_shift(df['fFlags'], 4)
+    df['fPiPIDHypo'] = np.bitwise_and(df['fFlags'], 0b1111)
+    utils.fill_th1_hist(hHeliumPIDHypo, df, 'fHePIDHypo')
+    utils.fill_th1_hist(hPiPIDHypo, df, 'fPiPIDHypo')
 
 
 
@@ -199,10 +206,18 @@ h2MassDCADaughters.Write()
 h2MassDCAHePv.Write()
 h2Mass4LHnSigmaHe.Write()
 h2MassPt.Write()
+h2NSigClusSizeHe.Write()
+h2NSigClusSizePi.Write()
+h2NSigHe3VsMom.Write()
+hHeMomTPCMinusMomGlo.Write()
 
 if "fFlags" in df.columns:
     hHeliumPIDHypo.Write()
     hPiPIDHypo.Write()
+
+hClusterSizeHe.Write()
+hClusterSizeHeCosLam.Write()
+hClusterSizePi.Write()
 
 if mc:
     f.mkdir("MC")
