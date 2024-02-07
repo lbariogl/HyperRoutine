@@ -26,6 +26,8 @@ class SignalExtraction:
         self.is_matter = False
         self.performance = False
         self.additional_pave_text = '' ## additional text to be added to the ALICE performance pave
+        self.colliding_system = 'pp'
+        self.energy = 13.6
 
         ## fit-related variables
         self.pdf = None
@@ -202,10 +204,18 @@ class SignalExtraction:
         pinfo_alice.SetTextAlign(11)
         pinfo_alice.SetTextFont(42)
         pinfo_alice.AddText('ALICE Performance')
-        pinfo_alice.AddText('Run 3, pp #sqrt{#it{s}} = 13.6 TeV')
+        
+        sqrtsnn = "#sqrt{#it{s}}"
+        if self.colliding_system != 'pp':
+            sqrtsnn = "#sqrt{#it{s_{NN}}}"
+        pinfo_alice.AddText(f'Run 3, {self.colliding_system} @ {sqrtsnn} = {self.energy} TeV')
         if not self.performance:
-            pinfo_alice.AddText('N_{ev} = ' f'{self.n_evts:.0f} '  '#times 10^{9}')
+            ##rounding n_events
+            exponent = np.floor(np.log10(self.n_evts))
+            self.n_evts = self.n_evts / 10**(exponent)
+            pinfo_alice.AddText('N_{ev} = ' + f'{self.n_evts:.1f} ' + '#times 10^{' + f'{exponent:.0f}' + '}') 
         pinfo_alice.AddText(decay_string)
+
         if self.additional_pave_text != '':
             pinfo_alice.AddText(self.additional_pave_text)
 
@@ -308,8 +318,6 @@ if __name__ == '__main__':
         description='Configure the parameters of the script.')
     parser.add_argument('--config-file', dest='config_file', default='',
                         help='path to the YAML file with configuration.')
-    parser.add_argument('--nbins', dest='n_bins', default=30,
-                        help='number of bins in the final plot.')
     parser.add_argument('--performance', action='store_true',
                         help="True for performance plot", default=False)
     args = parser.parse_args()
@@ -321,43 +329,48 @@ if __name__ == '__main__':
     input_analysis_results = config['input_analysis_results']
 
     input_parquet_mc = config['input_parquet_mc']
-
     output_dir = config['output_dir']
     output_file = config['output_file']
-
-    is_4lh = config['is_4lh']
     matter_type = config['matter_type']
-    n_bins = config['n_bins']
+    compute_significance = config['compute_significance']
 
     performance = args.performance
     data_hdl = TreeHandler(input_parquet_data)
-    mc_hdl =  TreeHandler(input_parquet_mc)
+    mc_hdl = None
+    if input_parquet_mc != '':
+        mc_hdl =  TreeHandler(input_parquet_mc)
 
     an_vtx_z = uproot.open(input_analysis_results)['hyper-reco-task']['hZvtx']
-    n_evts = an_vtx_z.values().sum() / 1e9
-    n_evts = round(n_evts, 0)
+    n_evts = an_vtx_z.values().sum()
 
     signal_extraction = SignalExtraction(data_hdl, mc_hdl)
-    signal_extraction.n_bins = n_bins
+    signal_extraction.n_bins = config['n_bins']
     signal_extraction.n_evts = n_evts
-    signal_extraction.matter_type = matter_type
+    signal_extraction.is_matter = not matter_type == 'antimatter'
     signal_extraction.performance = performance
-    signal_extraction.is_3lh = not is_4lh
-    signal_extraction.bkg_fit_func = 'pol1'
+    signal_extraction.is_3lh = not config['is_4lh']
+    signal_extraction.bkg_fit_func = 'pol2'
+
+    signal_extraction.colliding_system = config['colliding_system']
+    signal_extraction.energy = config['energy']
+
 
     signal_extraction.process_fit(extended_likelihood=True, rooworkspace_path="../results")
-    signal_extraction.compute_significance_asymptotic_calc(rooworkspace_path="../results", do_local_p0plot=True)
+    if compute_significance:
+        signal_extraction.compute_significance_asymptotic_calc(rooworkspace_path="../results", do_local_p0plot=True)
 
 
     # create output file and save frames
     out_file = ROOT.TFile(f'{output_dir}/{output_file}', 'recreate')
     out_file.cd()
     signal_extraction.data_frame_fit.Write()
-    signal_extraction.mc_frame_fit.Write()
-    signal_extraction.local_pvalue_graph.Write()
+    if mc_hdl != None:
+        signal_extraction.mc_frame_fit.Write()
+    if compute_significance:
+        signal_extraction.local_pvalue_graph.Write()
     out_file.Close()
 
-    if is_4lh:
+    if config['is_4lh']:
         state_label = '4lh'
     else:
         state_label = '3lh'

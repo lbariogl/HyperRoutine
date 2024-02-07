@@ -1,0 +1,24 @@
+mc: False
+is_h4l: False
+input_files:
+  [
+    # "/data/shared/hyp_run_3/pbpb/zzg_pass2_QC/AO2D_merg.root",
+    # "/data/shared/hyp_run_3/pbpb/zzf_pass2_QC/AO2D_merg.root",
+    "/data/shared/hyp_run_3/pbpb/pass2_full/AO2D_merg.root",
+  ]
+output_dir: "../results/"
+output_file: "HypertritonResults_pbpb"
+selection:
+  {
+    "fPt": "fPt > 2",
+    "fCt": "fCt > 1",
+    "fCosPA": "fCosPA > 0.9999",
+    "fNSigmaHe": "fNSigmaHe > -3",
+    "fTPCsignalPi": "fTPCsignalPi < 1000.",
+    "fNTPCclusHe": "fNTPCclusHe > 90",
+    "fTPCmomHe": "fTPCmomHe > 1",
+    "fAvgClusterSizeHe": "fAvgClusterSizeHe > 4.",
+  }
+is_matter: "both"
+calibrate_he_momentum: False
+skip_out_tree: False

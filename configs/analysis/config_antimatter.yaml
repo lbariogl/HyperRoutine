@@ -1,4 +1,5 @@
 mc: False
+is_h4l: False
 input_files:
   [
     "/data/shared/hyp_run_3/apass4/new_dataformat/LHC22m/AO2D_merged.root",

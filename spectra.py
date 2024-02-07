@@ -86,8 +86,7 @@ class SpectraMaker:
                 mc_bin_sel = f'abs(fGenPt) > {bin[0]} & abs(fGenPt) < {bin[1]}'
 
             # count generated per ct bin
-            bin_mc_hdl = self.mc_hdl.apply_preselections(
-                mc_bin_sel, inplace=False)
+            bin_mc_hdl = self.mc_hdl.apply_preselections(mc_bin_sel, inplace=False)
 
             if isinstance(self.selection_string, list):
                 bin_sel = f'{bin_sel} and {self.selection_string[ibin]}'
@@ -97,13 +96,13 @@ class SpectraMaker:
                 mc_bin_sel = f'{mc_bin_sel} and {self.selection_string}'
 
             # select reconstructed in data and mc
-            bin_data_hdl = self.data_hdl.apply_preselections(
-                bin_sel, inplace=False)
-            bin_mc_reco_hdl = self.mc_reco_hdl.apply_preselections(
-                mc_bin_sel, inplace=False)
+            bin_data_hdl = self.data_hdl.apply_preselections(bin_sel, inplace=False)
+            bin_mc_reco_hdl = self.mc_reco_hdl.apply_preselections(mc_bin_sel, inplace=False)
 
             # compute efficiency
             eff = len(bin_mc_reco_hdl) / len(bin_mc_hdl)
+            print(mc_bin_sel)
+            print("bin low", bin[0], "bin high", bin[1], "efficiency", eff)
             self.efficiency.append(eff)
 
             signal_extraction = SignalExtraction(bin_data_hdl, bin_mc_hdl)
@@ -124,8 +123,7 @@ class SpectraMaker:
             signal_extraction.signal_fit_func = sgn_mass_fit_func
             signal_extraction.n_bins_data = self.n_bins_mass_data
             signal_extraction.n_bins_mc = self.n_bins_mass_mc
-            n_ev_plot = round(self.n_ev / 1e9, 0)
-            signal_extraction.n_evts = n_ev_plot
+            signal_extraction.n_evts = self.n_ev
             signal_extraction.matter_type = self.is_matter
             signal_extraction.performance = False
             signal_extraction.is_3lh = True
