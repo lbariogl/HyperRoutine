@@ -1,0 +1,10 @@
+mc: True
+is_h4l: False
+# input_files: ["/data/shared/hyp_run_3/mc/anchoring_2022_apass4/AO2D_h3l_mc.root"]
+input_files: ["/home/fmazzasc/mc_bugged_merg.root"]
+output_dir: "../results/mc"
+output_file: "HypertritonResults_mc_h3l_bug"
+is_matter: "both"
+selection:
+  {
+  }

@@ -1,0 +1,19 @@
+mc: False
+input_files:
+  [
+    "/data/shared/hyp_run_3/apass4/new_dataformat/LHC22m/AO2D_merged.root",
+    "/data/shared/hyp_run_3/apass4/new_dataformat/LHC22o/AO2D_merged.root",
+    "/data/shared/hyp_run_3/apass4/new_dataformat/LHC22r/AO2D_merged.root",
+    "/data/shared/hyp_run_3/apass4/new_dataformat/LHC22t/AO2D_merged.root",
+  ]
+output_dir: "../results/"
+output_file: "HypertritonResults_antimatter_h4l.root"
+selection:
+  {
+    "fPt" : "fPt>1.2",
+    "fCosPA" : "fCosPA>0.98",
+    "fNSigmaHe": "fNSigmaHe>1",
+    "fTPCsignalPi": "fTPCsignalPi<1000"
+  }
+is_matter: "antimatter"
+correction_file: "utils/he3_pt_calibration.root"
