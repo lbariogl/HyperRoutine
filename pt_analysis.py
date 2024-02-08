@@ -67,7 +67,7 @@ if __name__ == '__main__':
                 tree_name = key
                 break
     print(f"Data tree found: {tree_name}")
-    data_hdl = TreeHandler(input_file_name_data, tree_name)
+    data_hdl = TreeHandler(input_file_name_data, tree_name, folder_name='DF')
     mc_hdl = TreeHandler(input_file_name_mc, 'O2mchypcands', folder_name='DF')
 
     # declare output file

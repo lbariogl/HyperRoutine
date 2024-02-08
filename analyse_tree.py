@@ -93,7 +93,7 @@ for tree in tree_names:
             tree_name = key
             break
 print(f"Tree name: {tree_name}")
-tree_hdl = TreeHandler(input_files_name, tree_name)
+tree_hdl = TreeHandler(input_files_name, tree_name, folder_name='DF')
 df = tree_hdl.get_data_frame()
 print("Tree columns:", df.columns)
 # correct and convert dataframe
