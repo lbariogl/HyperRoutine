@@ -39,6 +39,11 @@ class SignalExtraction:
         self.bkg_fit_func = 'pol1'
 
         ### frames to be saved to file
+        self.out_file = None ## could also be a TDirectory
+        self.data_frame_fit_name = 'data_frame_fit'
+        self.mc_frame_fit_name = 'mc_frame_fit'
+        
+        ## output objects, broken members for ROOT > 6.22 (TO BE FIXED)
         self.mc_frame_fit = None
         self.data_frame_fit = None
         self.local_pvalue_graph = None
@@ -105,7 +110,7 @@ class SignalExtraction:
             n2.setConstant()
             sigma.setRange(self.sigma_range_mc_to_data[0]*sigma.getVal(), self.sigma_range_mc_to_data[1]*sigma.getVal())
             self.mc_frame_fit = mass.frame(self.n_bins_mc)
-            self.mc_frame_fit.SetName('mc_frame_fit')
+            self.mc_frame_fit.SetName(self.mc_frame_fit_name)
             mass_roo_mc.plotOn(self.mc_frame_fit, ROOT.RooFit.Name('mc'), ROOT.RooFit.DrawOption('p'))
             signal.plotOn(self.mc_frame_fit, ROOT.RooFit.Name('signal'), ROOT.RooFit.DrawOption('p'))
             fit_param = ROOT.TPaveText(0.6, 0.43, 0.9, 0.85, 'NDC')
@@ -153,7 +158,7 @@ class SignalExtraction:
             background_counts_error = f.getVal() * self.roo_dataset.sumEntries()*f.getError()/f.getVal()
 
         self.data_frame_fit = mass.frame(self.n_bins_data)
-        self.data_frame_fit.SetName('data_frame_fit')
+        self.data_frame_fit.SetName(self.data_frame_fit_name)
 
         self.roo_dataset.plotOn(self.data_frame_fit, ROOT.RooFit.Name('data'), ROOT.RooFit.DrawOption('p'))
         self.pdf.plotOn(self.data_frame_fit, ROOT.RooFit.Components('bkg'), ROOT.RooFit.LineStyle(ROOT.kDashed), ROOT.RooFit.LineColor(kOrangeC))
@@ -235,6 +240,12 @@ class SignalExtraction:
             getattr(w, 'import')(sb_model)
             getattr(w, 'import')(self.roo_dataset)
             w.writeToFile(rooworkspace_path + '/rooworkspace.root', True)
+        
+        if self.out_file != None:
+            self.out_file.cd()
+            self.data_frame_fit.Write()
+            if self.mc_frame_fit != None:
+                self.mc_frame_fit.Write()
 
         return fit_stats
 
@@ -299,6 +310,10 @@ class SignalExtraction:
             self.local_pvalue_graph.SetMarkerSize(0)
             self.local_pvalue_graph.SetLineColor(kBlueC)
             self.local_pvalue_graph.SetLineWidth(2)
+            
+            if self.out_file != None:
+                self.out_file.cd()
+                self.local_pvalue_graph.Write()
 
         print("****************************************************")
         print(f'p0: {null_p_value:.3E} +/- {null_p_value_err:.3E}')
@@ -353,22 +368,14 @@ if __name__ == '__main__':
 
     signal_extraction.colliding_system = config['colliding_system']
     signal_extraction.energy = config['energy']
+    
+    out_file = ROOT.TFile(f'{output_dir}/{output_file}', 'recreate')
+    signal_extraction.out_file = out_file.mkdir('signal_extraction')
 
 
     signal_extraction.process_fit(extended_likelihood=True, rooworkspace_path="../results")
     if compute_significance:
         signal_extraction.compute_significance_asymptotic_calc(rooworkspace_path="../results", do_local_p0plot=True)
-
-
-    # create output file and save frames
-    out_file = ROOT.TFile(f'{output_dir}/{output_file}', 'recreate')
-    out_file.cd()
-    signal_extraction.data_frame_fit.Write()
-    if mc_hdl != None:
-        signal_extraction.mc_frame_fit.Write()
-    if compute_significance:
-        signal_extraction.local_pvalue_graph.Write()
-    out_file.Close()
 
     if config['is_4lh']:
         state_label = '4lh'

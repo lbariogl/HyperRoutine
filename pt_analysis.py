@@ -59,7 +59,15 @@ if __name__ == '__main__':
     print("----------------------------------")
     print("** Loading data and apply preselections **")
 
-    data_hdl = TreeHandler(input_file_name_data, 'O2datahypcands')
+    tree_names = ['O2datahypcands','O2hypcands', 'O2hypcandsflow']
+    tree_keys = uproot.open(input_file_name_data[0]).keys()
+    for tree in tree_names:
+        for key in tree_keys:
+            if tree in key:
+                tree_name = key
+                break
+    print(f"Data tree found: {tree_name}")
+    data_hdl = TreeHandler(input_file_name_data, tree_name)
     mc_hdl = TreeHandler(input_file_name_mc, 'O2mchypcands', folder_name='DF')
 
     # declare output file
@@ -90,12 +98,8 @@ if __name__ == '__main__':
     he3_spectrum = spectra_file.Get('fCombineHeliumSpecLevyFit_0-100')
     spectra_file.Close()
     utils.reweight_pt_spectrum(mc_hdl, 'fAbsGenPt', he3_spectrum)
-
     mc_hdl.apply_preselections('rej==True')
     mc_reco_hdl = mc_hdl.apply_preselections('fIsReco == 1', inplace=False)
-    
-    print("reco hdl len: ", len(mc_reco_hdl))
-    print("mc hdl len: ", len(mc_hdl))
 
     print("** Data loaded. ** \n")
     print("----------------------------------")
@@ -171,9 +175,10 @@ if __name__ == '__main__':
 
     print("** pt analysis done. ** \n")
 
-    print("** Starting systematic variations **")
+    
 
     if do_syst:
+        print("** Starting systematic variations **")
         n_trials = config['n_trials']
         output_dir_syst = output_file.mkdir('trials')
         # list of trial strings to be printed to a text file

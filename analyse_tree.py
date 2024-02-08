@@ -17,19 +17,22 @@ args = parser.parse_args()
 
 # initialise parameters from parser (can be overwritten by external yaml file)
 
-if args.config_file != "":
-    config_file = open(args.config_file, 'r')
-    config = yaml.full_load(config_file)
-    mc = config['mc']
-    input_files_name = config['input_files']
-    output_dir_name = config['output_dir']
-    output_file_name = config['output_file']
-    selections = config['selection']
-    selections_string = utils.convert_sel_to_string(selections)
-    is_matter = config['is_matter']
-    is_h4l = config['is_h4l']
-    skip_out_tree = config['skip_out_tree']
-    calibrate_he_momentum = config['calibrate_he_momentum']
+if args.config_file == "":
+    print('** No config file provided. Exiting. **')
+    exit()
+
+config_file = open(args.config_file, 'r')
+config = yaml.full_load(config_file)
+mc = config['mc']
+input_files_name = config['input_files']
+output_dir_name = config['output_dir']
+output_file_name = config['output_file']
+selections = config['selection']
+selections_string = utils.convert_sel_to_string(selections)
+is_matter = config['is_matter']
+is_h4l = config['is_h4l']
+skip_out_tree = config['skip_out_tree']
+calibrate_he_momentum = config['calibrate_he_momentum']
 
 
 matter_options = ['matter', 'antimatter', 'both']
@@ -82,7 +85,7 @@ hHeliumPIDHypo = ROOT.TH1F("hHeliumPIDHypo", "; Hypothesis", 16, 0.5, 16.5)
 hPiPIDHypo = ROOT.TH1F("hPiPIDHypo", "; Hypothesis", 16, 0.5, 16.5)
 
 ############# Read trees #############
-tree_names = ['O2datahypcands','O2hypcands', 'O2hypcandsflow', 'O2mchypcands', 'O2hypcandsflow;11']
+tree_names = ['O2datahypcands','O2hypcands', 'O2hypcandsflow', 'O2mchypcands']
 tree_keys = uproot.open(input_files_name[0]).keys()
 for tree in tree_names:
     for key in tree_keys:
