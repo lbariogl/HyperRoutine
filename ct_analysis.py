@@ -59,7 +59,15 @@ if __name__ == '__main__':
     print("----------------------------------")
     print("** Loading data and apply preselections **")
 
-    data_hdl = TreeHandler(input_file_name_data, 'O2datahypcands')
+    tree_names = ['O2datahypcands','O2hypcands', 'O2hypcandsflow']
+    tree_keys = uproot.open(input_file_name_data[0]).keys()
+    for tree in tree_names:
+        for key in tree_keys:
+            if tree in key:
+                tree_name = key
+                break
+    print(f"Data tree found: {tree_name}")
+    data_hdl = TreeHandler(input_file_name_data, tree_name)
     mc_hdl = TreeHandler(input_file_name_mc, 'O2mchypcands', folder_name='DF')
 
     lifetime_dist = ROOT.TH1D('syst_lifetime', ';#tau ps ;Counts', 40, 120, 380)
@@ -94,7 +102,6 @@ if __name__ == '__main__':
     utils.reweight_pt_spectrum(mc_hdl, 'fAbsGenPt', he3_spectrum)
 
     mc_hdl.apply_preselections('rej==True')
-    mc_hdl.apply_preselections('fGenCt < 28.5 or fGenCt > 28.6') ### Needed to remove the peak at 28.5 cm in the anchored MC
     mc_reco_hdl = mc_hdl.apply_preselections('fIsReco == 1', inplace=False)
 
     print("** Data loaded. ** \n")

@@ -127,14 +127,11 @@ class SpectraMaker:
             signal_extraction.matter_type = self.is_matter
             signal_extraction.performance = False
             signal_extraction.is_3lh = True
-
-            if isinstance(self.sigma_range_mc_to_data[0], list):
-                signal_extraction.sigma_range_mc_to_data = self.sigma_range_mc_to_data[ibin]
-            else:
-                signal_extraction.sigma_range_mc_to_data = self.sigma_range_mc_to_data
-
-            fit_stats = signal_extraction.process_fit()
-
+            
+            signal_extraction.out_file = self.output_dir
+            signal_extraction.data_frame_fit_name = f'data_fit_{ibin}'
+            signal_extraction.mc_frame_fit_name = f'mc_fit_{ibin}'
+            
             if self.var == 'fPt':
                 bin_label = f'{bin[0]} #leq #it{{p}}_{{T}} < {bin[1]} GeV/#it{{c}}'
             else:
@@ -142,9 +139,13 @@ class SpectraMaker:
 
             signal_extraction.additional_pave_text = bin_label
 
-            self.h_signal_extractions_data.append(
-                signal_extraction.data_frame_fit)
-            self.h_signal_extractions_mc.append(signal_extraction.mc_frame_fit)
+            if isinstance(self.sigma_range_mc_to_data[0], list):
+                signal_extraction.sigma_range_mc_to_data = self.sigma_range_mc_to_data[ibin]
+            else:
+                signal_extraction.sigma_range_mc_to_data = self.sigma_range_mc_to_data
+
+            fit_stats = signal_extraction.process_fit()
+            
             self.raw_counts.append(fit_stats['signal'][0])
             self.raw_counts_err.append(fit_stats['signal'][1])
             self.chi2.append(fit_stats['chi2'])
@@ -227,8 +228,7 @@ class SpectraMaker:
         self.efficiency = []
         self.corrected_counts = []
         self.corrected_counts_err = []
-        self.h_signal_extractions_data = []
-        self.h_signal_extractions_mc = []
+
 
         self.h_raw_counts = None
         self.h_efficiency = None
@@ -239,18 +239,6 @@ class SpectraMaker:
         self.h_raw_counts.Write()
         self.h_efficiency.Write()
         self.h_corrected_counts.Write()
-        for ibin in range(0, len(self.bins) - 1):
-            bin = [self.bins[ibin], self.bins[ibin + 1]]
-            self.output_dir.mkdir(f'{self.var}_{bin[0]}_{bin[1]}')
-            self.output_dir.cd(f'{self.var}_{bin[0]}_{bin[1]}')
-            h_data = self.h_signal_extractions_data[ibin]
-            h_mc = self.h_signal_extractions_mc[ibin]
-            bin_string_data = f'{self.var}_{self.bins[ibin]}_{self.bins[ibin + 1]}_data'
-            bin_string_mc = f'{self.var}_{self.bins[ibin]}_{self.bins[ibin + 1]}_mc'
-            h_data.SetName(bin_string_data)
-            h_mc.SetName(bin_string_mc)
-            h_data.Write()
-            h_mc.Write()
 
     def chi2_selection(self):
         for el in self.chi2:
