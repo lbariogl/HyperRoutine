@@ -90,7 +90,7 @@ tree_keys = uproot.open(input_files_name[0]).keys()
 for tree in tree_names:
     for key in tree_keys:
         if tree in key:
-            tree_name = key
+            tree_name = tree
             break
 print(f"Tree name: {tree_name}")
 tree_hdl = TreeHandler(input_files_name, tree_name, folder_name='DF')
