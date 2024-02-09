@@ -4,7 +4,7 @@ input_files:
   [
     # "/data/shared/hyp_run_3/pbpb/zzg_pass2_QC/AO2D_merg.root",
     # "/data/shared/hyp_run_3/pbpb/zzf_pass2_QC/AO2D_merg.root",
-    "/data/shared/hyp_run_3/pbpb/pass2_full/AO2D_merg.root",
+    "/data/shared/hyp_run_3/pbpb/pass2_full/AO2D.root",
   ]
 output_dir: "../results/"
 output_file: "HypertritonResults_pbpb"
