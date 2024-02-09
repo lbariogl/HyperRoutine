@@ -64,7 +64,7 @@ if __name__ == '__main__':
     for tree in tree_names:
         for key in tree_keys:
             if tree in key:
-                tree_name = key
+                tree_name = tree
                 break
     print(f"Data tree found: {tree_name}")
     data_hdl = TreeHandler(input_file_name_data, tree_name, folder_name='DF')
