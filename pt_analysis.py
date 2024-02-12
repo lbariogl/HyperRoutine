@@ -71,8 +71,7 @@ if __name__ == '__main__':
     mc_hdl = TreeHandler(input_file_name_mc, 'O2mchypcands', folder_name='DF')
 
     # declare output file
-    output_file = ROOT.TFile.Open(
-        f'{output_dir_name}/{output_file_name}.root', 'recreate')
+    output_file = ROOT.TFile.Open(f'{output_dir_name}/{output_file_name}.root', 'recreate')
 
     # Add columns to the handlers
     utils.correct_and_convert_df(data_hdl, calibrate_he3_pt=True)
@@ -147,8 +146,7 @@ if __name__ == '__main__':
     spectra_maker.dump_to_output_dir()
 
     std_corrected_counts = copy.deepcopy(spectra_maker.corrected_counts)
-    std_corrected_counts_err = copy.deepcopy(
-        spectra_maker.corrected_counts_err)
+    std_corrected_counts_err = copy.deepcopy(spectra_maker.corrected_counts_err)
     final_stat = copy.deepcopy(spectra_maker.h_corrected_counts)
     final_stat.SetName('hStat')
     utils.setHistStyle(final_stat, ROOT.kBlack)
@@ -156,19 +154,20 @@ if __name__ == '__main__':
     final_syst_rms = final_stat.Clone('hSystRMS')
     final_syst_rms.SetLineColor(ROOT.kAzure+1)
 
-    # std_yield = spectra_maker.fit_func.GetParameter(0)
-    # std_yield_err = spectra_maker.fit_func.GetParError(0)
 
-    # yield_dist = ROOT.TH1D('hYieldSyst', ';dN/dy ;Counts', 40, 120, 380)
-    # yield_prob = ROOT.TH1D('hYieldProb', ';prob. ;Counts', 100, 0, 1)
+
+    std_yield = spectra_maker.fit_func.GetParameter(0)
+    std_yield_err = spectra_maker.fit_func.GetParError(0)
+
+    yield_dist = ROOT.TH1D('hYieldSyst', ';dN/dy ;Counts', 40, 1.3e-08, 2.3e-08)
+    yield_prob = ROOT.TH1D('hYieldProb', ';prob. ;Counts', 100, 0, 1)
+
 
     h_pt_syst = []
     for i_bin in range(0, len(spectra_maker.bins) - 1):
 
         bin_label = f'{spectra_maker.bins[i_bin]}' + r' #leq #it{p}_{T} < ' f'{spectra_maker.bins[i_bin + 1]}' + r' GeV/#it{c}'
-
-        histo = ROOT.TH1D(f'hPtSyst_{i_bin}', f'{bin_label}' + r';d#it{N} / d#it{p}_{T} (GeV/#it{c})^{-1};',
-                          50, 0.5 * std_corrected_counts[i_bin], 1.5 * std_corrected_counts[i_bin])
+        histo = ROOT.TH1D(f'hPtSyst_{i_bin}', f'{bin_label}' + r';d#it{N} / d#it{p}_{T} (GeV/#it{c})^{-1};', 50, 0.5 * std_corrected_counts[i_bin], 1.5 * std_corrected_counts[i_bin])
         h_pt_syst.append(histo)
 
     spectra_maker.del_dyn_members()
@@ -268,24 +267,22 @@ if __name__ == '__main__':
             spectra_maker.n_bins_mass_data = n_bins_mass_data
             spectra_maker.n_bins_mass_mc = n_bins_mass_mc
             spectra_maker.sigma_range_mc_to_data = sigma_range_mc_to_data
-
+            trial_dir = output_dir_syst.mkdir(f'trial_{i_combo}')
+            spectra_maker.output_dir = trial_dir
             spectra_maker.make_spectra()
             spectra_maker.make_histos()
             spectra_maker.fit()
 
-            res_string = "Integral: " + str(spectra_maker.fit_func.GetParameter(0)) + " +- " + str(
-                spectra_maker.fit_func.GetParError(0)) + " Prob: " + str(spectra_maker.fit_func.GetProb())
+            res_string = "Integral: " + str(spectra_maker.fit_func.GetParameter(0)) + " +- " + str(spectra_maker.fit_func.GetParError(0)) + " Prob: " + str(spectra_maker.fit_func.GetProb())
             trial_strings.append(res_string)
 
             for i_bin in range(0, len(spectra_maker.bins) - 1):
                 h_pt_syst[i_bin].Fill(spectra_maker.corrected_counts[i_bin])
 
-            if spectra_maker.fit_func.GetProb() > 0.05:
-                trial_dir = output_dir_syst.mkdir(f'trial_{i_combo}')
-                spectra_maker.output_dir = trial_dir
+            if spectra_maker.fit_func.GetProb() > 0.01 and spectra_maker.chi2_selection():
                 spectra_maker.dump_to_output_dir()
-                # yield_dist.Fill(spectra_maker.fit_func.GetParameter(0))
-                # yield_prob.Fill(spectra_maker.fit_func.GetProb())
+                yield_dist.Fill(spectra_maker.fit_func.GetParameter(0))
+                yield_prob.Fill(spectra_maker.fit_func.GetProb())
 
             spectra_maker.del_dyn_members()
 
@@ -359,9 +356,12 @@ if __name__ == '__main__':
 
 
 
-    # yield_dist.Write()
-    # yield_prob.Write()
+    yield_dist.Write()
+    yield_prob.Write()
     output_file.Close()
+    
+    
+    print("Yield for the std selections: ", std_yield, " +- ", std_yield_err)
 
     print("** Systematics analysis done. ** \n")
     if do_syst:
