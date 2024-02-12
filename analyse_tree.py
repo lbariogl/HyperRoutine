@@ -113,9 +113,6 @@ if mc:
     elif is_matter == 'antimatter':
         mc_pre_sels += 'and fGenPt<0'
     
-
-    # df.query(mc_pre_sels, inplace=True)
-    df.query("fGenCt<28.5 or fGenCt>28.6", inplace=True) ### Needed to remove the peak at 28.5 cm in the anchored MC
     ## fill histograms to be put at denominator of efficiency
     utils.fill_th1_hist(hPtGen, df, 'fAbsGenPt')
     utils.fill_th1_hist(hCtGen, df, 'fGenCt')
@@ -159,14 +156,16 @@ utils.fill_th2_hist(h2MassDCADaughters, df, 'fDcaV0Daug', 'fMassH3L')
 utils.fill_th2_hist(h2MassDCAHePv, df, 'fDcaHe', 'fMassH3L')
 utils.fill_th2_hist(h2MassPt, df, 'fPt', 'fMassH3L')
 utils.fill_th2_hist(h2Mass4LHnSigmaHe, df, 'fNSigmaHe', 'fMassH4L')
-utils.fill_th1_hist(hClusterSizeHe, df, 'fAvgClusterSizeHe')
-utils.fill_th1_hist(hClusterSizeHeCosLam, df, 'fAvgClSizeCosLambda')
-utils.fill_th1_hist(hClusterSizePi, df, 'fAvgClusterSizePi')
-utils.fill_th2_hist(h2NSigClusSizeHe, df, 'fNSigmaHe', 'fAvgClusterSizeHe')
 utils.fill_th2_hist(h2NSigHe3VsMom, df, 'fTPCSignMomHe3', 'fNSigmaHe')
 
 df.eval('MomDiffHe3 = fTPCmomHe - fPHe3/2', inplace=True)
 utils.fill_th2_hist(hHeMomTPCMinusMomGlo, df, 'fGloSignMomHe3', 'MomDiffHe3')
+
+if "fITSclusterSizesHe" in df.columns:
+    utils.fill_th1_hist(hClusterSizeHe, df, 'fAvgClusterSizeHe')
+    utils.fill_th1_hist(hClusterSizeHeCosLam, df, 'fAvgClSizeCosLambda')
+    utils.fill_th1_hist(hClusterSizePi, df, 'fAvgClusterSizePi')
+    utils.fill_th2_hist(h2NSigClusSizeHe, df, 'fNSigmaHe', 'fAvgClusterSizeHe')
 
 
 if "fFlags" in df.columns:

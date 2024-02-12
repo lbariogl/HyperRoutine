@@ -1,15 +1,15 @@
 mc: False
 input_files_data:
   [
-  "/data/shared/hyp_run_3/pbpb/pass2_full/AO2D_merg.root",
+  "/data/shared/hyp_run_3/pbpb/pass2_full/AO2D.root",
   ]
 input_files_mc: ["/data/shared/hyp_run_3/mc/LHC23j6b/AO2D_h3l.root"]
 input_analysis_results_file: "/data/shared/hyp_run_3/apass4/new_dataformat/AnalysisResults.root"
 output_dir: "../results/"
 output_file: "pt_analysis_pbpb"
 
-pt_bins: [2.,3,4,5,6]
-bkg_fit_func: "pol1"
+pt_bins: [2,3,4,5,6]
+bkg_fit_func: "pol2"
 signal_fit_func: "dscb"
 is_matter: "both"
 n_bins_mass_data: 40
@@ -30,7 +30,7 @@ selection:
     {
     "fPt": "fPt > 2",
     "fCt": "fCt > 1",
-    "fCosPA": "fCosPA > 0.9999",
+    "fCosPA": "fCosPA > 0.999",
     "fNSigmaHe": "fNSigmaHe > -3",
     "fTPCsignalPi": "fTPCsignalPi < 1000.",
     "fNTPCclusHe": "fNTPCclusHe > 90",
@@ -40,7 +40,7 @@ selection:
     {
     "fPt": "fPt > 2",
     "fCt": "fCt > 1",
-    "fCosPA": "fCosPA > 0.9999",
+    "fCosPA": "fCosPA > 0.999",
     "fNSigmaHe": "fNSigmaHe > -3",
     "fTPCsignalPi": "fTPCsignalPi < 1000.",
     "fNTPCclusHe": "fNTPCclusHe > 90",
@@ -50,7 +50,7 @@ selection:
     {
     "fPt": "fPt > 2",
     "fCt": "fCt > 1",
-    "fCosPA": "fCosPA > 0.9999",
+    "fCosPA": "fCosPA > 0.999",
     "fNSigmaHe": "fNSigmaHe > -3",
     "fTPCsignalPi": "fTPCsignalPi < 1000.",
     "fNTPCclusHe": "fNTPCclusHe > 90",
