@@ -11,6 +11,8 @@ git clone https://github.com/hipe4ml/hipe4ml.git
 
 Then, from the repository base directory
 ```bash
+git checkout -b dev
+git pull upstream/dev
 pip install -e .[dev]
 ```
 
