@@ -167,7 +167,7 @@ class SpectraMaker:
             x_label = r'#it{p}_{T} (GeV/#it{c})'
             y_raw_label = r'#it{N}_{raw}'
             y_eff_label = r'#epsilon #times acc.'
-            y_corr_label = r'#frac{d#it{N}}{d#it{p}_{T}} (GeV/#it{c})^{-1}'
+            y_corr_label = r'#frac{1}{N_{ev}}#frac{#it{d}N}{#it{d}y#it{d}#it{p}_{T}} (GeV/#it{c})^{-1}'
 
         self.h_raw_counts = ROOT.TH1D('h_raw_counts', f';{x_label};{y_raw_label}', len(
             self.bins) - 1, np.array(self.bins, dtype=np.float64))
@@ -217,10 +217,9 @@ class SpectraMaker:
             raise ValueError('Fit function not set.')
 
         if self.fit_range:
-            self.h_corrected_counts.Fit(
-                self.fit_func, self.fit_options, '', self.fit_range[0], self.fit_range[1])
+            self.h_corrected_counts.Fit(self.fit_func, self.fit_options, '', self.fit_range[0], self.fit_range[1])
         else:
-            self.h_corrected_counts.Fit(self.fit_func, 'R')
+            self.h_corrected_counts.Fit(self.fit_func, 'RMI+')
 
     def del_dyn_members(self):
         self.raw_counts = []
