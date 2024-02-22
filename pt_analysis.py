@@ -13,6 +13,8 @@ ROOT.RooMsgService.instance().setSilentMode(True)
 ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.ERROR)
 ROOT.gStyle.SetOptStat(0)
 ROOT.gStyle.SetOptFit(0)
+kBlueC = ROOT.TColor.GetColor('#1f78b4')
+kOrangeC  = ROOT.TColor.GetColor('#ff7f00')
 
 import sys
 sys.path.append('utils')
@@ -39,6 +41,7 @@ if __name__ == '__main__':
     pt_bins = config['pt_bins']
     selections_std = config['selection']
     is_matter = config['is_matter']
+    calibrate_he_momentum = config['calibrate_he_momentum']
 
     signal_fit_func = config['signal_fit_func']
     bkg_fit_func = config['bkg_fit_func']
@@ -74,8 +77,8 @@ if __name__ == '__main__':
     output_file = ROOT.TFile.Open(f'{output_dir_name}/{output_file_name}.root', 'recreate')
 
     # Add columns to the handlers
-    utils.correct_and_convert_df(data_hdl, calibrate_he3_pt=True)
-    utils.correct_and_convert_df(mc_hdl, calibrate_he3_pt=True, isMC=True)
+    utils.correct_and_convert_df(data_hdl, calibrate_he3_pt=calibrate_he_momentum, isMC=False)
+    utils.correct_and_convert_df(mc_hdl, calibrate_he3_pt=calibrate_he_momentum, isMC=True)
 
     # apply preselections
     matter_sel = ''
@@ -138,7 +141,7 @@ if __name__ == '__main__':
     he3_spectrum.FixParameter(1, he3_spectrum.GetParameter(1))
     he3_spectrum.FixParameter(2, he3_spectrum.GetParameter(2))
     he3_spectrum.FixParameter(3, 2.99131)
-    he3_spectrum.SetLineColor(ROOT.kRed)
+    he3_spectrum.SetLineColor(kOrangeC)
 
     spectra_maker.fit_func = he3_spectrum
     spectra_maker.fit_options = 'MIQ+'
@@ -149,7 +152,7 @@ if __name__ == '__main__':
     std_corrected_counts_err = copy.deepcopy(spectra_maker.corrected_counts_err)
     final_stat = copy.deepcopy(spectra_maker.h_corrected_counts)
     final_stat.SetName('hStat')
-    utils.setHistStyle(final_stat, ROOT.kBlack)
+    utils.setHistStyle(final_stat, kBlueC)
     final_syst = final_stat.Clone('hSyst')
     final_syst_rms = final_stat.Clone('hSystRMS')
     final_syst_rms.SetLineColor(ROOT.kAzure+1)
@@ -167,7 +170,7 @@ if __name__ == '__main__':
     for i_bin in range(0, len(spectra_maker.bins) - 1):
 
         bin_label = f'{spectra_maker.bins[i_bin]}' + r' #leq #it{p}_{T} < ' f'{spectra_maker.bins[i_bin + 1]}' + r' GeV/#it{c}'
-        histo = ROOT.TH1D(f'hPtSyst_{i_bin}', f'{bin_label}' + r';d#it{N} / d#it{p}_{T} (GeV/#it{c})^{-1};', 50, 0.5 * std_corrected_counts[i_bin], 1.5 * std_corrected_counts[i_bin])
+        histo = ROOT.TH1D(f'hPtSyst_{i_bin}', f'{bin_label}' + r';d#it{N} / d#it{p}_{T} (GeV/#it{c})^{-1};', 30, 0.5 * std_corrected_counts[i_bin], 2 * std_corrected_counts[i_bin])
         h_pt_syst.append(histo)
 
     spectra_maker.del_dyn_members()
@@ -185,6 +188,7 @@ if __name__ == '__main__':
         print("----------------------------------")
         print("** Starting systematics analysis **")
         print(f'** {n_trials} trials will be tested **')
+        print("----------------------------------")
 
         cut_dict_syst = config['cut_dict_syst']
         signal_fit_func_syst = config['signal_fit_func_syst']
@@ -228,6 +232,7 @@ if __name__ == '__main__':
             trial_num_string = f'Trial: {i_combo} / {len(combo_random_indices)}'
             trial_strings.append(trial_num_string)
             print(trial_num_string)
+            print("----------------------------------")
 
             cut_selection_list = []
             bkg_fit_func_list = []
@@ -298,21 +303,19 @@ if __name__ == '__main__':
         canvas.SetBottomMargin(0.15)
         canvas.SetLeftMargin(0.08)
         canvas.SetRightMargin(0.08)
-        canvas.DrawFrame(0.5 * std_corrected_counts[i_bin], 0, 1.5 * std_corrected_counts[i_bin],
+        canvas.DrawFrame(0.5 * std_corrected_counts[i_bin], 0, 2 * std_corrected_counts[i_bin],
                          1.1 * h_pt_syst[i_bin].GetMaximum(), r';d#it{N} / d#it{p}_{T} (GeV/#it{c})^{-1};')
         # create a line for the standard value of lifetime
-        std_line = ROOT.TLine(
-            std_corrected_counts[i_bin], 0, std_corrected_counts[i_bin], 1.05 * h_pt_syst[i_bin].GetMaximum())
-        std_line.SetLineColor(ROOT.kRed)
+        std_line = ROOT.TLine(std_corrected_counts[i_bin], 0, std_corrected_counts[i_bin], 1.05 * h_pt_syst[i_bin].GetMaximum())
+        std_line.SetLineColor(kOrangeC)
         std_line.SetLineWidth(2)
         # create box for statistical uncertainty
         std_errorbox = ROOT.TBox(std_corrected_counts[i_bin] - std_corrected_counts_err[i_bin], 0,
                                  std_corrected_counts[i_bin] + std_corrected_counts_err[i_bin], 1.05 * h_pt_syst[i_bin].GetMaximum())
-        std_errorbox.SetFillColorAlpha(ROOT.kRed, 0.5)
+        std_errorbox.SetFillColorAlpha(kOrangeC, 0.5)
         std_errorbox.SetLineWidth(0)
         # fitting histogram with systematic variations
-        fit_func = ROOT.TF1(f'fit_func_{i_bin}', 'gaus', 0.5 *
-                            std_corrected_counts[i_bin], 1.5 * std_corrected_counts[i_bin])
+        fit_func = ROOT.TF1(f'fit_func_{i_bin}', 'gaus', 0.5 *std_corrected_counts[i_bin], 1.5 * std_corrected_counts[i_bin])
         fit_func.SetLineColor(ROOT.kGreen+3)
         h_pt_syst[i_bin].Fit(fit_func, 'Q')
         syst_mu = fit_func.GetParameter(1)
@@ -348,9 +351,12 @@ if __name__ == '__main__':
         canvas.SaveAs(f'{output_dir_name}/cYield_{i_bin}.pdf')
 
     cFinalSpectrum = ROOT.TCanvas('cFinalSpectrum', 'cFinalSpectrum', 800, 600)
+    fit_fun_stat = final_stat.GetFunction(spectra_maker.fit_func.GetName())
+    fit_fun_stat.SetRange(0, 10)
     final_stat.Draw('PEX0')
+    
     final_syst_rms.Draw('PE2 SAME')
-    final_syst.Draw('PE2 SAME')
+    # final_syst.Draw('PE2 SAME')
     cFinalSpectrum.Write()
     cFinalSpectrum.SaveAs(f'{output_dir_name}/cFinalSpectrum.pdf')
 

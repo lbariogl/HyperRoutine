@@ -59,6 +59,7 @@ h2NSigHe3VsMom = ROOT.TH2F("h2NSigHe3VsMom", ";{}^{3}He #it{p}_{T} (GeV/#it{c});
 hClusterSizeHe = ROOT.TH1F("hClusterSizeHe", ";<Cluster size>", 15, 0.5, 15.5)
 hClusterSizeHeCosLam = ROOT.TH1F("hClusterSizeHeCosLam", ";<Cluster size> x cos(#lambda)", 15, 0.5, 15.5)
 h2NSigClusSizeHe = ROOT.TH2F("h2NSigClusSizeHe", ";n_{#sigma}^{TPC}({}^{3}He);<Cluster size>", 50, -3, 3, 15, 0.5, 15.5)
+h2TPCSigClusSize = ROOT.TH2F("h2TPCSigClusSize", ";<Cluster size>; TPC signal", 50, 0.5, 15.5, 100, 0.5, 1000)
 hClusterSizePi = ROOT.TH1F("hClusterSizePi", ";<Cluster size>", 15, 0.5, 15.5)
 h2NSigClusSizePi = ROOT.TH2F("h2NSigClusSizePi", ";n_{#sigma}^{TPC}(#pi);<Cluster size>", 50, -3, 3, 15, 0.5, 15.5)
 hHeMomTPCMinusMomGlo = ROOT.TH2F("hHeMomTPCMinusMomGlo", ";#it{p}^{glo}/z (GeV/#it{c});(#it{p}^{TPC} - #it{p}^{Glo}) / z (GeV/#it{c})", 50, -5, 5, 50, -2, 2)
@@ -166,6 +167,8 @@ if "fITSclusterSizesHe" in df.columns:
     utils.fill_th1_hist(hClusterSizeHeCosLam, df, 'fAvgClSizeCosLambda')
     utils.fill_th1_hist(hClusterSizePi, df, 'fAvgClusterSizePi')
     utils.fill_th2_hist(h2NSigClusSizeHe, df, 'fNSigmaHe', 'fAvgClusterSizeHe')
+    utils.fill_th2_hist(h2TPCSigClusSize, df, 'fAvgClusterSizeHe', 'fTPCsignalHe')
+    utils.fill_th2_hist(h2TPCSigClusSize, df, 'fAvgClusterSizePi', 'fTPCsignalPi')
 
 
 if "fFlags" in df.columns:
@@ -210,6 +213,7 @@ h2Mass4LHnSigmaHe.Write()
 h2MassPt.Write()
 h2NSigClusSizeHe.Write()
 h2NSigClusSizePi.Write()
+h2TPCSigClusSize.Write()
 h2NSigHe3VsMom.Write()
 hHeMomTPCMinusMomGlo.Write()
 

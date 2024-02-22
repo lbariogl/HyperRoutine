@@ -10,14 +10,15 @@ output_dir: "../results/"
 output_file: "HypertritonResults_pbpb"
 selection:
   {
-    "fPt": "fPt > 2",
+    "fPt": "fPt > 2.",
     "fCt": "fCt > 1",
     "fCosPA": "fCosPA > 0.9999",
     "fNSigmaHe": "fNSigmaHe > -3",
-    "fTPCsignalPi": "fTPCsignalPi < 1000.",
+    "fTPCsignalPi": "fTPCsignalPi < 600.",
     "fNTPCclusHe": "fNTPCclusHe > 90",
     "fTPCmomHe": "fTPCmomHe > 1",
     "fAvgClusterSizeHe": "fAvgClusterSizeHe > 4.",
+    "fTPCsignalHe": "fTPCsignalHe < 600",
   }
 is_matter: "both"
 calibrate_he_momentum: False
