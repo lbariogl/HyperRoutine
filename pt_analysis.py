@@ -70,8 +70,8 @@ if __name__ == '__main__':
                 tree_name = tree
                 break
     print(f"Data tree found: {tree_name}")
-    data_hdl = TreeHandler(input_file_name_data, tree_name, folder_name='DF')
-    mc_hdl = TreeHandler(input_file_name_mc, 'O2mchypcands', folder_name='DF')
+    data_hdl = TreeHandler(input_file_name_data, tree_name, folder_name='DF*')
+    mc_hdl = TreeHandler(input_file_name_mc, 'O2mchypcands', folder_name='DF*')
 
     # declare output file
     output_file = ROOT.TFile.Open(f'{output_dir_name}/{output_file_name}.root', 'recreate')
