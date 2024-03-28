@@ -8,27 +8,6 @@ kOrangeC = ROOT.TColor.GetColor('#ff7f00')
 ## set numpy seed
 np.random.seed(42)
 
-
-def fill_th1_hist(h, df, var):
-    for var_val in df[var]:
-        h.Fill(var_val)
-
-
-def fill_th1_hist_abs(h, df, var):
-    for var_val in df[var]:
-        h.Fill(abs(var_val))
-
-
-def fill_th2_hist(h, df, var1, var2):
-    for var1_val, var2_val in zip(df[var1], df[var2]):
-        h.Fill(var1_val, var2_val)
-
-
-def fill_th2_hist_abs(h, df, var1, var2):
-    for var1_val, var2_val in zip(df[var1], df[var2]):
-        h.Fill(abs(var1_val), var2_val)
-
-
 def computeEfficiency(gen_hist, rec_hist, name, rebin=0):
     if rebin > 1:
         gen_hist.Rebin(rebin)
@@ -57,18 +36,37 @@ def setHistStyle(hist, colour, marker=20, fillstyle=0, linewidth=1):
     hist.SetFillStyle(fillstyle)
     hist.SetLineWidth(linewidth)
 
-
 def fill_th1_hist(h, df, var):
+    if not type(df) == pd.DataFrame:
+        df = df._full_data_frame
     for var_val in df[var]:
         h.Fill(var_val)
 
 
+def fill_th1_hist_abs(h, df, var):
+    if not type(df) == pd.DataFrame:
+        df = df._full_data_frame
+    for var_val in df[var]:
+        h.Fill(abs(var_val))
+
+
 def fill_th2_hist(h, df, var1, var2):
-    for i in range(df.shape[0]):
-        h.Fill(df[var1].iloc[i], df[var2].iloc[i])
+    if not type(df) == pd.DataFrame:
+        df = df._full_data_frame
+    for var1_val, var2_val in zip(df[var1], df[var2]):
+        h.Fill(var1_val, var2_val)
+
+
+def fill_th2_hist_abs(h, df, var1, var2):
+    if not type(df) == pd.DataFrame:
+        df = df._full_data_frame
+    for var1_val, var2_val in zip(df[var1], df[var2]):
+        h.Fill(abs(var1_val), var2_val)
 
 
 def fill_res_hist(h, df, var1, var2):
+    if not type(df) == pd.DataFrame:
+        df = df._full_data_frame
     for var_val1, var_val2 in zip(df[var1], df[var2]):
         h.Fill((var_val1 - var_val2)/var_val1)
 
@@ -77,9 +75,9 @@ def fill_res_hist_th2(h, df, var1, var2):
     for var_val1, var_val2 in zip(df[var1], df[var2]):
         h.Fill(var_val1, (var_val1 - var_val2)/var_val1)
 
-
 def fill_mass_weighted_hist(h, df, var, weight=[1, 1]):
-
+    if not type(df) == pd.DataFrame:
+        df = df._full_data_frame
     for var_val, w in zip(df[var], df['isSignal']):
         if w == 1:
             h.Fill(var_val, weight[0])
@@ -273,7 +271,7 @@ def correct_and_convert_df(df, calibrate_he3_pt = False, isMC=False, isH4L=False
             df.eval('fGenCt = fGenDecLen * 2.99131 / fGenP', inplace=True)
         else:
             df.eval('fGenCt = fGenDecLen * 3.922 / fGenP', inplace=True)
-            
+
 
     # remove useless columns
     df.drop(columns=['fPxHe3', 'fPyHe3', 'fPzHe3', 'fEnHe3', 'fPxPi', 'fPyPi', 'fPzPi', 'fPPi', 'fEnPi', 'fPx', 'fPy', 'fPz', 'fP', 'fEn'])
