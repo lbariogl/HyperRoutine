@@ -71,9 +71,11 @@ def fill_res_hist(h, df, var1, var2):
         h.Fill((var_val1 - var_val2)/var_val1)
 
 
-def fill_res_hist_th2(h, df, var1, var2):
+def fill_th2_res_hist(h, df, var1, var2):
+    if not type(df) == pd.DataFrame:
+        df = df._full_data_frame
     for var_val1, var_val2 in zip(df[var1], df[var2]):
-        h.Fill(var_val1, (var_val1 - var_val2)/var_val1)
+        h.Fill(var_val1, (var_val2 - var_val1)/var_val1)
 
 def fill_mass_weighted_hist(h, df, var, weight=[1, 1]):
     if not type(df) == pd.DataFrame:
