@@ -125,6 +125,7 @@ if __name__ == '__main__':
     spectra_maker.is_matter = is_matter
     spectra_maker.inv_mass_signal_func = signal_fit_func
     spectra_maker.inv_mass_bkg_func = bkg_fit_func
+    spectra_maker.sigma_range_mc_to_data = sigma_range_mc_to_data
 
     spectra_maker.output_dir = output_dir_std
 
@@ -361,7 +362,8 @@ if __name__ == '__main__':
     cFinalSpectrum.SaveAs(f'{output_dir_name}/cFinalSpectrum.pdf')
 
 
-
+    final_stat.Write()
+    final_syst.Write()
     yield_dist.Write()
     yield_prob.Write()
     output_file.Close()
