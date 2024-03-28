@@ -216,7 +216,6 @@ def correct_and_convert_df(df, calibrate_he3_pt = False, isMC=False, isH4L=False
     # Momentum variables to be stored
     df.eval('fPt = sqrt(fPx**2 + fPy**2)', inplace=True)
     df.eval('fEta = arccosh(fP/fPt)', inplace=True)
-    df.eval('fPhi = arctan(fPy/fPx)', inplace=True)
     df.eval('fCosLambda = fPz/fP', inplace=True)
     df.eval('fCosLambdaHe = fPzHe3/fPHe3', inplace=True)
 
@@ -258,6 +257,11 @@ def correct_and_convert_df(df, calibrate_he3_pt = False, isMC=False, isH4L=False
         df['nITSHitsHe'] = nHitsHe
         df['nITSHitsPi'] = nHitsPi
         df.eval('fAvgClSizeCosLambda = fAvgClusterSizeHe * fCosLambdaHe', inplace=True)
+
+    if "fPsiFT0C" in df.columns:
+        df.eval('fPhi = arctan2(fPy, fPx)', inplace=True)
+        df.eval('fV2 = cos(2*(fPhi - fPsiFT0C))', inplace=True)
+    
 
     if isMC:
         df.eval('fGenDecLen = sqrt(fGenXDecVtx**2 + fGenYDecVtx**2 + fGenZDecVtx**2)', inplace=True)
