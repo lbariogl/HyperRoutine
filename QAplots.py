@@ -412,3 +412,48 @@ cResolutionDecVtxZ = ROOT.TCanvas('cResolutionDecVtxZ', 'cResolutionDecVtxZ', 80
 hResolutionDecVtxZ.Draw('HISTO')
 hResolutionDecVtxZ.Write()
 cResolutionDecVtxZ.SaveAs(f'{qa_dir_name}/cResolutionDecVtxZ.pdf')
+
+# general plots
+
+input_analysis_results = ROOT.TFile(input_analysis_results_file)
+
+hZvtx = input_analysis_results.Get('hyper-reco-task/hZvtx')
+hZvtx.SetDirectory(0)
+utils.setHistStyle(hZvtx, ROOT.kRed+1)
+cZvtx = ROOT.TCanvas('cZvtx', 'cZvtx', 800, 600)
+hZvtx.Draw('HISTO')
+cZvtx.SaveAs(f'{qa_dir_name}/cZvtx.pdf')
+output_file.cd()
+hZvtx.Write()
+
+hEvents = input_analysis_results.Get('hyper-reco-task/hEvents')
+hEvents.SetDirectory(0)
+utils.setHistStyle(hEvents, ROOT.kRed+1)
+cEvents = ROOT.TCanvas('cEvents', 'cEvents', 800, 600)
+hEvents.Draw('HISTO')
+cEvents.SaveAs(f'{qa_dir_name}/cEvents.pdf')
+output_file.cd()
+hEvents.Write()
+
+input_analysis_results_mc = ROOT.TFile(input_analysis_results_file_mc)
+
+hZvtx_MC = input_analysis_results_mc.Get('hyper-reco-task/hZvtx')
+hZvtx_MC.SetDirectory(0)
+hZvtx_MC.SetName('hZvtx_MC')
+utils.setHistStyle(hZvtx_MC, ROOT.kRed+1)
+cZvtx_MC = ROOT.TCanvas('cZvtx_MC', 'cZvtx_MC', 800, 600)
+hZvtx_MC.Draw('HISTO')
+cZvtx_MC.SaveAs(f'{qa_dir_name}/cZvtx_MC.pdf')
+output_file.cd()
+hZvtx_MC.Write()
+
+hEvents_MC = input_analysis_results_mc.Get('hyper-reco-task/hEvents')
+hEvents_MC.SetDirectory(0)
+hEvents_MC.SetName('hEvents_MC')
+utils.setHistStyle(hEvents_MC, ROOT.kRed+1)
+cEvents_MC = ROOT.TCanvas('cEvents_MC', 'cEvents_MC', 800, 600)
+hEvents_MC.Draw('HISTO')
+cEvents_MC.SaveAs(f'{qa_dir_name}/cEvents_MC.pdf')
+output_file.cd()
+hEvents_MC.Write()
+
