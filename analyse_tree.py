@@ -48,7 +48,7 @@ print('**********************************')
 ############# Create histograms #############
 hCosPA = ROOT.TH1F("hCosPA", ";cos(#theta_{PA})", 50, 0.95, 1)
 hNTPCclus = ROOT.TH1F("hNTPCclus", ";n TPC clusters", 50, 60, 200)
-hMass3LH = ROOT.TH1F("h_3lh_mass", "; m({}^{3}_{#Lambda}H) (GeV/#it{c})", 40, 2.96, 3.04)
+hMass3LH = ROOT.TH1F("h_3lh_mass", "; m({}^{3}_{#Lambda}H) (GeV/#it{c})", 20, 2.96, 3.04)
 hMass4LH = ROOT.TH1F("h_4lh_mass", ";  m({}^{4}_{#Lambda}H) (GeV/#it{c^{2}})", 30, 3.89, 3.97)
 hPtRec = ROOT.TH1F("hPtRec", ";#it{p}_{T} (GeV/#it{c})", 50, 0, 5)
 hCtRec = ROOT.TH1F("hCtRec", ";#it{c#tau} (cm)", 50, 0, 40)
@@ -63,7 +63,8 @@ h2TPCSigClusSize = ROOT.TH2F("h2TPCSigClusSize", ";<Cluster size>; TPC signal", 
 hClusterSizePi = ROOT.TH1F("hClusterSizePi", ";<Cluster size>", 15, 0.5, 15.5)
 h2NSigClusSizePi = ROOT.TH2F("h2NSigClusSizePi", ";n_{#sigma}^{TPC}(#pi);<Cluster size>", 50, -3, 3, 15, 0.5, 15.5)
 hHeMomTPCMinusMomGlo = ROOT.TH2F("hHeMomTPCMinusMomGlo", ";#it{p}^{glo}/z (GeV/#it{c});(#it{p}^{TPC} - #it{p}^{Glo}) / z (GeV/#it{c})", 50, -5, 5, 50, -2, 2)
-
+h2MassV2 = ROOT.TH2F("h2MassV2", ";m({}^{3}_{#Lambda}H) (GeV/#it{c}); v2", 20, 2.96, 3.04, 500, -1, 1)
+hMeanV2VsMass = ROOT.TH1F("hMeanV2VsMass", ";m({}^{3}_{#Lambda}H) (GeV/#it{c}); <v2>", 20, 2.96, 3.04)
 h2MassCosPA = ROOT.TH2F("h2MassCosPA", ";cos(#theta_{PA}); m({}^{3}_{#Lambda}H) (GeV/#it{c})", 100, 0.99, 1, 50, 2.96, 3.04)
 h2MassDecLen = ROOT.TH2F("h2MassDecLen", ";Decay length (cm); m({}^{3}_{#Lambda}H) (GeV/#it{c})", 100, 0, 40, 50, 2.96, 3.04)
 h2MassDCADaughters = ROOT.TH2F("h2MassDCADaughters", ";DCA daughters (cm); m({}^{3}_{#Lambda}H) (GeV/#it{c})", 200, 0, 0.3, 50, 2.96, 3.04)
@@ -177,6 +178,25 @@ if "fFlags" in df.columns:
     utils.fill_th1_hist(hHeliumPIDHypo, df, 'fHePIDHypo')
     utils.fill_th1_hist(hPiPIDHypo, df, 'fPiPIDHypo')
 
+if 'fV2' in df.columns:
+    utils.fill_th2_hist(h2MassV2, df, 'fMassH3L', 'fV2')
+    ## fill the mean v2 vs mass starting from the 2D hist
+    for i in range(1, h2MassV2.GetNbinsX()+1):
+        bin_entries = []
+        v2 = []
+        for j in range(1, h2MassV2.GetNbinsY()+1):
+            bin_entries.append(h2MassV2.GetBinContent(i, j))
+            v2.append(h2MassV2.GetYaxis().GetBinCenter(j))
+        if len(bin_entries) > 0:
+            mean = np.average(v2, weights=bin_entries)
+            std = np.sqrt(np.average((v2 - mean)**2, weights=bin_entries))
+            hMeanV2VsMass.SetBinContent(i, mean)
+            hMeanV2VsMass.SetBinError(i, std/np.sqrt(np.sum(bin_entries)))
+            # print(f"bin {i}: {mean}, {std}, {np.sum(bin_entries)}, {std/np.sqrt(np.sum(bin_entries))} ")
+            
+        else:
+            hMeanV2VsMass.SetBinContent(i, 0)
+            hMeanV2VsMass.SetBinError(i, 0)
 
 
 # for MC only
@@ -204,6 +224,8 @@ hNTPCclus.Write()
 hNSigHe.Write()
 hMass3LH.Write()
 hMass4LH.Write()
+h2MassV2.Write()
+hMeanV2VsMass.Write()
 
 h2MassCosPA.Write()
 h2MassDecLen.Write()
