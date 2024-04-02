@@ -1,10 +1,9 @@
 input_files_data:
   [
-    "/data/shared/hyp_run_3/pp2022/LHC22_highIR/AO2D.root",
+    "/data3/fmazzasc/hyp_run_3/pp2022/LHC22_highIR/AO2D.root",
   ]
-input_files_mc: ["/data/shared/hyp_run_3/mc/LHC23j6b/AO2D_h3l.root"]
-input_analysis_results_file: "/data/shared/hyp_run_3/pp2022/LHC22_highIR/AnalysisResults.root"
-input_analysis_results_file_mc: "/data/shared/hyp_run_3/mc/LHC23j6b/AnalysisResults_h3l.root"
+input_files_mc: ["/data3/fmazzasc/hyp_run_3/mc/LHC23j6b/AO2D_h3l.root"]
+input_analysis_results_file: "/data3/fmazzasc/hyp_run_3/pp2022/LHC22_highIR/AnalysisResults.root"
 output_dir: "../results/"
 output_file: "pt_analysis_antimat"
 output_file_qa: "qa"
@@ -19,6 +18,11 @@ n_bins_mass_mc: 80
 
 selection:
   [
+    #  {
+    #   "fCosPA": "fCosPA > 0.99",
+    #   "fNSigmaHe": "fNSigmaHe > -2.",
+    #   "fTPCsignalPi": "fTPCsignalPi < 1000."
+    # },
     {
       "fCosPA": "fCosPA > 0.99",
       "fNSigmaHe": "fNSigmaHe > -2.",
