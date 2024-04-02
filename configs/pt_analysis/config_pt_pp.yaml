@@ -2,14 +2,8 @@ input_files_data:
   [
     "/data3/fmazzasc/hyp_run_3/pp2022/LHC22_highIR/AO2D.root",
   ]
-<<<<<<< HEAD
-input_files_mc: ["/data/shared/hyp_run_3/mc/LHC23j6b/AO2D_h3l.root"]
-input_analysis_results_file: "/data/shared/hyp_run_3/pp2022/LHC22_highIR/AnalysisResults.root"
-input_analysis_results_file_mc: "/data/shared/hyp_run_3/mc/LHC23j6b/AnalysisResults_h3l.root"
-=======
 input_files_mc: ["/data3/fmazzasc/hyp_run_3/mc/LHC23j6b/AO2D_h3l.root"]
 input_analysis_results_file: "/data3/fmazzasc/hyp_run_3/pp2022/LHC22_highIR/AnalysisResults.root"
->>>>>>> be8e10a (Add absorption study)
 output_dir: "../results/"
 output_file: "pt_analysis_antimat"
 output_file_qa: "qa"
