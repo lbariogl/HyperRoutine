@@ -261,7 +261,7 @@ def correct_and_convert_df(df, calibrate_he3_pt = False, isMC=False, isH4L=False
     if "fPsiFT0C" in df.columns:
         df.eval('fPhi = arctan2(fPy, fPx)', inplace=True)
         df.eval('fV2 = cos(2*(fPhi - fPsiFT0C))', inplace=True)
-    
+
 
     if isMC:
         df.eval('fGenDecLen = sqrt(fGenXDecVtx**2 + fGenYDecVtx**2 + fGenZDecVtx**2)', inplace=True)
@@ -288,3 +288,15 @@ def convert_sel_to_string(selection):
     for _, val in selection.items():
         sel_string = sel_string + val + conj
     return sel_string[:-len(conj)]
+
+def saveCanvasAsPDF(histo, plots_dir, is2D=False):
+    histo_name = histo.GetName()
+    canvas_name = histo_name.replace('h', 'c', 1)
+    canvas = ROOT.TCanvas(canvas_name, canvas_name, 800, 600)
+    canvas.SetBottomMargin(0.13)
+    canvas.SetLeftMargin(0.13)
+    if not is2D:
+        histo.Draw('histo')
+    else:
+        histo.Draw('colz')
+    canvas.SaveAs(f'{plots_dir}/{canvas_name}.pdf')
