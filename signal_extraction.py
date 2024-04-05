@@ -11,7 +11,6 @@ sys.path.append('utils')
 import utils as utils
 
 utils.set_style()
-kBlueC = ROOT.TColor.GetColor('#1f78b4')
 kOrangeC  = ROOT.TColor.GetColor('#ff7f00')
 ROOT.gROOT.SetBatch()
 
@@ -162,7 +161,7 @@ class SignalExtraction:
 
         self.roo_dataset.plotOn(self.data_frame_fit, ROOT.RooFit.Name('data'), ROOT.RooFit.DrawOption('p'))
         self.pdf.plotOn(self.data_frame_fit, ROOT.RooFit.Components('bkg'), ROOT.RooFit.LineStyle(ROOT.kDashed), ROOT.RooFit.LineColor(kOrangeC))
-        self.pdf.plotOn(self.data_frame_fit, ROOT.RooFit.LineColor(kBlueC), ROOT.RooFit.Name('fit_func'))
+        self.pdf.plotOn(self.data_frame_fit, ROOT.RooFit.LineColor(ROOT.kAzure + 2 ), ROOT.RooFit.Name('fit_func'))
 
         chi2_data = self.data_frame_fit.chiSquare('fit_func', 'data')
         ndf_data = self.n_bins_data - fit_results_data.floatParsFinal().getSize()
@@ -306,9 +305,9 @@ class SignalExtraction:
             self.local_pvalue_graph.GetYaxis().SetTitle('Local p-value')
             # log Y axis
             self.local_pvalue_graph.SetMarkerStyle(20)
-            self.local_pvalue_graph.SetMarkerColor(kBlueC)
+            self.local_pvalue_graph.SetMarkerColor(ROOT.kAzure + 2 )
             self.local_pvalue_graph.SetMarkerSize(0)
-            self.local_pvalue_graph.SetLineColor(kBlueC)
+            self.local_pvalue_graph.SetLineColor(ROOT.kAzure + 2 )
             self.local_pvalue_graph.SetLineWidth(2)
             
             if self.out_file != None:

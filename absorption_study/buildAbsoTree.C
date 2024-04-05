@@ -14,7 +14,7 @@
 #include <string>
 #include <sstream>
 
-void buildAbsoTree(std::string path = "/data3/fmazzasc/sim/xs_studies/")
+void buildAbsoTree(std::string path = "/data3/fmazzasc/sim/xs_studies/he3_x5/")
 {
   // Path to the directory with the files
   TSystemDirectory dir("MyDir", path.data());
@@ -29,23 +29,25 @@ void buildAbsoTree(std::string path = "/data3/fmazzasc/sim/xs_studies/")
     if (file.substr(0, 2) == "tf")
     {
       int dirnum = stoi(file.substr(2, file.size()));
-      if (dirnum > 10)
-        continue;
+      // if (dirnum > 10)
+      //   continue;
       dirs.push_back(path + file + "/" + "sgn_" + std::to_string(dirnum) + "_Kine.root");
       std::cout << dirs.back() << std::endl;
     }
   }
 
   // create a new tree
-  float pt, eta, phi, prodRad;
+  float pt, eta, phi, absoX, absoY, absoZ;
   int process, pdg;
 
-  TFile *fout = new TFile("absorption_tree.root", "recreate");
+  TFile *fout = new TFile("absorption_tree_x5.root", "recreate");
   TTree *t = new TTree("he3candidates", "he3candidates");
   t->Branch("pt", &pt, "pt/F");
   t->Branch("eta", &eta, "eta/F");
   t->Branch("phi", &phi, "phi/F");
-  t->Branch("prodRad", &prodRad, "prodRad/F");
+  t->Branch("absoX", &absoX, "absoX/F");
+  t->Branch("absoY", &absoY, "absoY/F");
+  t->Branch("absoZ", &absoZ, "absoZ/F");
   t->Branch("process", &process, "process/I");
   t->Branch("pdg", &pdg, "pdg/I");
 
@@ -81,7 +83,9 @@ void buildAbsoTree(std::string path = "/data3/fmazzasc/sim/xs_studies/")
           if (isTreeFilled)
             continue;
 
-          prodRad = std::sqrt(daughter.GetStartVertexCoordinatesX() * daughter.GetStartVertexCoordinatesX() + daughter.GetStartVertexCoordinatesY() * daughter.GetStartVertexCoordinatesY());
+          absoX = daughter.GetStartVertexCoordinatesX();
+          absoY = daughter.GetStartVertexCoordinatesY();
+          absoZ = daughter.GetStartVertexCoordinatesZ();
           process = daughter.getProcess();
           t->Fill();
           isTreeFilled = true;
@@ -89,7 +93,9 @@ void buildAbsoTree(std::string path = "/data3/fmazzasc/sim/xs_studies/")
 
         if(!isTreeFilled){
           process = -1;
-          prodRad = -1;
+          absoX = -999;
+          absoY = -999;
+          absoZ = -999;
           t->Fill();
         }
       }
