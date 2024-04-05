@@ -18,6 +18,7 @@ class SpectraMaker:
         self.n_ev = 0
         self.branching_ratio = 0.25
         self.delta_rap = 2.0
+        self.h_absorption = None
 
         # variable related members
         self.var = ''
@@ -181,28 +182,23 @@ class SpectraMaker:
 
         for ibin in range(0, len(self.bins) - 1):
             bin_width = self.bins[ibin + 1] - self.bins[ibin]
-
-            self.h_raw_counts.SetBinContent(
-                ibin + 1, self.raw_counts[ibin]/bin_width)
-            self.h_raw_counts.SetBinError(
-                ibin + 1, self.raw_counts_err[ibin]/bin_width)
+            self.h_raw_counts.SetBinContent(ibin + 1, self.raw_counts[ibin]/bin_width)
+            self.h_raw_counts.SetBinError(ibin + 1, self.raw_counts_err[ibin]/bin_width)
             self.h_efficiency.SetBinContent(ibin + 1, self.efficiency[ibin])
 
-            local_corrected_counts = self.raw_counts[ibin] / \
-                self.efficiency[ibin] / bin_width
-            local_corrected_counts_err = self.raw_counts_err[ibin] / \
-                self.efficiency[ibin] / bin_width
+            absorption_corr = 1
+            if self.h_absorption is not None:
+                absorption_corr = self.h_absorption.GetBinContent(ibin + 1)
+            
+            local_corrected_counts = self.raw_counts[ibin] / self.efficiency[ibin] / absorption_corr / bin_width
+            local_corrected_counts_err = self.raw_counts_err[ibin] / self.efficiency[ibin] / absorption_corr / bin_width
 
             if self.var == 'fPt':
-                local_corrected_counts = local_corrected_counts / \
-                    self.n_ev / self.branching_ratio / self.delta_rap
-                local_corrected_counts_err = local_corrected_counts_err / \
-                    self.n_ev / self.branching_ratio / self.delta_rap
+                local_corrected_counts = local_corrected_counts / self.n_ev / self.branching_ratio / self.delta_rap
+                local_corrected_counts_err = local_corrected_counts_err / self.n_ev / self.branching_ratio / self.delta_rap
 
-            self.h_corrected_counts.SetBinContent(
-                ibin + 1, local_corrected_counts)
-            self.h_corrected_counts.SetBinError(
-                ibin + 1, local_corrected_counts_err)
+            self.h_corrected_counts.SetBinContent(ibin + 1, local_corrected_counts)
+            self.h_corrected_counts.SetBinError(ibin + 1, local_corrected_counts_err)
 
             self.corrected_counts.append(local_corrected_counts)
             self.corrected_counts_err.append(local_corrected_counts_err)
@@ -237,6 +233,8 @@ class SpectraMaker:
         self.output_dir.cd()
         self.h_raw_counts.Write()
         self.h_efficiency.Write()
+        if self.h_absorption is not None:
+            self.h_absorption.Write()
         self.h_corrected_counts.Write()
 
     def chi2_selection(self):
