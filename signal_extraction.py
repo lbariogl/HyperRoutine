@@ -94,7 +94,7 @@ class SignalExtraction:
             raise ValueError(f'Invalid background fit function. Expected one of: pol1, pol2, expo')
 
         if extended_likelihood:
-            n_signal = ROOT.RooRealVar('n_signal', 'n_signal', 0., 1e4)
+            n_signal = ROOT.RooRealVar('n_signal', 'n_signal', 0., 1e3)
             n_background = ROOT.RooRealVar('n_background', 'n_background', 0., 1e6)
         else:
             f = ROOT.RooRealVar('f', 'fraction of signal', 0., 0.4)
@@ -108,6 +108,8 @@ class SignalExtraction:
             n1.setConstant()
             n2.setConstant()
             sigma.setRange(self.sigma_range_mc_to_data[0]*sigma.getVal(), self.sigma_range_mc_to_data[1]*sigma.getVal())
+            print("sigma range set to: ", self.sigma_range_mc_to_data[0]*sigma.getVal(), self.sigma_range_mc_to_data[1]*sigma.getVal())
+            print("sigma: ", sigma.getVal())
             self.mc_frame_fit = mass.frame(self.n_bins_mc)
             self.mc_frame_fit.SetName(self.mc_frame_fit_name)
             mass_roo_mc.plotOn(self.mc_frame_fit, ROOT.RooFit.Name('mc'), ROOT.RooFit.DrawOption('p'))
@@ -141,6 +143,7 @@ class SignalExtraction:
         fit_pars = self.pdf.getParameters(self.roo_dataset)
         sigma_val = fit_pars.find('sigma').getVal()
         sigma_val_error = fit_pars.find('sigma').getError()
+        print("sigma: ", sigma_val, "+/-", sigma_val_error)
         mu_val = fit_pars.find('mu').getVal()
         mu_val_error = fit_pars.find('mu').getError()
 
@@ -364,6 +367,7 @@ if __name__ == '__main__':
     signal_extraction.performance = performance
     signal_extraction.is_3lh = not config['is_4lh']
     signal_extraction.bkg_fit_func = 'pol2'
+    signal_extraction.sigma_range_mc_to_data = [1, 1.3]
 
     signal_extraction.colliding_system = config['colliding_system']
     signal_extraction.energy = config['energy']

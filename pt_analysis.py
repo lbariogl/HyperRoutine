@@ -161,6 +161,12 @@ he3_spectrum.SetParameter(0, he3_spectrum.GetParameter(0))
 he3_spectrum.FixParameter(1, he3_spectrum.GetParameter(1))
 he3_spectrum.FixParameter(2, he3_spectrum.GetParameter(2))
 he3_spectrum.FixParameter(3, 2.99131)
+
+# #par ranges
+# he3_spectrum.SetParLimits(0, 1e-08, 4e-08)
+# he3_spectrum.SetParLimits(1, 6, 8)
+# he3_spectrum.SetParLimits(2, 0.1, 0.4)
+
 he3_spectrum.SetLineColor(kOrangeC)
 
 spectra_maker.fit_func = he3_spectrum
@@ -233,14 +239,12 @@ if do_syst:
     combos = list(product(*list(cut_string_dict.values())))
 
     if n_trials < len(combos):
-        combo_random_indices = np.random.randint(
-            len(combos), size=(n_trials, len(pt_bins) - 1))
+        combo_random_indices = np.random.randint(len(combos), size=(n_trials, len(pt_bins) - 1))
     else:
         print(f"** Warning: n_trials > n_combinations ({n_trials}, {len(combos)}), taking all the possible combinations **")
         indices = np.arange(len(combos))
         # create a (len(combos), len(ct_bins) - 1) array with the indices repeated for each ct bin
-        combo_random_indices = np.repeat(
-            indices[:, np.newaxis], len(pt_bins) - 1, axis=1)
+        combo_random_indices = np.repeat(indices[:, np.newaxis], len(pt_bins) - 1, axis=1)
         # now shuffle each column of the array
         for i in range(combo_random_indices.shape[1]):
             np.random.shuffle(combo_random_indices[:, i])
@@ -266,6 +270,12 @@ if do_syst:
 
             # extract a signal and a background fit function
             sel_string = " & ".join(combo[: -2])
+            ## add to the sel string all the variables that are not included in the syst variations but are in the std selections
+            for var, sel in selections_std[ipt].items():
+                if var not in sel_string:
+                    sel_string += " & " + sel
+
+
             signal_fit_func = combo[-2]
             bkg_fit_func = combo[-1]
 
@@ -321,7 +331,7 @@ for i_bin in range(0, len(spectra_maker.bins) - 1):
     canvas.SetBottomMargin(0.15)
     canvas.SetLeftMargin(0.08)
     canvas.SetRightMargin(0.08)
-    canvas.DrawFrame(0.5 * std_corrected_counts[i_bin], 0, 2 * std_corrected_counts[i_bin],
+    canvas.DrawFrame(0, 0, 2 * std_corrected_counts[i_bin],
                      1.1 * h_pt_syst[i_bin].GetMaximum(), r';d#it{N} / d#it{p}_{T} (GeV/#it{c})^{-1};')
     # create a line for the standard value of lifetime
     std_line = ROOT.TLine(std_corrected_counts[i_bin], 0, std_corrected_counts[i_bin], 1.05 * h_pt_syst[i_bin].GetMaximum())
@@ -370,12 +380,12 @@ for i_bin in range(0, len(spectra_maker.bins) - 1):
     canvas.SaveAs(f'{output_dir_name}/cYield_{i_bin}.pdf')
 
 cFinalSpectrum = ROOT.TCanvas('cFinalSpectrum', 'cFinalSpectrum', 800, 600)
+# define canvas between 0 and 10
+cFinalSpectrum.DrawFrame(0.1e-09, 0, 6, 1.3 * final_stat.GetMaximum(), r';#it{p}_{T} (GeV/#it{c});#frac{1}{N_{ev}}#frac{#it{d}N}{#it{d}y#it{d}#it{p}_{T}} (GeV/#it{c})^{-1}')
 fit_fun_stat = final_stat.GetFunction(spectra_maker.fit_func.GetName())
-fit_fun_stat.SetRange(0, 10)
-final_stat.Draw('PEX0')
-
+fit_fun_stat.SetRange(0, 6)
+final_stat.Draw('PEX0 SAME')
 final_syst_rms.Draw('PE2 SAME')
-# final_syst.Draw('PE2 SAME')
 cFinalSpectrum.Write()
 cFinalSpectrum.SaveAs(f'{output_dir_name}/cFinalSpectrum.pdf')
 
@@ -392,6 +402,10 @@ if absorption_syst_array != [] and absorption_syst_array is not None:
 print("** Multi trial analysis done ** \n")
 
 print("Yield for the std selections: ", std_yield, " +- ", std_yield_err)
+## print all the fit parameters
+print("Final fit parameters: ")
+for i in range(4):
+    print(f'Parameter {i}: {fit_fun_stat.GetParameter(i)} +- {fit_fun_stat.GetParError(i)}')
 
 if do_syst:
     # write trial strings to a text file

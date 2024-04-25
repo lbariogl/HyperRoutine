@@ -4,22 +4,26 @@ input_files:
   [
     # "/data/shared/hyp_run_3/pbpb/zzg_pass2_QC/AO2D_merg.root",
     # "/data/shared/hyp_run_3/pbpb/zzf_pass2_QC/AO2D_merg.root",
-    "/data3/fmazzasc/hyp_run_3/pbpb/pass2_flow/AO2D.root",
+    # "/data3/fmazzasc/hyp_run_3/pbpb/str_tracking_pass2/AO2D.root",
+    "/data3/fmazzasc/hyp_run_3/pbpb/pass3/AO2D.root",
+    # "/data3/fmazzasc/hyp_run_3/pbpb/pass2_flow/AO2D.root",
+
   ]
 output_dir: "../results/"
 output_file: "HypertritonResults_pbpb"
 selection:
   {
-    "fPt": "fPt > 3.",
+    "fPt": "fPt > 2.",
     "fCt": "fCt > 1",
-    "fCosPA": "fCosPA > 0.9995",
+    "fCosPA": "fCosPA > 0.999",
     "fNSigmaHe": "fNSigmaHe > -3",
     "fTPCsignalPi": "fTPCsignalPi < 600.",
     "fNTPCclusHe": "fNTPCclusHe > 90",
     "fTPCmomHe": "fTPCmomHe > 1",
-    "fAvgClusterSizeHe": "fAvgClusterSizeHe > 4.",
+    "fAvgClusterSizeHe": "fAvgClusterSizeHe > 4.5",
     "fTPCsignalHe": "fTPCsignalHe < 600",
-    "fCentralityFT0C" : "10 < fCentralityFT0C < 60",
+    # "fCentralityFT0C" : "10 < fCentralityFT0C < 60",
+    # "fTracked": "fTracked == 0",
   }
 is_matter: "both"
 calibrate_he_momentum: False

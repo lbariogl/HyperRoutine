@@ -5,13 +5,13 @@ import numpy as np
 kBlueC = ROOT.TColor.GetColor('#1f78b4')
 kOrangeC  = ROOT.TColor.GetColor('#ff7f00')
 
-hyp_file = ROOT.TFile("../results/pt_analysis_antimat.root")
+hyp_file = ROOT.TFile("../results/pt_analysis_antimat_roftf_cut.root")
 hyp_hist_stat = hyp_file.Get("std/hStat")
 hyp_hist_syst = hyp_file.Get("std/hSyst")
 
-he3_file = ROOT.TFile("../results/he3fra.root")
-he3_hist_stat = he3_file.Get("fStatTPCA")
-he3_hist_syst = he3_file.Get("fSystTPCA")
+he3_file = ROOT.TFile("../results/checkpoint_max.root")
+he3_hist_stat = he3_file.Get("tpc_spectrum_stat")
+he3_hist_syst = he3_file.Get("tpc_spectrum_syst")
 
 ## first do hyp/he ratio
 ratio_stat = hyp_hist_stat.Clone("ratio_stat")
@@ -19,10 +19,10 @@ ratio_stat = hyp_hist_stat.Clone("ratio_stat")
 ratio_stat.GetListOfFunctions().Clear()
 
 ratio_syst = hyp_hist_syst.Clone("ratio_syst")
-ratio_stat.SetMarkerColor(kBlueC)
-ratio_stat.SetLineColor(kBlueC)
-ratio_syst.SetMarkerColor(kBlueC)
-ratio_syst.SetLineColor(kBlueC)
+ratio_stat.SetMarkerColor(ROOT.kAzure + 2)
+ratio_stat.SetLineColor(ROOT.kAzure + 2)
+ratio_syst.SetMarkerColor(ROOT.kAzure + 2)
+ratio_syst.SetLineColor(ROOT.kAzure + 2)
 
 ratio_stat.GetYaxis().SetTitle("{}^{3}_{#bar{#Lambda}}#bar{H} / ^{3}#bar{He}")
 

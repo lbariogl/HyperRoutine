@@ -27,7 +27,7 @@ reweight_pt = False
 
 
 h_he_rad = {"mat": ROOT.TH1F('h_he_rad_mat', 'He3 radius (cm)', 400, 0, 100),
-                "antimat": ROOT.TH1F('h_he_rad_antimat', 'Absorption radius (cm)', 400, 0, 100)}
+                "antimat": ROOT.TH1F('h_he_rad_antimat', ';Absorption radius (cm)', 400, 0, 100)}
 h_he_ct = {"mat": ROOT.TH1F('h_he_ct_mat', 'He3 ct (cm)', 20, 0, 40),
                 "antimat": ROOT.TH1F('h_he_ct_antimat', 'Absorption ct (cm)', 20, 0, 40)}
 h_he_pt = {"mat": ROOT.TH1F('h_he_pt_mat', 'He3 p_{T} (GeV/c)', len(pt_bins)-1, pt_bins),

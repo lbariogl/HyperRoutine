@@ -68,14 +68,14 @@ if __name__ == '__main__':
     print("----------------------------------")
     print("** Loading data and apply preselections **")
 
-    data_hdl = TreeHandler(input_file_name_data, 'O2datahypcands')
-    mc_hdl = TreeHandler(input_file_name_mc, 'O2mchypcands')
+    data_hdl = TreeHandler(input_file_name_data, 'O2hypcands', folder_name='DF*')
+    mc_hdl = TreeHandler(input_file_name_mc, 'O2mchypcands', folder_name='DF*')
 
     # declare output file
-    output_file = ROOT.TFile.Open(
-        f'{output_dir_name}/{output_file_name}', 'recreate')
+    output_file = ROOT.TFile.Open(f'{output_dir_name}/{output_file_name}', 'recreate')
 
     # Add columns to the handlers
+    print("Data summary:", data_hdl.print_summary())
     utils.correct_and_convert_df(data_hdl, calibrate_he3_pt=True)
     utils.correct_and_convert_df(mc_hdl, calibrate_he3_pt=True, isMC=True)
 
