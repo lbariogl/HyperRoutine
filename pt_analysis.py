@@ -189,7 +189,7 @@ final_syst_rms.SetMarkerColor(ROOT.kAzure + 2)
 std_yield = spectra_maker.fit_func.GetParameter(0)
 std_yield_err = spectra_maker.fit_func.GetParError(0)
 
-yield_dist = ROOT.TH1D('hYieldSyst', ';dN/dy ;Counts', 40, 1.3e-08, 2.3e-08)
+yield_dist = ROOT.TH1D('hYieldSyst', ';dN/dy ;Counts', 40, 1.7e-08, 2.8e-08)
 yield_prob = ROOT.TH1D('hYieldProb', ';prob. ;Counts', 100, 0, 1)
 
 

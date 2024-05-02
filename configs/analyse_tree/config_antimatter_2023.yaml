@@ -1,24 +1,24 @@
 mc: False
+is_h4l: False
 input_files:
   [
-    "/data/shared/hyp_run_3/2023/LHC23l/AO2D_merged.root",
-    "/data/shared/hyp_run_3/2023/LHC23k/AO2D_merged.root",
-    "/data/shared/hyp_run_3/2023/LHC23r/AO2D_merged.root",
-    "/data/shared/hyp_run_3/2023/LHC23s/AO2D_merged.root",
-    "/data/shared/hyp_run_3/2023/LHC23u/AO2D_merged.root",
-    "/data/shared/hyp_run_3/2023/LHC23v/AO2D_merged.root",
-    "/data/shared/hyp_run_3/2023/LHC23y/AO2D_merged.root",
-    "/data/shared/hyp_run_3/2023/LHC23za/AO2D_merged.root",
-    "/data/shared/hyp_run_3/2023/LHC23zc/AO2D_merged.root",
-
+    "/data3/fmazzasc/hyp_run_3/pp2023/skimmed/AO2D.root",
   ]
 output_dir: "../results/"
-output_file: "HypertritonResults_antimatter_2023"
+output_file: "HypertritonResults_skimmed"
 selection:
   {
-    "fPt": "fPt > 1",
-    "fCosPA": "fCosPA > 0.99",
-    "fNSigmaHe": "fNSigmaHe > -2.",
-    "fTPCsignalPi": "fTPCsignalPi < 1000."
+    "fEtaHe3" : "abs(fEtaHe3) < 0.9",
+    "fEtaPi" : "abs(fEtaPi) < 0.9",
+    "fNTPCclusHe": "fNTPCclusHe > 110",
+      "fCosPA": "fCosPA > 0.98",
+      "fNSigmaHe": "fNSigmaHe > -4.",
+      "fTPCsignalPi": "fTPCsignalPi < 1000.",
+      "fTPCmomHe": "fTPCmomHe > 0.2",
+      "fPt": "fPt < 2 and fPt > 1.5",
+      "fAvgClusterSizeHe": "fAvgClusterSizeHe > 4.5",
+
   }
 is_matter: "antimatter"
+calibrate_he_momentum: False
+skip_out_tree: False

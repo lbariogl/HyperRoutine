@@ -103,7 +103,16 @@ print(f'Tree name: {tree_name}')
 tree_hdl = TreeHandler(input_files_name, tree_name, folder_name='DF*')
 df = tree_hdl.get_data_frame()
 print('Tree columns:', df.columns)
-# correct and convert dataframe
+
+# ## check if the dataset is unique
+# print('df.head()', df.head())
+
+# if len(unique_df) != len(df):
+#     print('Length of the dataset:', len(df))
+#     print('Length of the unique dataset:', len(unique_df))
+# else:
+#     print('Dataset is unique')
+# # correct and convert dataframe
 utils.correct_and_convert_df(df, calibrate_he_momentum, mc, is_h4l)
 
 

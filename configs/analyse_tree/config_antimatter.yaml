@@ -8,10 +8,12 @@ output_dir: "../results/"
 output_file: "HypertritonResults_antimatter"
 selection:
   {
-    "fPt": "fPt > 1. and fPt < 1.5",
-    "fCosPA": "fCosPA > 0.99",
-    "fNSigmaHe": "fNSigmaHe > 0",
-    "fTPCsignalPi": "fTPCsignalPi < 1000."
+    "fEtaHe3" : "abs(fEtaHe3) < 0.9",
+    "fEtaPi" : "abs(fEtaPi) < 0.9",
+    "fNTPCclusPi": "fNTPCclusPi > 70",
+      "fCosPA": "fCosPA > 0.99",
+      "fNSigmaHe": "fNSigmaHe > -3.",
+      "fTPCsignalPi": "fTPCsignalPi < 1000."
   }
 is_matter: "antimatter"
 calibrate_he_momentum: True

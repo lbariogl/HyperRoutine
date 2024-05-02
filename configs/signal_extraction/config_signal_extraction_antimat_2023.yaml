@@ -2,13 +2,19 @@
 matter_type: 'antimatter'
 
 ## i/o
-input_parquet_data : ['../results/HypertritonResults_antimatter_2023.parquet']
-input_parquet_mc: '../results/mc/HypertritonResults_anch.parquet'
-input_analysis_results: '/data/shared/hyp_run_3/2023/AnalysisResults.root'
+input_parquet_data : ['../results/HypertritonResults_skimmed.parquet']
+input_parquet_mc: ['../results/HypertritonResults_mc_h3l.parquet']
+input_analysis_results: '/data3/fmazzasc/hyp_run_3/pp2023/skimmed/AnalysisResults.root'
 output_dir : '../results'
-output_file : 'fit_results_antimat_2023.root'
+output_file : 'fit_results_skimmed_2023.root'
 
 is_4lh: False
 preselections: ''
-n_bins: 40
+compute_significance: False
+n_bins: 30
+
+colliding_system: 'pp'
+energy: 13.6
+
+
 
