@@ -118,7 +118,7 @@ utils.correct_and_convert_df(df, calibrate_he_momentum, mc, is_h4l)
 
 ############# Apply pre-selections to MC #############
 if mc:
-    mc_pre_sels = ''
+    mc_pre_sels = 'fGenCt < 28.5 or fGenCt > 28.6'
     spectra_file = ROOT.TFile.Open('utils/heliumSpectraMB.root')
     he3_spectrum = spectra_file.Get('fCombineHeliumSpecLevyFit_0-100')
     spectra_file.Close()
@@ -128,7 +128,7 @@ if mc:
         mc_pre_sels += 'and fGenPt>0'
     elif is_matter == 'antimatter':
         mc_pre_sels += 'and fGenPt<0'
-
+    df.query('fGenCt < 28.5 or fGenCt > 28.6', inplace=True)
     ## fill histograms to be put at denominator of efficiency
     utils.fill_th1_hist(hPtGen, df, 'fAbsGenPt')
     utils.fill_th1_hist(hCtGen, df, 'fGenCt')

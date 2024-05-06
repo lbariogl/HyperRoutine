@@ -2,11 +2,10 @@ input_files_data:
   [
     "/data3/fmazzasc/hyp_run_3/pp2022/LHC22_new/AO2D.root",
   ]
-input_files_mc: ["/data3/fmazzasc/hyp_run_3/mc/LHC23j6b/AO2D_h3l.root"]
+input_files_mc: ["/home/fmazzasc/AO2D.root"]
 input_analysis_results_file: "/data3/fmazzasc/hyp_run_3/pp2022/LHC22_new/AnalysisResults.root"
-absorption_histo_file: "../results/absorption/absorption_histos_x1.5.root"
 output_dir: "../results/"
-output_file: "pt_analysis_antimat_roftf_cut"
+output_file: "pt_analysis_antimat_sigloss"
 output_file_qa: "qa"
 
 pt_bins: [1.5, 2., 2.5, 3.5, 5]
@@ -23,7 +22,6 @@ selection:
       "fEtaHe3" : "abs(fEtaHe3) < 0.9",
       "fEtaPi" : "abs(fEtaPi) < 0.9",
       "fNTPCclusPi": "fNTPCclusPi > 70",
-      "fCosPA": "fCosPA > 0.99",
       "fCosPA": "fCosPA > 0.99",
       "fNSigmaHe": "fNSigmaHe > -2.",
       "fTPCsignalPi": "fTPCsignalPi < 1000."
@@ -55,7 +53,13 @@ selection:
     
   ]
 
-sigma_range_mc_to_data: [[1., 1.2], [1, 1.4], [1., 1.4], [1., 1.3]]
+sigma_range_mc_to_data: [[1., 1.2], [1, 1.3], [1., 1.5], [1.5, 1.7]]
+
+
+# absorption, event and signal loss corrections
+absorption_histo_file: "../results/absorption/absorption_histos_x1.5.root"
+event_loss: 0.75
+signal_loss: 0.74
 
 do_syst: True
 n_trials: 1000
@@ -70,3 +74,5 @@ cut_dict_syst:
   }
 
 absorption_syst: [0.03, 0.03, 0.03, 0.03]
+
+

@@ -32,7 +32,6 @@ config = yaml.full_load(config_file)
 input_file_name_data = config['input_files_data']
 input_file_name_mc = config['input_files_mc']
 input_analysis_results_file = config['input_analysis_results_file']
-absorption_histo_file = config['absorption_histo_file']
 output_dir_name = config['output_dir']
 output_file_name = config['output_file']
 
@@ -46,6 +45,10 @@ bkg_fit_func = config['bkg_fit_func']
 n_bins_mass_data = config['n_bins_mass_data']
 n_bins_mass_mc = config['n_bins_mass_mc']
 sigma_range_mc_to_data = config['sigma_range_mc_to_data']
+
+absorption_histo_file = config['absorption_histo_file']
+event_loss = config['event_loss']
+signal_loss = config['signal_loss']
 
 do_syst = config['do_syst']
 n_trials = config['n_trials']
@@ -119,7 +122,9 @@ he3_spectrum = spectra_file.Get('fCombineHeliumSpecLevyFit_0-100')
 spectra_file.Close()
 utils.reweight_pt_spectrum(mc_hdl, 'fAbsGenPt', he3_spectrum)
 mc_hdl.apply_preselections('rej==True')
+# mc_hdl.apply_preselections('fGenCt < 28.5 or fGenCt > 28.6')
 mc_reco_hdl = mc_hdl.apply_preselections('fIsReco == 1', inplace=False)
+mc_hdl_evsel = mc_hdl.apply_preselections('fIsSurvEvSel==True', inplace=False)
 
 print("** Data loaded. ** \n")
 print("----------------------------------")
@@ -129,13 +134,16 @@ output_dir_std = output_file.mkdir('std')
 spectra_maker = SpectraMaker()
 
 spectra_maker.data_hdl = data_hdl
-spectra_maker.mc_hdl = mc_hdl
+spectra_maker.mc_hdl = mc_hdl_evsel
+spectra_maker.mc_hdl_sign_extr = mc_hdl
 spectra_maker.mc_reco_hdl = mc_reco_hdl
 
 spectra_maker.n_ev = uproot.open(input_analysis_results_file)['hyper-reco-task']['hZvtx'].values().sum()
 spectra_maker.branching_ratio = 0.25
 spectra_maker.delta_rap = 2.0
 spectra_maker.h_absorption = absorption_histo
+spectra_maker.event_loss = event_loss
+spectra_maker.signal_loss = signal_loss
 
 spectra_maker.var = 'fPt'
 spectra_maker.bins = pt_bins

@@ -1,11 +1,12 @@
 mc: True
 is_h4l: False
 # input_files: ["/data/shared/hyp_run_3/mc/anchoring_2022_apass4/AO2D_h3l_mc.root"]
-input_files: ["/data3/fmazzasc/hyp_run_3/mc/LHC23j6b/AO2D_h3l.root"]
+input_files: ["/home/fmazzasc/AO2D.root"]
 output_dir: "../results/"
-output_file: "HypertritonResults_after_corr"
+output_file: "HypertritonResults_non_surv"
 selection:
   {
+    "fIsSurvEvSel" : "fIsSurvEvSel==False"
   }
 
 is_matter: "both"

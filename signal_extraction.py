@@ -94,7 +94,7 @@ class SignalExtraction:
             raise ValueError(f'Invalid background fit function. Expected one of: pol1, pol2, expo')
 
         if extended_likelihood:
-            n_signal = ROOT.RooRealVar('n_signal', 'n_signal', 0., 1e3)
+            n_signal = ROOT.RooRealVar('n_signal', 'n_signal', 0., 1e4)
             n_background = ROOT.RooRealVar('n_background', 'n_background', 0., 1e6)
         else:
             f = ROOT.RooRealVar('f', 'fraction of signal', 0., 0.4)

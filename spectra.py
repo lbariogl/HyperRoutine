@@ -13,12 +13,15 @@ class SpectraMaker:
         # data related members
         self.data_hdl = None
         self.mc_hdl = None
+        self.mc_hdl_sign_extr = None
         self.mc_reco_hdl = None
 
         self.n_ev = 0
         self.branching_ratio = 0.25
         self.delta_rap = 2.0
         self.h_absorption = None
+        self.event_loss = None
+        self.signal_loss = None
 
         # variable related members
         self.var = ''
@@ -88,6 +91,10 @@ class SpectraMaker:
 
             # count generated per ct bin
             bin_mc_hdl = self.mc_hdl.apply_preselections(mc_bin_sel, inplace=False)
+            if self.mc_hdl_sign_extr:
+                bin_mc_hdl_sign_extr = self.mc_hdl_sign_extr.apply_preselections(mc_bin_sel, inplace=False)
+            else:
+                bin_mc_hdl_sign_extr = bin_mc_hdl
 
             if isinstance(self.selection_string, list):
                 bin_sel = f'{bin_sel} and {self.selection_string[ibin]}'
@@ -106,7 +113,7 @@ class SpectraMaker:
             print("bin low", bin[0], "bin high", bin[1], "efficiency", eff)
             self.efficiency.append(eff)
 
-            signal_extraction = SignalExtraction(bin_data_hdl, bin_mc_hdl)
+            signal_extraction = SignalExtraction(bin_data_hdl, bin_mc_hdl_sign_extr)
 
             bkg_mass_fit_func = None
             if isinstance(self.inv_mass_bkg_func, list):
@@ -190,12 +197,20 @@ class SpectraMaker:
             if self.h_absorption is not None:
                 absorption_corr = self.h_absorption.GetBinContent(ibin + 1)
             
+            event_loss_corr = 1
+            if self.event_loss is not None:
+                event_loss_corr = self.event_loss
+            
+            signal_loss_corr = 1
+            if self.signal_loss is not None:
+                signal_loss_corr = self.signal_loss
+            
             local_corrected_counts = self.raw_counts[ibin] / self.efficiency[ibin] / absorption_corr / bin_width
             local_corrected_counts_err = self.raw_counts_err[ibin] / self.efficiency[ibin] / absorption_corr / bin_width
 
             if self.var == 'fPt':
-                local_corrected_counts = local_corrected_counts / self.n_ev / self.branching_ratio / self.delta_rap
-                local_corrected_counts_err = local_corrected_counts_err / self.n_ev / self.branching_ratio / self.delta_rap
+                local_corrected_counts = local_corrected_counts / self.n_ev / self.branching_ratio / self.delta_rap / signal_loss_corr * event_loss_corr
+                local_corrected_counts_err = local_corrected_counts_err / self.n_ev / self.branching_ratio / self.delta_rap / signal_loss_corr * event_loss_corr
 
             self.h_corrected_counts.SetBinContent(ibin + 1, local_corrected_counts)
             self.h_corrected_counts.SetBinError(ibin + 1, local_corrected_counts_err)
