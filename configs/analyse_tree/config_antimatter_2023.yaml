@@ -8,15 +8,14 @@ output_dir: "../results/"
 output_file: "HypertritonResults_skimmed"
 selection:
   {
-    "fEtaHe3" : "abs(fEtaHe3) < 0.9",
-    "fEtaPi" : "abs(fEtaPi) < 0.9",
-    "fNTPCclusHe": "fNTPCclusHe > 110",
-      "fCosPA": "fCosPA > 0.98",
-      "fNSigmaHe": "fNSigmaHe > -4.",
+    # "fEtaHe3" : "abs(fEtaHe3) < 0.9",
+    # "fEtaPi" : "abs(fEtaPi) <   0.9",
+    # "fNTPCclusHe": "fNTPCclusHe > 100",
+      "fCosPA": "fCosPA > 0.99",
+      "fNSigmaHe": "fNSigmaHe > -1",
       "fTPCsignalPi": "fTPCsignalPi < 1000.",
-      "fTPCmomHe": "fTPCmomHe > 0.2",
-      "fPt": "fPt < 2 and fPt > 1.5",
-      "fAvgClusterSizeHe": "fAvgClusterSizeHe > 4.5",
+      "fTPCmomHe": "fTPCmomHe > 0.5",
+      "fAvgClusterSizeHe": "fAvgClusterSizeHe > 4.",
 
   }
 is_matter: "antimatter"

@@ -58,8 +58,8 @@ sigma_range_mc_to_data: [[1., 1.2], [1, 1.3], [1., 1.5], [1.5, 1.7]]
 
 # absorption, event and signal loss corrections
 absorption_histo_file: "../results/absorption/absorption_histos_x1.5.root"
-event_loss: 0.75
-signal_loss: 0.74
+event_loss: 0.9
+signal_loss: 0.83
 
 do_syst: True
 n_trials: 1000
