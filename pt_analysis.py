@@ -164,13 +164,19 @@ spectra_maker.make_spectra()
 # create corrected spectra
 spectra_maker.make_histos()
 
-# define fit function
-he3_spectrum.SetParameter(0, he3_spectrum.GetParameter(0))
-he3_spectrum.FixParameter(1, he3_spectrum.GetParameter(1))
-he3_spectrum.FixParameter(2, he3_spectrum.GetParameter(2))
-he3_spectrum.FixParameter(3, 2.99131)
+# define fit function mT exponential
+he3_spectrum = ROOT.TF1('mtexpo', '[2]*x*exp(-TMath::Sqrt([0]*[0]+x*x)/[1])', 0.1, 6)
+he3_spectrum.FixParameter(0, 2.99131)
+he3_spectrum.SetParameter(1, 0.5199)
 
-# #par ranges
+#  Constrained Levy-Tsallis
+# he3_spectrum.SetParLimits(2, 1e-08, 5e-04)
+# he3_spectrum.SetParameter(0, he3_spectrum.GetParameter(0))
+# he3_spectrum.FixParameter(1, he3_spectrum.GetParameter(1))
+# he3_spectrum.FixParameter(2, he3_spectrum.GetParameter(2))
+# he3_spectrum.FixParameter(3, 2.99131)
+
+# Unconstrained Levy-Tsallis
 # he3_spectrum.SetParLimits(0, 1e-08, 4e-08)
 # he3_spectrum.SetParLimits(1, 6, 8)
 # he3_spectrum.SetParLimits(2, 0.1, 0.4)
@@ -197,7 +203,7 @@ final_syst_rms.SetMarkerColor(ROOT.kAzure + 2)
 std_yield = spectra_maker.fit_func.GetParameter(0)
 std_yield_err = spectra_maker.fit_func.GetParError(0)
 
-yield_dist = ROOT.TH1D('hYieldSyst', ';dN/dy ;Counts', 40, 1.7e-08, 2.8e-08)
+yield_dist = ROOT.TH1D('hYieldSyst', ';dN/dy ;Counts', 40, 1.e-08, 2.e-08)
 yield_prob = ROOT.TH1D('hYieldProb', ';prob. ;Counts', 100, 0, 1)
 
 
@@ -316,15 +322,15 @@ if do_syst:
         spectra_maker.make_histos()
         spectra_maker.fit()
 
-        res_string = "Integral: " + str(spectra_maker.fit_func.GetParameter(0)) + " +- " + str(spectra_maker.fit_func.GetParError(0)) + " Prob: " + str(spectra_maker.fit_func.GetProb())
+        res_string = "Integral: " + str(spectra_maker.fit_func.Integral(0, 10)) + " Prob: " + str(spectra_maker.fit_func.GetProb())
         trial_strings.append(res_string)
 
         for i_bin in range(0, len(spectra_maker.bins) - 1):
             h_pt_syst[i_bin].Fill(spectra_maker.corrected_counts[i_bin])
 
-        if spectra_maker.fit_func.GetProb() > 0.01 and spectra_maker.chi2_selection():
+        if spectra_maker.fit_func.GetProb() > 0.05 and spectra_maker.chi2_selection():
             spectra_maker.dump_to_output_dir()
-            yield_dist.Fill(spectra_maker.fit_func.GetParameter(0))
+            yield_dist.Fill(spectra_maker.fit_func.Integral(0, 10))
             yield_prob.Fill(spectra_maker.fit_func.GetProb())
 
         spectra_maker.del_dyn_members()
@@ -400,6 +406,7 @@ cFinalSpectrum.SaveAs(f'{output_dir_name}/cFinalSpectrum.pdf')
 
 final_stat.Write()
 final_syst.Write()
+fit_fun_stat.Write()
 yield_dist.Write()
 yield_prob.Write()
 output_file.Close()
@@ -412,8 +419,14 @@ print("** Multi trial analysis done ** \n")
 print("Yield for the std selections: ", std_yield, " +- ", std_yield_err)
 ## print all the fit parameters
 print("Final fit parameters: ")
-for i in range(4):
+print(fit_fun_stat.GetName())
+
+for i in range(fit_fun_stat.GetNpar()):
     print(f'Parameter {i}: {fit_fun_stat.GetParameter(i)} +- {fit_fun_stat.GetParError(i)}')
+
+print("Fit integral: ", fit_fun_stat.Integral(0, 10), " +- ", fit_fun_stat.IntegralError(0, 10))
+print("Chi2/ndf: ", fit_fun_stat.GetChisquare() / fit_fun_stat.GetNDF())
+print("Prob: ", fit_fun_stat.GetProb())
 
 if do_syst:
     # write trial strings to a text file
