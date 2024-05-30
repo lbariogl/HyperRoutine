@@ -97,12 +97,12 @@ gr_syst_hm.SetFillStyle(0)
 
 
 ## adding SHM models
-hp_ratio_csm_1 = ROOT.TGraphErrors("VanillaCSM.Yields.Vc.eq.dVdy.dat","%*s %*s %*s %lg %*s %*s %*s %*s %lg %*s")
-hp_ratio_csm_3 = ROOT.TGraphErrors("VanillaCSM.Yields.Vc.eq.3dVdy.dat","%*s %*s %*s %lg %*s %*s %*s %*s %lg %*s")
+hp_ratio_csm_1 = ROOT.TGraphErrors("../utils/models/VanillaCSM.Yields.Vc.eq.1.6dVdy.dat","%*s %*s %*s %lg %*s %*s %*s %*s %lg %*s")
+hp_ratio_csm_3 = ROOT.TGraphErrors("../utils/models/VanillaCSM.Yields.Vc.eq.3dVdy.dat","%*s %*s %*s %lg %*s %*s %*s %*s %lg %*s")
 
 hp_ratio_csm_1.SetLineColor(922)
 hp_ratio_csm_1.SetLineWidth(2)
-hp_ratio_csm_1.SetTitle("SHM, #it{Vc} = d#it{V}/d#it{y}")
+hp_ratio_csm_1.SetTitle("SHM, #it{Vc} = 1.6 d#it{V}/d#it{y}")
 hp_ratio_csm_1.SetMarkerSize(0)
 
 hp_ratio_csm_3.SetLineColor(922)
@@ -113,7 +113,7 @@ hp_ratio_csm_3.SetTitle("SHM, #it{Vc} = 3d#it{V}/d#it{y}")
 
 
 ## adding coalescence models
-hp_2body = ROOT.TGraphErrors("coal2b.csv","%lg %lg %lg")
+hp_2body = ROOT.TGraphErrors("../utils/models/coal2b.csv","%lg %lg %lg")
 # hp_2body.SetFillStyle(3014)
 hp_2body.SetMarkerSize(0)
 hp_2body.SetLineWidth(2)
@@ -121,7 +121,7 @@ hp_2body.SetLineColor(kAzureC)
 hp_2body.SetMarkerColor(kAzureC)
 hp_2body.SetFillColorAlpha(kAzureC, 0.3)
 
-hp_3body = ROOT.TGraphErrors("coal3b.csv","%lg %lg %lg")
+hp_3body = ROOT.TGraphErrors("../utils/models/coal3b.csv","%lg %lg %lg")
 # hp_3body.SetFillStyle(3014)
 hp_3body.SetMarkerSize(0)
 hp_3body.SetLineWidth(2)
@@ -172,7 +172,7 @@ leg.AddEntry(gr_stat_new, "Run 3, pp #sqrt{#it{s}} = 13.6 TeV", "P")
 leg.AddEntry(gr_stat_trd, "Run 2, pp #sqrt{#it{s}} = 13 TeV", "P")
 
 leg_theory = ROOT.TLegend(0.57, 0.15, 0.94, 0.26)
-leg_theory.AddEntry(hp_ratio_csm_1, "SHM, #it{Vc} = d#it{V}/d#it{y}", "L")
+leg_theory.AddEntry(hp_ratio_csm_1, "SHM, #it{Vc} = 1.6 d#it{V}/d#it{y}", "L")
 leg_theory.AddEntry(hp_2body, "Coalescence, 2-body", "F")
 # leg.AddEntry(hp_3body, "Coalescence, 3-body", "F")
 # leg.AddEntry(hp_ratio_csm_3, "SHM, #it{Vc} = 3d#it{V}/d#it{y}", "L")
