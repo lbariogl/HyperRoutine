@@ -2,11 +2,11 @@
 matter_type: 'both'
 
 ## i/o
-input_parquet_data : ['../results/HypertritonResults_pbpb.parquet']
+input_parquet_data : ['../results/HypertritonResults_pbpb_builtin.parquet']
 input_parquet_mc: ['../results/HypertritonResults_mc_h3l.parquet']
-input_analysis_results: '/data3/fmazzasc/hyp_run_3/pbpb/str_tracking_pass2/AnalysisResults.root'
+input_analysis_results: '/data3/fmazzasc/hyp_run_3/pbpb/pass3/AnalysisResults.root'
 output_dir : '../results'
-output_file : 'fit_results_pbpb_apass2.root'
+output_file : 'fit_results_pbpb_builtin.root'
 
 is_4lh: False
 preselections: ''

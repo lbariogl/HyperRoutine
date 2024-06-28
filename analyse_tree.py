@@ -6,6 +6,8 @@ import argparse
 import os
 import yaml
 from hipe4ml.tree_handler import TreeHandler
+from signal_extraction import SignalExtraction
+
 
 import sys
 sys.path.append('utils')
@@ -36,6 +38,7 @@ is_matter = config['is_matter']
 is_h4l = config['is_h4l']
 skip_out_tree = config['skip_out_tree']
 calibrate_he_momentum = config['calibrate_he_momentum']
+do_signal_extraction = config['do_signal_extraction']
 
 
 matter_options = ['matter', 'antimatter', 'both']
@@ -54,7 +57,7 @@ hNTPCclus = ROOT.TH1F('hNTPCclus', r';n TPC clusters', 80, 79.5, 159.5)
 h2NTPCclusPt = ROOT.TH2F('h2NTPCclusPt', r';#it{p}_{T} (GeV/#it{c}); n TPC clusters', 50, 0, 5, 80, 79.5, 159.5)
 
 hMass3LH = ROOT.TH1F('h_3lh_mass', r'; m({}^{3}_{#Lambda}H) (GeV/#it{c})', 40, 2.96, 3.04)
-hMass4LH = ROOT.TH1F('h_4lh_mass', r';  m({}^{4}_{#Lambda}H) (GeV/#it{c^{2}})', 30, 3.89, 3.97)
+hMass4LH = ROOT.TH1F('h_4lh_mass', r';  m({}^{4}_{#Lambda}H) (GeV/#it{c^{2}})', 32, 3.87, 3.98)
 hPtRec = ROOT.TH1F('hPtRec', r';#it{p}_{T} (GeV/#it{c})', 50, 0, 5)
 hCtRec = ROOT.TH1F('hCtRec', r';#it{c#tau} (cm)', 50, 0, 40)
 hRadius = ROOT.TH1F('hRadius', r';Radius (cm)', 100, 0, 40)
@@ -63,17 +66,21 @@ hNSigHe = ROOT.TH1F('hNSigmaHe', r';n_{#sigma}^{TPC}({}^{3}He)', 50, -3, 3)
 h2NSigHe3VsMom = ROOT.TH2F('h2NSigHe3VsMom', r';{}^{3}He #it{p}_{T} (GeV/#it{c});n_{#sigma}^{TPC}({}^{3}He)', 50, -5, 5, 50, -3, 3)
 hClusterSizeHe = ROOT.TH1F('hClusterSizeHe', r';#LT Cluster size #GT', 15, 0.5, 15.5)
 hClusterSizeHeCosLam = ROOT.TH1F('hClusterSizeHeCosLam', r';#LT Cluster size #GT x cos(#lambda)', 15, 0.5, 15.5)
+h2ClusSizeVsCosLam = ROOT.TH2F('h2ClusSizeVsCosLam', r'; Cos(#lambda); #LT Cluster size #GT', 100, 0.95, 1, 15, 0.5, 15.5)
 h2NSigClusSizeHe = ROOT.TH2F('h2NSigClusSizeHe', r';n_{#sigma}^{TPC}({}^{3}He);<Cluster size>', 50, -3, 3, 15, 0.5, 15.5)
 h2TPCSigClusSize = ROOT.TH2F('h2TPCSigClusSize', r';<Cluster size>; TPC signal', 50, 0.5, 15.5, 100, 0.5, 1000)
 hClusterSizePi = ROOT.TH1F('hClusterSizePi', r';#LT Cluster size #GT', 15, 0.5, 15.5)
 h2NSigClusSizePi = ROOT.TH2F('h2NSigClusSizePi', r';n_{#sigma}^{TPC}(#pi); #LT Cluster size #GT', 50, -3, 3, 15, 0.5, 15.5)
 hHeMomTPCMinusMomGlo = ROOT.TH2F('hHeMomTPCMinusMomGlo', r';#it{p}^{glo}/z (GeV/#it{c});(#it{p}^{TPC} - #it{p}^{Glo}) / z (GeV/#it{c})', 50, -5, 5, 50, -2, 2)
+hHeMomTPCMinusMomGloTritHyp = ROOT.TH2F('hHeMomTPCMinusMomGloTritHyp', r';#it{p}^{glo}/z (GeV/#it{c});(#it{p}^{TPC} - #it{p}^{Glo}) / z (GeV/#it{c})', 50, -5, 5, 50, -2, 2)
+hHeMomTPCMinusMomGloHeHyp = ROOT.TH2F('hHeMomTPCMinusMomGloHeHyp', r';#it{p}^{glo}/z (GeV/#it{c});(#it{p}^{TPC} - #it{p}^{Glo}) / z (GeV/#it{c})', 50, -5, 5, 50, -2, 2)
+
 h2MassV2 = ROOT.TH2F('h2MassV2', r';m({}^{3}_{#Lambda}H) (GeV/#it{c}); v2', 30, 2.96, 3.04, 500, -1, 1)
 hMeanV2VsMass = ROOT.TH1F('hMeanV2VsMass', r';m({}^{3}_{#Lambda}H) (GeV/#it{c}); #LT v2 #GT', 30, 2.96, 3.04)
 h2MassCosPA = ROOT.TH2F('h2MassCosPA', r';cos(#theta_{PA}); m({}^{3}_{#Lambda}H) (GeV/#it{c})', 100, 0.99, 1, 50, 2.96, 3.04)
 h2MassDecLen = ROOT.TH2F('h2MassDecLen', r';Decay length (cm); m({}^{3}_{#Lambda}H) (GeV/#it{c})', 100, 0, 40, 50, 2.96, 3.04)
 h2MassDCADaughters = ROOT.TH2F('h2MassDCADaughters', r';DCA daughters (cm); m({}^{3}_{#Lambda}H) (GeV/#it{c})', 200, 0, 0.3, 50, 2.96, 3.04)
-h2MassDCAHePv = ROOT.TH2F('h2MassDCAHe', r';DCA He3 PVs (cm); m({}^{3}_{#Lambda}H) (GeV/#it{c})', 100, 0, 2, 50, 2.96, 3.04)
+h2MassDCAHePv = ROOT.TH2F('h2MassDCAHe', r';DCA He3 PVs (cm); m({}^{3}_{#Lambda}H) (GeV/#it{c})', 100, -0.2, 0.2, 50, 2.96, 3.04)
 h2MassPt = ROOT.TH2F('h2MassPt', r';#it{p}_{T} (GeV/#it{c}); m({}^{3}_{#Lambda}H) (GeV/#it{c})', 50, 0, 7, 50, 2.96, 3.04)
 h2Mass4LHnSigmaHe = ROOT.TH2F('h2Mass4LHnSigmaHe', r';n_{#sigma}^{TPC}({}^{3}He); m({}^{4}_{#Lambda}H) (GeV/#it{c})', 50, -4, 4, 30, 3.89, 3.97)
 # for MC only
@@ -101,6 +108,8 @@ for tree in tree_names:
             break
 print(f'Tree name: {tree_name}')
 tree_hdl = TreeHandler(input_files_name, tree_name, folder_name='DF*')
+# tree_hdl = TreeHandler(input_files_name, tree_name)
+
 df = tree_hdl.get_data_frame()
 print('Tree columns:', df.columns)
 
@@ -185,13 +194,17 @@ if 'fITSclusterSizesHe' in df.columns:
     utils.fill_th2_hist(h2NSigClusSizeHe, df, 'fNSigmaHe', 'fAvgClusterSizeHe')
     utils.fill_th2_hist(h2TPCSigClusSize, df, 'fAvgClusterSizeHe', 'fTPCsignalHe')
     utils.fill_th2_hist(h2TPCSigClusSize, df, 'fAvgClusterSizePi', 'fTPCsignalPi')
-
+    utils.fill_th2_hist(h2ClusSizeVsCosLam, df, 'fCosLambdaHe', 'fAvgClusterSizeHe')
 
 if 'fFlags' in df.columns:
     df['fHePIDHypo'] = np.right_shift(df['fFlags'], 4)
     df['fPiPIDHypo'] = np.bitwise_and(df['fFlags'], 0b1111)
     utils.fill_th1_hist(hHeliumPIDHypo, df, 'fHePIDHypo')
     utils.fill_th1_hist(hPiPIDHypo, df, 'fPiPIDHypo')
+    df_He_PID = df.query('fHePIDHypo==7')
+    df_Trit_PID = df.query('fHePIDHypo==6')
+    utils.fill_th2_hist(hHeMomTPCMinusMomGloTritHyp, df_Trit_PID, 'fGloSignMomHe3', 'MomDiffHe3')
+    utils.fill_th2_hist(hHeMomTPCMinusMomGloHeHyp, df_He_PID, 'fGloSignMomHe3', 'MomDiffHe3')
 
 if 'fV2' in df.columns:
     utils.fill_th2_hist(h2MassV2, df, 'fMassH3L', 'fV2')
@@ -202,7 +215,7 @@ if 'fV2' in df.columns:
         for j in range(1, h2MassV2.GetNbinsY()+1):
             bin_entries.append(h2MassV2.GetBinContent(i, j))
             v2.append(h2MassV2.GetYaxis().GetBinCenter(j))
-        if len(bin_entries) > 0:
+        if len(bin_entries) > 0 and np.sum(bin_entries) > 0:
             mean = np.average(v2, weights=bin_entries)
             std = np.sqrt(np.average((v2 - mean)**2, weights=bin_entries))
             hMeanV2VsMass.SetBinContent(i, mean)
@@ -231,84 +244,50 @@ f = ROOT.TFile(f'{output_dir_name}/{output_file_name}.root', 'RECREATE')
 
 
 hPtRec.Write()
-# utils.saveCanvasAsPDF(hPtRec, f'{output_dir_name}/qa_plots')
 hCtRec.Write()
-# utils.saveCanvasAsPDF(hCtRec, f'{output_dir_name}/qa_plots')
 hCosPA.Write()
-# utils.saveCanvasAsPDF(hCosPA, f'{output_dir_name}/qa_plots')
 hRadius.Write()
-# utils.saveCanvasAsPDF(hRadius, f'{output_dir_name}/qa_plots')
 hDecLen.Write()
-# utils.saveCanvasAsPDF(hDecLen, f'{output_dir_name}/qa_plots')
 hNTPCclus.Write()
-# utils.saveCanvasAsPDF(hNTPCclus, f'{output_dir_name}/qa_plots')
 h2NTPCclusPt.Write()
 hNSigHe.Write()
-# utils.saveCanvasAsPDF(hNSigHe, f'{output_dir_name}/qa_plots')
 hMass3LH.Write()
-# utils.saveCanvasAsPDF(hMass3LH, f'{output_dir_name}/qa_plots')
 hMass4LH.Write()
-# utils.saveCanvasAsPDF(hMass4LH, f'{output_dir_name}/qa_plots')
 h2MassV2.Write()
-# utils.saveCanvasAsPDF(hPtRec, f'{output_dir_name}/qa_plots', is2D=True)
 hMeanV2VsMass.Write()
-# utils.saveCanvasAsPDF(hMeanV2VsMass, f'{output_dir_name}/qa_plots', is2D=True)
-
 h2MassCosPA.Write()
-# utils.saveCanvasAsPDF(h2MassCosPA, f'{output_dir_name}/qa_plots', is2D=True)
 h2MassDecLen.Write()
-# utils.saveCanvasAsPDF(h2MassDecLen, f'{output_dir_name}/qa_plots', is2D=True)
 h2MassDCADaughters.Write()
-# utils.saveCanvasAsPDF(h2MassDCADaughters, f'{output_dir_name}/qa_plots', is2D=True)
 h2MassDCAHePv.Write()
-# utils.saveCanvasAsPDF(h2MassDCAHePv, f'{output_dir_name}/qa_plots', is2D=True)
 h2Mass4LHnSigmaHe.Write()
-# utils.saveCanvasAsPDF(h2Mass4LHnSigmaHe, f'{output_dir_name}/qa_plots', is2D=True)
 h2MassPt.Write()
-# utils.saveCanvasAsPDF(h2NSigClusSizeHe, f'{output_dir_name}/qa_plots', is2D=True)
-h2NSigClusSizeHe.Write()
-# utils.saveCanvasAsPDF(h2NSigClusSizeHe, f'{output_dir_name}/qa_plots', is2D=True)
 h2NSigClusSizePi.Write()
-# utils.saveCanvasAsPDF(h2NSigClusSizePi, f'{output_dir_name}/qa_plots', is2D=True)
 h2TPCSigClusSize.Write()
-# utils.saveCanvasAsPDF(h2TPCSigClusSize, f'{output_dir_name}/qa_plots', is2D=True)
 h2NSigHe3VsMom.Write()
-# utils.saveCanvasAsPDF(h2NSigHe3VsMom, f'{output_dir_name}/qa_plots', is2D=True)
 hHeMomTPCMinusMomGlo.Write()
-# utils.saveCanvasAsPDF(hHeMomTPCMinusMomGlo, f'{output_dir_name}/qa_plots', is2D=True)
 
 if 'fFlags' in df.columns:
     hHeliumPIDHypo.Write()
-    # utils.saveCanvasAsPDF(hHeliumPIDHypo, f'{output_dir_name}/qa_plots')
     hPiPIDHypo.Write()
-    # utils.saveCanvasAsPDF(hPiPIDHypo, f'{output_dir_name}/qa_plots')
+    hHeMomTPCMinusMomGloTritHyp.Write()
+    hHeMomTPCMinusMomGloHeHyp.Write()
 
 hClusterSizeHe.Write()
-# utils.saveCanvasAsPDF(hClusterSizeHe, f'{output_dir_name}/qa_plots')
 hClusterSizeHeCosLam.Write()
-# utils.saveCanvasAsPDF(hClusterSizeHeCosLam, f'{output_dir_name}/qa_plots')
 hClusterSizePi.Write()
-# utils.saveCanvasAsPDF(hClusterSizePi, f'{output_dir_name}/qa_plots')
-
 h2NSigClusSizeHe.Write()
+h2ClusSizeVsCosLam.Write()
 
 if mc:
     f.mkdir('MC')
     f.cd('MC')
     hResolutionPt.Write()
-    # utils.saveCanvasAsPDF(hResolutionPt, f'{output_dir_name}/qa_plots')
     hResolutionPtvsPt.Write()
-    # utils.saveCanvasAsPDF(hResolutionPtvsPt, f'{output_dir_name}/qa_plots', is2D=True)
     hResolutionDecVtxX.Write()
-    # utils.saveCanvasAsPDF(hResolutionDecVtxX, f'{output_dir_name}/qa_plots')
     hResolutionDecVtxY.Write()
-    # utils.saveCanvasAsPDF(hResolutionDecVtxY, f'{output_dir_name}/qa_plots')
     hResolutionDecVtxZ.Write()
-    # utils.saveCanvasAsPDF(hResolutionDecVtxZ, f'{output_dir_name}/qa_plots')
     hPtGen.Write()
-    # utils.saveCanvasAsPDF(hPtGen, f'{output_dir_name}/qa_plots')
     hCtGen.Write()
-    # utils.saveCanvasAsPDF(hCtGen, f'{output_dir_name}/qa_plots')
 
     h_eff = hPtRec.Clone('hEfficiencyPt')
     h_eff.SetTitle(';#it{p}_{T} (GeV/#it{c}); Efficiency')
@@ -328,3 +307,18 @@ if mc:
 if not skip_out_tree:
     df.to_parquet(f'{output_dir_name}/{output_file_name}.parquet')
 
+
+if do_signal_extraction:
+    sign_extr_dir = f.mkdir('SignalExtraction')
+    f.cd('SignalExtraction')
+    signal_extraction = SignalExtraction(df)
+    signal_extraction.bkg_fit_func = "pol1"
+    signal_extraction.signal_fit_func = "dscb"
+    signal_extraction.n_bins_data = 30
+    signal_extraction.n_evts = 1e9
+    signal_extraction.matter_type = is_matter
+    signal_extraction.performance = False
+    signal_extraction.is_3lh = not is_h4l
+    signal_extraction.out_file =  sign_extr_dir
+    signal_extraction.process_fit()
+f.Close()

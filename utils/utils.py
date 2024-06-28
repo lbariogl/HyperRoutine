@@ -184,6 +184,25 @@ def create_pt_shift_histo(df):
     hShiftVsPtHe3.SetName('hShiftVsPtHe3')
     return h2MomResoVsPtHe3, hShiftVsPtHe3
 
+def heBB(rigidity, mass):
+    p1 = -321.34
+    p2 = 0.6539
+    p3 = 1.591
+    p4 = 0.8225
+    p5 = 2.363
+
+    betagamma = rigidity * 2 / mass
+    beta = betagamma / np.sqrt(1 + betagamma**2)
+    aa = beta**p4
+    bb = np.log(p3 + (1 / betagamma)**p5)
+    return (p2 - aa - bb) * p1 / aa
+
+def computeNSigmaHe4(df):
+    expBB = heBB(df['fTPCmomHe'], 3.727)
+    nSigma = (df['fTPCsignalHe'] - expBB) / (0.06*df['fTPCsignalHe'])
+    return nSigma
+
+
 # put dataframe in the correct format
 
 def correct_and_convert_df(df, calibrate_he3_pt = False, isMC=False, isH4L=False):
@@ -216,8 +235,10 @@ def correct_and_convert_df(df, calibrate_he3_pt = False, isMC=False, isH4L=False
     # Momentum variables to be stored
     df.eval('fPt = sqrt(fPx**2 + fPy**2)', inplace=True)
     df.eval('fEta = arccosh(fP/fPt)', inplace=True)
-    df.eval('fCosLambda = fPz/fP', inplace=True)
-    df.eval('fCosLambdaHe = fPzHe3/fPHe3', inplace=True)
+    df.eval('fCosLambda = fPt/fP', inplace=True)
+    df.eval('fCosLambdaHe = fPtHe3/fPHe3', inplace=True)
+
+    df['fNSigmaHe4'] = computeNSigmaHe4(df)
 
     # Variables of interest
     df.eval('fDecLen = sqrt(fXDecVtx**2 + fYDecVtx**2 + fZDecVtx**2)', inplace=True)

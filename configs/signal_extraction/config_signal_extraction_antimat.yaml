@@ -2,11 +2,11 @@
 matter_type: 'antimatter'
 
 ## i/o
-input_parquet_data : ['../results/HypertritonResults_antimatter.parquet']
+input_parquet_data : ['../results/HypertritonResults_antimatter_thin.parquet']
 input_parquet_mc: ['../results/HypertritonResults_mc_h3l.parquet']
 input_analysis_results: '/data3/fmazzasc/hyp_run_3/pp2022/LHC22_highIR/AnalysisResults.root'
 output_dir : '../results'
-output_file : 'fit_results_antimatter.root'
+output_file : 'fit_results_antimatter_thin.root'
 
 is_4lh: False
 preselections: ''

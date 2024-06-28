@@ -1,0 +1,13 @@
+mc: True
+is_h4l: False
+input_files: ["/data3/fmazzasc/hyp_run_3/mc/LHC24b3/AO2D.root"]
+output_dir: "../results/"
+output_file: "HypertritonResults_lhc24b3"
+selection:
+  {
+    # "fIsSurvEvSel" : "fIsSurvEvSel==False"
+  }
+
+is_matter: "both"
+calibrate_he_momentum: False
+skip_out_tree: False
