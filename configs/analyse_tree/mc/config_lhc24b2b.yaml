@@ -1,8 +1,8 @@
 mc: True
 is_h4l: False
-input_files: ["/data3/fmazzasc/hyp_run_3/mc/LHC23j6b/AO2D_h3l.root"]
+input_files: ["/home/fmazzasc/AO2D_h3l.root"]
 output_dir: "../results/"
-output_file: "HypertritonResults_23j6b"
+output_file: "HypertritonResults_24b2b_h3l"
 selection: {
       "fEtaHe3" : "abs(fEtaHe3) < 0.9",
       "fEtaPi" : "abs(fEtaPi) < 0.9",
@@ -13,5 +13,6 @@ selection: {
 }
 
 is_matter: "both"
-calibrate_he_momentum: False
-skip_out_tree: False
+calibrate_he_momentum: True
+skip_out_tree: True
+do_signal_extraction: True

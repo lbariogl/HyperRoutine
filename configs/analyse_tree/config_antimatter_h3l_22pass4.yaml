@@ -2,19 +2,20 @@ mc: False
 is_h4l: False
 input_files:
   [
-    "/data3/fmazzasc/hyp_run_3/pp2022/LHC22_highIR_thin_custom/AO2D.root",
+    "/data3/fmazzasc/hyp_run_3/pp2022/LHC22_highIR_thin/AO2D.root",
   ]
 output_dir: "../results/"
-output_file: "HypertritonResults_antimatter_thin_custom"
+output_file: "HypertritonResults_antimatter_thin"
 selection:
   {
     # "fEtaHe3" : "abs(fEtaHe3) < 0.9",
     # "fEtaPi" : "abs(fEtaPi) < 0.9",
-    "fDcaV0Daug": "abs(fDcaV0Daug) < 0.2",
+    "fDcaV0Daug": "abs(fDcaV0Daug) < 0.1",
     "fDcaHe": "abs(fDcaHe) > 0.004",
+    "fDcaPi": "abs(fDcaPi) > 0.05",
     # "fNTPCclusPi": "fNTPCclusPi > 70",
-      "fCosPA": "fCosPA > 0.999",
-      "fNSigmaHe": "fNSigmaHe > -2.",
+      "fCosPA": "fCosPA > 0.99",
+      "fNSigmaHe": "fNSigmaHe > -2.5",
       # "fTPCsignalPi": "fTPCsignalPi < 1000."
   }
 is_matter: "antimatter"

@@ -51,6 +51,9 @@ print('**********************************')
 print('    Running analyse_tree.py')
 print('**********************************')
 
+mass_low_limit = 3.87 if is_h4l else 2.96
+mass_high_limit = 3.98 if is_h4l else 3.04
+
 ############# Create histograms #############
 hCosPA = ROOT.TH1F('hCosPA', r';cos(#theta_{PA})', 50, 0.95, 1)
 hNTPCclus = ROOT.TH1F('hNTPCclus', r';n TPC clusters', 80, 79.5, 159.5)
@@ -58,6 +61,7 @@ h2NTPCclusPt = ROOT.TH2F('h2NTPCclusPt', r';#it{p}_{T} (GeV/#it{c}); n TPC clust
 
 hMass3LH = ROOT.TH1F('h_3lh_mass', r'; m({}^{3}_{#Lambda}H) (GeV/#it{c})', 40, 2.96, 3.04)
 hMass4LH = ROOT.TH1F('h_4lh_mass', r';  m({}^{4}_{#Lambda}H) (GeV/#it{c^{2}})', 32, 3.87, 3.98)
+h2Mass3LHVvsMass4LH = ROOT.TH2F('h2Mass3LHVvsMass4LH', r'; m({}^{3}_{#Lambda}H) (GeV/#it{c}); m({}^{4}_{#Lambda}H) (GeV/#it{c})', 40, 2.96, 3.04, 32, 3.87, 3.98)
 hPtRec = ROOT.TH1F('hPtRec', r';#it{p}_{T} (GeV/#it{c})', 50, 0, 5)
 hCtRec = ROOT.TH1F('hCtRec', r';#it{c#tau} (cm)', 50, 0, 40)
 hRadius = ROOT.TH1F('hRadius', r';Radius (cm)', 100, 0, 40)
@@ -75,13 +79,14 @@ hHeMomTPCMinusMomGlo = ROOT.TH2F('hHeMomTPCMinusMomGlo', r';#it{p}^{glo}/z (GeV/
 hHeMomTPCMinusMomGloTritHyp = ROOT.TH2F('hHeMomTPCMinusMomGloTritHyp', r';#it{p}^{glo}/z (GeV/#it{c});(#it{p}^{TPC} - #it{p}^{Glo}) / z (GeV/#it{c})', 50, -5, 5, 50, -2, 2)
 hHeMomTPCMinusMomGloHeHyp = ROOT.TH2F('hHeMomTPCMinusMomGloHeHyp', r';#it{p}^{glo}/z (GeV/#it{c});(#it{p}^{TPC} - #it{p}^{Glo}) / z (GeV/#it{c})', 50, -5, 5, 50, -2, 2)
 
-h2MassV2 = ROOT.TH2F('h2MassV2', r';m({}^{3}_{#Lambda}H) (GeV/#it{c}); v2', 30, 2.96, 3.04, 500, -1, 1)
-hMeanV2VsMass = ROOT.TH1F('hMeanV2VsMass', r';m({}^{3}_{#Lambda}H) (GeV/#it{c}); #LT v2 #GT', 30, 2.96, 3.04)
-h2MassCosPA = ROOT.TH2F('h2MassCosPA', r';cos(#theta_{PA}); m({}^{3}_{#Lambda}H) (GeV/#it{c})', 100, 0.99, 1, 50, 2.96, 3.04)
-h2MassDecLen = ROOT.TH2F('h2MassDecLen', r';Decay length (cm); m({}^{3}_{#Lambda}H) (GeV/#it{c})', 100, 0, 40, 50, 2.96, 3.04)
-h2MassDCADaughters = ROOT.TH2F('h2MassDCADaughters', r';DCA daughters (cm); m({}^{3}_{#Lambda}H) (GeV/#it{c})', 200, 0, 0.3, 50, 2.96, 3.04)
-h2MassDCAHePv = ROOT.TH2F('h2MassDCAHe', r';DCA He3 PVs (cm); m({}^{3}_{#Lambda}H) (GeV/#it{c})', 100, -0.2, 0.2, 50, 2.96, 3.04)
-h2MassPt = ROOT.TH2F('h2MassPt', r';#it{p}_{T} (GeV/#it{c}); m({}^{3}_{#Lambda}H) (GeV/#it{c})', 50, 0, 7, 50, 2.96, 3.04)
+h2MassV2 = ROOT.TH2F('h2MassV2', r';m({}^{3}_{#Lambda}H) (GeV/#it{c}); v2', 30, mass_low_limit, mass_high_limit, 500, -1, 1)
+hMeanV2VsMass = ROOT.TH1F('hMeanV2VsMass', r';m({}^{3}_{#Lambda}H) (GeV/#it{c}); #LT v2 #GT', 30, mass_low_limit, mass_high_limit)
+h2MassCosPA = ROOT.TH2F('h2MassCosPA', r';cos(#theta_{PA}); m({}^{3}_{#Lambda}H) (GeV/#it{c})', 100, 0.99, 1, 50, mass_low_limit, mass_high_limit)
+h2MassDecLen = ROOT.TH2F('h2MassDecLen', r';Decay length (cm); m({}^{3}_{#Lambda}H) (GeV/#it{c})', 100, 0, 40, 50, mass_low_limit, mass_high_limit)
+h2MassDCADaughters = ROOT.TH2F('h2MassDCADaughters', r';DCA daughters (cm); m({}^{3}_{#Lambda}H) (GeV/#it{c})', 200, 0, 0.3, 50, mass_low_limit, mass_high_limit)
+h2MassDCAHePv = ROOT.TH2F('h2MassDCAHe', r';DCA He3 PVs (cm); m({}^{3}_{#Lambda}H) (GeV/#it{c})', 100, -0.2, 0.2, 50, mass_low_limit, mass_high_limit)
+h2MassPt = ROOT.TH2F('h2MassPt', r';#it{p}_{T} (GeV/#it{c}); m({}^{3}_{#Lambda}H) (GeV/#it{c})', 50, 0, 7, 50, mass_low_limit, mass_high_limit)
+h2MassPIDHypo = ROOT.TH2F('h2MassPIDHypo', r';Hypothesis; m({}^{3}_{#Lambda}H) (GeV/#it{c})', 16, 0.5, 16.5, 50, mass_low_limit, mass_high_limit)
 h2Mass4LHnSigmaHe = ROOT.TH2F('h2Mass4LHnSigmaHe', r';n_{#sigma}^{TPC}({}^{3}He); m({}^{4}_{#Lambda}H) (GeV/#it{c})', 50, -4, 4, 30, 3.89, 3.97)
 # for MC only
 hPtGen = ROOT.TH1F('hPtGen', r';#it{p}_{T}^{gen} (GeV/#it{c})', 50, 0, 5)
@@ -98,6 +103,7 @@ hResolutionDecVtxZ = ROOT.TH1F('hResolutionDecVtxZ', r'; Resolution Dec Z', 50, 
 hHeliumPIDHypo = ROOT.TH1F('hHeliumPIDHypo', r';Hypothesis', 16, 0.5, 16.5)
 hPiPIDHypo = ROOT.TH1F('hPiPIDHypo', r';Hypothesis', 16, 0.5, 16.5)
 
+
 ############# Read trees #############
 tree_names = ['O2datahypcands','O2hypcands', 'O2hypcandsflow', 'O2mchypcands']
 tree_keys = uproot.open(input_files_name[0]).keys()
@@ -112,16 +118,6 @@ tree_hdl = TreeHandler(input_files_name, tree_name, folder_name='DF*')
 
 df = tree_hdl.get_data_frame()
 print('Tree columns:', df.columns)
-
-# ## check if the dataset is unique
-# print('df.head()', df.head())
-
-# if len(unique_df) != len(df):
-#     print('Length of the dataset:', len(df))
-#     print('Length of the unique dataset:', len(unique_df))
-# else:
-#     print('Dataset is unique')
-# # correct and convert dataframe
 utils.correct_and_convert_df(df, calibrate_he_momentum, mc, is_h4l)
 
 
@@ -164,6 +160,7 @@ if selections_string != '':
 
 
 # df.query('fAvgClusterSizeHe>4', inplace=True)
+mass_string = 'fMassH3L' if not is_h4l else 'fMassH4L'
 
 ############# Fill output histograms #############
 utils.fill_th1_hist(hPtRec, df, 'fPt')
@@ -176,12 +173,13 @@ utils.fill_th2_hist(h2NTPCclusPt, df, 'fPt', 'fNTPCclusHe')
 utils.fill_th1_hist(hNSigHe, df, 'fNSigmaHe')
 utils.fill_th1_hist(hMass3LH, df, 'fMassH3L')
 utils.fill_th1_hist(hMass4LH, df, 'fMassH4L')
-utils.fill_th2_hist(h2MassCosPA, df, 'fCosPA', 'fMassH3L')
-utils.fill_th2_hist(h2MassDecLen, df, 'fDecLen', 'fMassH3L')
-utils.fill_th2_hist(h2MassDCADaughters, df, 'fDcaV0Daug', 'fMassH3L')
-utils.fill_th2_hist(h2MassDCAHePv, df, 'fDcaHe', 'fMassH3L')
-utils.fill_th2_hist(h2MassPt, df, 'fPt', 'fMassH3L')
-utils.fill_th2_hist(h2Mass4LHnSigmaHe, df, 'fNSigmaHe', 'fMassH4L')
+utils.fill_th2_hist(h2Mass3LHVvsMass4LH, df, 'fMassH3L', 'fMassH4L')
+utils.fill_th2_hist(h2MassCosPA, df, 'fCosPA', mass_string)
+utils.fill_th2_hist(h2MassDecLen, df, 'fDecLen', mass_string)
+utils.fill_th2_hist(h2MassDCADaughters, df, 'fDcaV0Daug', mass_string)
+utils.fill_th2_hist(h2MassDCAHePv, df, 'fDcaHe', mass_string)
+utils.fill_th2_hist(h2MassPt, df, 'fPt', mass_string)
+utils.fill_th2_hist(h2Mass4LHnSigmaHe, df, 'fNSigmaHe', mass_string)
 utils.fill_th2_hist(h2NSigHe3VsMom, df, 'fTPCSignMomHe3', 'fNSigmaHe')
 
 df.eval('MomDiffHe3 = fTPCmomHe - fPHe3/2', inplace=True)
@@ -197,17 +195,16 @@ if 'fITSclusterSizesHe' in df.columns:
     utils.fill_th2_hist(h2ClusSizeVsCosLam, df, 'fCosLambdaHe', 'fAvgClusterSizeHe')
 
 if 'fFlags' in df.columns:
-    df['fHePIDHypo'] = np.right_shift(df['fFlags'], 4)
-    df['fPiPIDHypo'] = np.bitwise_and(df['fFlags'], 0b1111)
     utils.fill_th1_hist(hHeliumPIDHypo, df, 'fHePIDHypo')
     utils.fill_th1_hist(hPiPIDHypo, df, 'fPiPIDHypo')
     df_He_PID = df.query('fHePIDHypo==7')
     df_Trit_PID = df.query('fHePIDHypo==6')
     utils.fill_th2_hist(hHeMomTPCMinusMomGloTritHyp, df_Trit_PID, 'fGloSignMomHe3', 'MomDiffHe3')
     utils.fill_th2_hist(hHeMomTPCMinusMomGloHeHyp, df_He_PID, 'fGloSignMomHe3', 'MomDiffHe3')
+    utils.fill_th2_hist(h2MassPIDHypo, df, 'fHePIDHypo', mass_string)
 
 if 'fV2' in df.columns:
-    utils.fill_th2_hist(h2MassV2, df, 'fMassH3L', 'fV2')
+    utils.fill_th2_hist(h2MassV2, df, mass_string, 'fV2')
     ## fill the mean v2 vs mass starting from the 2D hist
     for i in range(1, h2MassV2.GetNbinsX()+1):
         bin_entries = []
@@ -265,12 +262,14 @@ h2NSigClusSizePi.Write()
 h2TPCSigClusSize.Write()
 h2NSigHe3VsMom.Write()
 hHeMomTPCMinusMomGlo.Write()
+h2Mass3LHVvsMass4LH.Write()
 
 if 'fFlags' in df.columns:
     hHeliumPIDHypo.Write()
     hPiPIDHypo.Write()
     hHeMomTPCMinusMomGloTritHyp.Write()
     hHeMomTPCMinusMomGloHeHyp.Write()
+    h2MassPIDHypo.Write()
 
 hClusterSizeHe.Write()
 hClusterSizeHeCosLam.Write()
@@ -312,8 +311,8 @@ if do_signal_extraction:
     sign_extr_dir = f.mkdir('SignalExtraction')
     f.cd('SignalExtraction')
     signal_extraction = SignalExtraction(df)
-    signal_extraction.bkg_fit_func = "pol1"
-    signal_extraction.signal_fit_func = "dscb"
+    signal_extraction.bkg_fit_func = "pol2"
+    signal_extraction.signal_fit_func = "gaus"
     signal_extraction.n_bins_data = 30
     signal_extraction.n_evts = 1e9
     signal_extraction.matter_type = is_matter
