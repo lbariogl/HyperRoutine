@@ -1,7 +1,7 @@
 mc: True
 is_h4l: False
 input_files: ["/home/fmazzasc/AO2D_h3l.root"]
-output_dir: "../results/"
+output_dir: "../results/mc_analyse_tree/"
 output_file: "HypertritonResults_24b2b_h3l"
 selection: {
       "fEtaHe3" : "abs(fEtaHe3) < 0.9",
@@ -15,4 +15,4 @@ selection: {
 is_matter: "both"
 calibrate_he_momentum: True
 skip_out_tree: True
-do_signal_extraction: True
+do_signal_extraction: False

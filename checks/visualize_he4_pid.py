@@ -33,18 +33,16 @@ def heBB(rigidity, mass):
     return (p2 - aa - bb) * p1 / aa
 
 tree_list = [
-    "/data3/fmazzasc/hyp_run_3/pp2023/skimmed/AO2D.root",
-    # "/data3/fmazzasc/hyp_run_3/pp2022/LHC22_highIR_thin_custom/AO2D.root",
-    "/data3/fmazzasc/hyp_run_3/pp2024/ag/AO2D.root",
-    "/data3/fmazzasc/hyp_run_3/pp2024/aj/AO2D.root",
-    "/data3/fmazzasc/hyp_run_3/pp2024/af/AO2D.root",
-    "/data3/fmazzasc/hyp_run_3/pp2024/al/AO2D.root"
+    "/data3/fmazzasc/hyp_run_3/pp2024/ag/AO2D_custom.root",
+    "/data3/fmazzasc/hyp_run_3/pp2024/aj/AO2D_custom.root",
+    "/data3/fmazzasc/hyp_run_3/pp2024/af/AO2D_custom.root",
+    "/data3/fmazzasc/hyp_run_3/pp2024/al/AO2D_custom.root"
   ]    
 
 hdl = TreeHandler(tree_list, 'O2hypcands', folder_name='DF*')
 utils.correct_and_convert_df(hdl, True, False, True)
 
-hdl.apply_preselections('fAvgClusterSizeHe > 6 and fNSigmaHe > -4 and fNTPCclusHe > 90 and fIsMatter==True')
+hdl.apply_preselections('fAvgClusterSizeHe > 6 and fNSigmaHe > -3 and fNTPCclusHe > 90 and fIsMatter==False')
 
 h2TPCSigClusSize = ROOT.TH2F('h2TPCSigMomHeTPC', r'; p_{TPC}; TPC signal', 50, 0.5, 5, 200, 0.5, 2000)
 utils.fill_th2_hist(h2TPCSigClusSize, hdl, 'fTPCmomHe', 'fTPCsignalHe')

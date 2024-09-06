@@ -84,7 +84,7 @@ hMeanV2VsMass = ROOT.TH1F('hMeanV2VsMass', r';m({}^{3}_{#Lambda}H) (GeV/#it{c});
 h2MassCosPA = ROOT.TH2F('h2MassCosPA', r';cos(#theta_{PA}); m({}^{3}_{#Lambda}H) (GeV/#it{c})', 100, 0.99, 1, 50, mass_low_limit, mass_high_limit)
 h2MassDecLen = ROOT.TH2F('h2MassDecLen', r';Decay length (cm); m({}^{3}_{#Lambda}H) (GeV/#it{c})', 100, 0, 40, 50, mass_low_limit, mass_high_limit)
 h2MassDCADaughters = ROOT.TH2F('h2MassDCADaughters', r';DCA daughters (cm); m({}^{3}_{#Lambda}H) (GeV/#it{c})', 200, 0, 0.3, 50, mass_low_limit, mass_high_limit)
-h2MassDCAHePv = ROOT.TH2F('h2MassDCAHe', r';DCA He3 PVs (cm); m({}^{3}_{#Lambda}H) (GeV/#it{c})', 100, -0.2, 0.2, 50, mass_low_limit, mass_high_limit)
+h2MassDCAHePv = ROOT.TH2F('h2MassDCAHe', r';DCA He3 PVs (cm); m({}^{3}_{#Lambda}H) (GeV/#it{c})', 400, -2,2, 50, mass_low_limit, mass_high_limit)
 h2MassPt = ROOT.TH2F('h2MassPt', r';#it{p}_{T} (GeV/#it{c}); m({}^{3}_{#Lambda}H) (GeV/#it{c})', 50, 0, 7, 50, mass_low_limit, mass_high_limit)
 h2MassPIDHypo = ROOT.TH2F('h2MassPIDHypo', r';Hypothesis; m({}^{3}_{#Lambda}H) (GeV/#it{c})', 16, 0.5, 16.5, 50, mass_low_limit, mass_high_limit)
 h2Mass4LHnSigmaHe = ROOT.TH2F('h2Mass4LHnSigmaHe', r';n_{#sigma}^{TPC}({}^{3}He); m({}^{4}_{#Lambda}H) (GeV/#it{c})', 50, -4, 4, 30, 3.89, 3.97)
@@ -117,7 +117,6 @@ tree_hdl = TreeHandler(input_files_name, tree_name, folder_name='DF*')
 # tree_hdl = TreeHandler(input_files_name, tree_name)
 
 df = tree_hdl.get_data_frame()
-print('Tree columns:', df.columns)
 utils.correct_and_convert_df(df, calibrate_he_momentum, mc, is_h4l)
 
 

@@ -176,8 +176,8 @@ def reweight_pt_spectrum(df, var, distribution):
 # create histogram for momentum correction
 
 def create_pt_shift_histo(df):
-    h2MomResoVsPtHe3 = ROOT.TH2F('h2MomResoVsPtHe3', ';{}^{3}He #it{p}_{T} (GeV/#it{c});{}^{3}He #it{p}_{T}^{reco} - #it{p}_{T}^{gen} (GeV/#it{c})', 50, 1., 5, 50, -0.4, 0.4)
-    df.eval('PtResHe3 = (fPtHe3 - fGenPtHe3)', inplace=True)
+    h2MomResoVsPtHe3 = ROOT.TH2F('h2MomResoVsPtHe3', ';{}^{3}He #it{p}_{T} (GeV/#it{c});{}^{3}He #it{p}_{T}^{gen} - #it{p}_{T}^{reco} (GeV/#it{c})', 30, 1.3, 5, 50, -0.4, 0.4)
+    df.eval('PtResHe3 = (fGenPtHe3 - fPtHe3)', inplace=True)
     fill_th2_hist(h2MomResoVsPtHe3, df, 'fPtHe3', 'PtResHe3')
     h2MomResoVsPtHe3.FitSlicesY()
     hShiftVsPtHe3 = ROOT.gDirectory.Get('h2MomResoVsPtHe3_1')
@@ -202,8 +202,24 @@ def computeNSigmaHe4(df):
     nSigma = (df['fTPCsignalHe'] - expBB) / (0.08*df['fTPCsignalHe'])
     return nSigma
 
+def getNEvents(an_files, is_trigger=False):
+    n_ev = 0
+    if type(an_files) == str:
+        an_files = [an_files]
 
-# put dataframe in the correct format
+    for an_file in an_files:
+        an_file = ROOT.TFile(an_file)
+        print(an_file)
+        if is_trigger: 
+            zorro_summ = an_file.Get('hyper-reco-task').Get('zorroSummary;1')
+            n_ev += zorro_summ.getNormalisationFactor(0)
+        else:
+            n_ev += an_file.Get('hyper-reco-task').Get('hZvtx').Integral()
+
+    return n_ev
+
+
+
 
 def correct_and_convert_df(df, calibrate_he3_pt = False, isMC=False, isH4L=False):
 
@@ -229,10 +245,10 @@ def correct_and_convert_df(df, calibrate_he3_pt = False, isMC=False, isH4L=False
             df["fPtHe3"] += 2.98019e-02 + 7.66100e-01 * np.exp(-1.31641e+00 * df["fPtHe3"]) ### functional form given by mpuccio
         else:
             print("PID in tracking detected, using new momentum re-calibration")
-            df_Trit_PID = df.query('fHePIDHypo!=7')
-            df_else = df.query('fHePIDHypo==7')
+            df_Trit_PID = df.query('fHePIDHypo==6')
+            df_else = df.query('fHePIDHypo!=6')
             ##pt_new = pt + kp0 + kp1 * pt + kp2 * pt^2 curveParams = {'kp0': -0.200281,'kp1': 0.103039,'kp2': -0.012325}, functional form given by G.A. Lucia
-            df_Trit_PID["fPtHe3"] += -0.200281 + 0.103039 * df_Trit_PID["fPtHe3"] - 0.012325 * df_Trit_PID["fPtHe3"]**2
+            df_Trit_PID["fPtHe3"] += -0.1286 - 0.1269 * df_Trit_PID["fPtHe3"] + 0.06 * df_Trit_PID["fPtHe3"]**2
             df_new = pd.concat([df_Trit_PID, df_else])
             ## assign the new dataframe to the original one
             df[:] = df_new.values
