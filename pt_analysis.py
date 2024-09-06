@@ -32,6 +32,8 @@ config = yaml.full_load(config_file)
 input_file_name_data = config['input_files_data']
 input_file_name_mc = config['input_files_mc']
 input_analysis_results_file = config['input_analysis_results_file']
+is_trigger = config['is_trigger']
+
 output_dir_name = config['output_dir']
 output_file_name = config['output_file']
 
@@ -126,6 +128,7 @@ mc_hdl.apply_preselections('rej==True')
 mc_reco_hdl = mc_hdl.apply_preselections('fIsReco == 1', inplace=False)
 mc_hdl_evsel = mc_hdl.apply_preselections('fIsSurvEvSel==True', inplace=False)
 
+
 print("** Data loaded. ** \n")
 print("----------------------------------")
 print("** Starting pt analysis **")
@@ -138,7 +141,8 @@ spectra_maker.mc_hdl = mc_hdl_evsel
 spectra_maker.mc_hdl_sign_extr = mc_hdl
 spectra_maker.mc_reco_hdl = mc_reco_hdl
 
-spectra_maker.n_ev = uproot.open(input_analysis_results_file)['hyper-reco-task']['hZvtx'].values().sum()
+spectra_maker.n_ev = utils.getNEvents(input_analysis_results_file, is_trigger)
+print(f'Number of events: {spectra_maker.n_ev}')
 spectra_maker.branching_ratio = 0.25
 spectra_maker.delta_rap = 2.0
 spectra_maker.h_absorption = absorption_histo
@@ -165,16 +169,16 @@ spectra_maker.make_spectra()
 spectra_maker.make_histos()
 
 # define fit function mT exponential
-he3_spectrum = ROOT.TF1('mtexpo', '[2]*x*exp(-TMath::Sqrt([0]*[0]+x*x)/[1])', 0.1, 6)
-he3_spectrum.FixParameter(0, 2.99131)
-he3_spectrum.SetParameter(1, 0.5199)
+# he3_spectrum = ROOT.TF1('mtexpo', '[2]*x*exp(-TMath::Sqrt([0]*[0]+x*x)/[1])', 0.1, 6)
+# he3_spectrum.FixParameter(0, 2.99131)
+# he3_spectrum.SetParameter(1, 0.5199)
 
 #  Constrained Levy-Tsallis
-# he3_spectrum.SetParLimits(2, 1e-08, 5e-04)
-# he3_spectrum.SetParameter(0, he3_spectrum.GetParameter(0))
-# he3_spectrum.FixParameter(1, he3_spectrum.GetParameter(1))
-# he3_spectrum.FixParameter(2, he3_spectrum.GetParameter(2))
-# he3_spectrum.FixParameter(3, 2.99131)
+he3_spectrum.SetParLimits(2, 1e-08, 5e-04)
+he3_spectrum.SetParameter(0, he3_spectrum.GetParameter(0))
+he3_spectrum.FixParameter(1, he3_spectrum.GetParameter(1))
+he3_spectrum.FixParameter(2, he3_spectrum.GetParameter(2))
+he3_spectrum.FixParameter(3, 2.99131)
 
 # Unconstrained Levy-Tsallis
 # he3_spectrum.SetParLimits(0, 1e-08, 4e-08)

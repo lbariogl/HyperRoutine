@@ -10,17 +10,23 @@ input_files:
     "/data3/fmazzasc/hyp_run_3/pp2024/al/AO2D.root"
   ]
 output_dir: "../results/"
-output_file: "HypertritonResults_antimatter_h4l_thin_custom"
+output_file: "HypertritonResults_24_apass4_sk_cal"
 selection:
   {
-    "fAvgClSizeCosLambda": "fAvgClSizeCosLambda > 5",
-    "fPt" : "fPt>1. and fPt < 5",
-    "fCosPA" : "fCosPA>0.99",
-    "fNSigmaHe": "fNSigmaHe>1.",
-    "fNTPCclusHe": "fNTPCclusHe > 100",
-    "fTPCsignalPi": "fTPCsignalPi<1000"
+    # "fEtaHe3" : "abs(fEtaHe3) < 0.9",
+    # "fEtaPi" : "abs(fEtaPi) <   0.9",
+    # "fNTPCclusHe": "fNTPCclusHe > 100",
+    "fPt" : " fPt < 4.",
+    "fCosPA": "fCosPA > 0.995",
+    "fNSigmaHe": "fNSigmaHe > 1",
+    # "fTracked": "fTracked == 1",  
+      "fNSigmaHe4": "abs(fNSigmaHe4) < 2",
+      # "fTPCsignalPi": "fTPCsignalPi < 1000.",
+      # "fTPCmomHe": "fTPCmomHe > 0.5",
+    "fAvgClSizeCosLambda": "fAvgClSizeCosLambda > 4",
+
   }
-is_matter: "antimatter"
+is_matter: "matter"
 calibrate_he_momentum: True
 skip_out_tree: True
 do_signal_extraction: True

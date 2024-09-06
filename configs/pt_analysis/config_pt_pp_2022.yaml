@@ -2,10 +2,12 @@ input_files_data:
   [
     "/data3/fmazzasc/hyp_run_3/pp2022/LHC22_new/AO2D.root",
   ]
-input_files_mc: ["/home/fmazzasc/AO2D.root"]
+input_files_mc: ["/data3/fmazzasc/mc_old/AO2D_h3l.root"]
 input_analysis_results_file: "/data3/fmazzasc/hyp_run_3/pp2022/LHC22_new/AnalysisResults.root"
-output_dir: "../results/"
-output_file: "pt_analysis_antimat_sigloss"
+output_dir: "../results/2022_pt_analysis/"
+is_trigger: False
+
+output_file: "pt_analysis_antimat"
 output_file_qa: "qa"
 
 pt_bins: [1.5, 2., 2.5, 3.5, 5]
@@ -13,7 +15,7 @@ calibrate_he_momentum : True
 bkg_fit_func: "pol1"
 signal_fit_func: "dscb"
 is_matter: "antimatter"
-n_bins_mass_data: 30
+n_bins_mass_data: 3
 n_bins_mass_mc: 80
 
 selection:

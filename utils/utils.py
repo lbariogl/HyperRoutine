@@ -176,8 +176,8 @@ def reweight_pt_spectrum(df, var, distribution):
 # create histogram for momentum correction
 
 def create_pt_shift_histo(df):
-    h2MomResoVsPtHe3 = ROOT.TH2F('h2MomResoVsPtHe3', ';{}^{3}He #it{p}_{T} (GeV/#it{c});{}^{3}He #it{p}_{T}^{reco} - #it{p}_{T}^{gen} (GeV/#it{c})', 50, 1., 5, 50, -0.4, 0.4)
-    df.eval('PtResHe3 = (fPtHe3 - fGenPtHe3)', inplace=True)
+    h2MomResoVsPtHe3 = ROOT.TH2F('h2MomResoVsPtHe3', ';{}^{3}He #it{p}_{T} (GeV/#it{c});{}^{3}He #it{p}_{T}^{gen} - #it{p}_{T}^{reco} (GeV/#it{c})', 30, 1.3, 5, 50, -0.4, 0.4)
+    df.eval('PtResHe3 = (fGenPtHe3 - fPtHe3)', inplace=True)
     fill_th2_hist(h2MomResoVsPtHe3, df, 'fPtHe3', 'PtResHe3')
     h2MomResoVsPtHe3.FitSlicesY()
     hShiftVsPtHe3 = ROOT.gDirectory.Get('h2MomResoVsPtHe3_1')
@@ -199,19 +199,62 @@ def heBB(rigidity, mass):
 
 def computeNSigmaHe4(df):
     expBB = heBB(df['fTPCmomHe'], 3.727)
-    nSigma = (df['fTPCsignalHe'] - expBB) / (0.06*df['fTPCsignalHe'])
+    nSigma = (df['fTPCsignalHe'] - expBB) / (0.08*df['fTPCsignalHe'])
     return nSigma
 
+def getNEvents(an_files, is_trigger=False):
+    n_ev = 0
+    if type(an_files) == str:
+        an_files = [an_files]
 
-# put dataframe in the correct format
+    for an_file in an_files:
+        an_file = ROOT.TFile(an_file)
+        print(an_file)
+        if is_trigger: 
+            zorro_summ = an_file.Get('hyper-reco-task').Get('zorroSummary;1')
+            n_ev += zorro_summ.getNormalisationFactor(0)
+        else:
+            n_ev += an_file.Get('hyper-reco-task').Get('hZvtx').Integral()
+
+    return n_ev
+
+
+
 
 def correct_and_convert_df(df, calibrate_he3_pt = False, isMC=False, isH4L=False):
+
+    kDefaultPID = 15
+    kPionPID = 2
+    kTritonPID = 6
+
     if not type(df) == pd.DataFrame:
         df = df._full_data_frame
-    # correct 3He momentum
-    if calibrate_he3_pt:
-        df["fPtHe3"] += 2.98019e-02 + 7.66100e-01 * np.exp(-1.31641e+00 * df["fPtHe3"]) ### functional form given by mpuccio
 
+    if 'fFlags' in df.columns:
+        df['fHePIDHypo'] = np.right_shift(df['fFlags'], 4)
+        df['fPiPIDHypo'] = np.bitwise_and(df['fFlags'], 0b1111)
+
+    # correct 3He momentum    
+
+    if calibrate_he3_pt:
+        # print(df.query('fIsReco==True')['fHePIDHypo'])
+        no_pid_mask = np.logical_and(df['fHePIDHypo'] != kDefaultPID, df['fHePIDHypo'] != kPionPID)
+
+        if (no_pid_mask.sum() == 0):
+            print("PID in tracking not detected, using old momentum re-calibration")
+            df["fPtHe3"] += 2.98019e-02 + 7.66100e-01 * np.exp(-1.31641e+00 * df["fPtHe3"]) ### functional form given by mpuccio
+        else:
+            print("PID in tracking detected, using new momentum re-calibration")
+            df_Trit_PID = df.query('fHePIDHypo==6')
+            df_else = df.query('fHePIDHypo!=6')
+            ##pt_new = pt + kp0 + kp1 * pt + kp2 * pt^2 curveParams = {'kp0': -0.200281,'kp1': 0.103039,'kp2': -0.012325}, functional form given by G.A. Lucia
+            df_Trit_PID["fPtHe3"] += -0.1286 - 0.1269 * df_Trit_PID["fPtHe3"] + 0.06 * df_Trit_PID["fPtHe3"]**2
+            df_new = pd.concat([df_Trit_PID, df_else])
+            ## assign the new dataframe to the original one
+            df[:] = df_new.values
+
+        
+    print(df)
     # 3He momentum
     df.eval('fPxHe3 = fPtHe3 * cos(fPhiHe3)', inplace=True)
     df.eval('fPyHe3 = fPtHe3 * sin(fPhiHe3)', inplace=True)
@@ -252,6 +295,7 @@ def correct_and_convert_df(df, calibrate_he3_pt = False, isMC=False, isH4L=False
     df.eval('fCosPA = (fPx * fXDecVtx + fPy * fYDecVtx + fPz * fZDecVtx) / (fP * fDecLen)', inplace=True)
     df.eval('fMassH3L = sqrt(fEn**2 - fP**2)', inplace=True)
     df.eval('fMassH4L = sqrt(fEn4**2 - fP**2)', inplace=True)
+    print(df.columns)
 
     ## signed TPC mom
     df.eval('fTPCSignMomHe3 = fTPCmomHe * (-1 + 2*fIsMatter)', inplace=True)
