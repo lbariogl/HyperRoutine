@@ -1,13 +1,15 @@
 input_files_data:
   [
-    "/data3/fmazzasc/hyp_run_3/pp2024/ag/AO2D.root",
-    "/data3/fmazzasc/hyp_run_3/pp2024/aj/AO2D.root",
-    "/data3/fmazzasc/hyp_run_3/pp2024/af/AO2D.root",
-    "/data3/fmazzasc/hyp_run_3/pp2024/al/AO2D.root"
+    "/data3/fmazzasc/hyp_run_3/pp2023/skimmed/AO2D.root",
+    "/data3/fmazzasc/hyp_run_3/pp2024/ag/new/AO2D.root",
+    "/data3/fmazzasc/hyp_run_3/pp2024/aj/new/AO2D.root",
+    "/data3/fmazzasc/hyp_run_3/pp2024/af/new/AO2D.root",
+    "/data3/fmazzasc/hyp_run_3/pp2024/al/new/AO2D.root"
   ]
 input_files_mc: ["/data3/fmazzasc/hyp_run_3/mc/LHC24b2b/AO2D_h3l.root"]
 input_analysis_results_file:
   [
+    "/data3/fmazzasc/hyp_run_3/pp2023/skimmed/AnalysisResults.root",
     "/data3/fmazzasc/hyp_run_3/pp2024/ag/AnalysisResults.root",
     "/data3/fmazzasc/hyp_run_3/pp2024/aj/AnalysisResults.root",
     "/data3/fmazzasc/hyp_run_3/pp2024/af/AnalysisResults.root",
@@ -17,10 +19,10 @@ input_analysis_results_file:
 is_trigger: True
 
 output_dir: "../results/2024_pt_analysis/"
-output_file: "pt_analysis_antimat_2024"
+output_file: "pt_analysis_antimat_2024_newcut"
 output_file_qa: "qa"
 
-pt_bins: [1.5, 2., 2.4, 2.7, 3, 3.5, 4.5]
+pt_bins: [1.5, 2., 2.4, 2.7, 3, 3.5, 4., 5]
 calibrate_he_momentum : True
 bkg_fit_func: "pol2"
 signal_fit_func: "dscb"
@@ -33,7 +35,6 @@ selection:
     {
       "fEtaHe3" : "abs(fEtaHe3) < 0.9",
       "fEtaPi" : "abs(fEtaPi) < 0.9",
-      "fDcaHe": "abs(fDcaHe) < 1.2",
       # "fNTPCclusPi": "fNTPCclusPi > 70",
       "fCosPA": "fCosPA > 0.99",
       "fNSigmaHe": "abs(fNSigmaHe) < 2.5",
@@ -42,7 +43,6 @@ selection:
     {
       "fEtaHe3" : "abs(fEtaHe3) < 0.9",
       "fEtaPi" : "abs(fEtaPi) < 0.9",
-      "fDcaHe": "abs(fDcaHe) < 1.2",
       # "fNTPCclusPi": "fNTPCclusPi > 70",
       "fCosPA": "fCosPA > 0.99",
       "fNSigmaHe": "abs(fNSigmaHe) < 2.5",
@@ -51,7 +51,6 @@ selection:
     {
       "fEtaHe3" : "abs(fEtaHe3) < 0.9",
       "fEtaPi" : "abs(fEtaPi) < 0.9",
-      # "fDcaHe": "abs(fDcaHe) < 1.2",
       # "fNTPCclusPi": "fNTPCclusPi > 70",
       "fCosPA": "fCosPA > 0.99",
       "fNSigmaHe": "abs(fNSigmaHe) < 2.5",
@@ -60,7 +59,6 @@ selection:
     {
       "fEtaHe3" : "abs(fEtaHe3) < 0.9",
       "fEtaPi" : "abs(fEtaPi) < 0.9",
-      # "fDcaHe": "abs(fDcaHe) < 1.2",
       # "fNTPCclusPi": "fNTPCclusPi > 70",
       "fCosPA": "fCosPA > 0.99",
       "fNSigmaHe": "abs(fNSigmaHe) < 2.5",
@@ -69,7 +67,6 @@ selection:
     {
       "fEtaHe3" : "abs(fEtaHe3) < 0.9",
       "fEtaPi" : "abs(fEtaPi) < 0.9",
-      # "fDcaHe": "abs(fDcaHe) < 1.2",
       # "fNTPCclusPi": "fNTPCclusPi > 70",
       "fCosPA": "fCosPA > 0.99",
       "fNSigmaHe": "abs(fNSigmaHe) < 2.5",
@@ -78,35 +75,33 @@ selection:
     {
       "fEtaHe3" : "abs(fEtaHe3) < 0.9",
       "fEtaPi" : "abs(fEtaPi) < 0.9",
-      # "fDcaHe": "abs(fDcaHe) < 1.2",
-      # "fNTPCclusPi": "fNTPCclusPi > 70",
+      "fTPCChi2He": "fTPCChi2He > 0.5",
       "fCosPA": "fCosPA > 0.99",
       "fNSigmaHe": "abs(fNSigmaHe) < 2.5",
       "fTPCsignalPi": "fTPCsignalPi < 1000."
     },
-    {
+      {
       "fEtaHe3" : "abs(fEtaHe3) < 0.9",
       "fEtaPi" : "abs(fEtaPi) < 0.9",
-      # "fDcaHe": "abs(fDcaHe) < 1.2",
-      # "fNTPCclusPi": "fNTPCclusPi > 70",
-      "fCosPA": "fCosPA > 0.995",
-      "fNSigmaHe": "abs(fNSigmaHe) < 2.55",
+      "fTPCChi2He": "fTPCChi2He > 0.5",
+      "fCosPA": "fCosPA > 0.99",
+      "fNSigmaHe": "abs(fNSigmaHe) < 2.5",
       "fTPCsignalPi": "fTPCsignalPi < 1000."
     },
     
   ]
 
-sigma_range_mc_to_data: [[1., 1.], [1, 1.], [1., 1.], [1., 1.], [1., 1.], [1., 1.]]
+sigma_range_mc_to_data: [[1., 1.], [1, 1.], [1., 1.], [1., 1.], [1., 1.], [1., 1.], [1., 1.]]
 
 
 # absorption, event and signal loss corrections
 absorption_histo_file: "../results/absorption/absorption_histos_x1.5.root"
-event_loss: 0.83
+event_loss: 1.0
 signal_loss: 0.9
 
-do_syst: False
+do_syst: True
 n_trials: 1000
-bkg_fit_func_syst: ["pol1", "expo"]
+bkg_fit_func_syst: ["pol2", "expo"]
 signal_fit_func_syst: ["dscb"]
 cut_dict_syst:
   {
@@ -116,6 +111,6 @@ cut_dict_syst:
     #  "fDcaV0Daug": {"cut_greater": False, "cut_list": [0.1, 0.5, 20]}
   }
 
-absorption_syst: [0.03, 0.03, 0.03, 0.03, 0.03, 0.03]
+absorption_syst: [0.03, 0.03, 0.03, 0.03, 0.03, 0.03 , 0.03]
 
 

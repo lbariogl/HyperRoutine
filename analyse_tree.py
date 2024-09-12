@@ -69,6 +69,7 @@ hDecLen = ROOT.TH1F('hDecLen', r';Decay length (cm)', 100, 0, 40)
 hNSigHe = ROOT.TH1F('hNSigmaHe', r';n_{#sigma}^{TPC}({}^{3}He)', 50, -3, 3)
 h2NSigHe3VsMom = ROOT.TH2F('h2NSigHe3VsMom', r';{}^{3}He #it{p}_{T} (GeV/#it{c});n_{#sigma}^{TPC}({}^{3}He)', 50, -5, 5, 50, -3, 3)
 hClusterSizeHe = ROOT.TH1F('hClusterSizeHe', r';#LT Cluster size #GT', 15, 0.5, 15.5)
+hTrackedClSize = ROOT.TH1F('hTrackedClSize', r';#LT Cluster size #GT', 15, 0.5, 15.5)
 hClusterSizeHeCosLam = ROOT.TH1F('hClusterSizeHeCosLam', r';#LT Cluster size #GT x cos(#lambda)', 15, 0.5, 15.5)
 h2ClusSizeVsCosLam = ROOT.TH2F('h2ClusSizeVsCosLam', r'; Cos(#lambda); #LT Cluster size #GT', 100, 0.95, 1, 15, 0.5, 15.5)
 h2NSigClusSizeHe = ROOT.TH2F('h2NSigClusSizeHe', r';n_{#sigma}^{TPC}({}^{3}He);<Cluster size>', 50, -3, 3, 15, 0.5, 15.5)
@@ -193,6 +194,9 @@ if 'fITSclusterSizesHe' in df.columns:
     utils.fill_th2_hist(h2TPCSigClusSize, df, 'fAvgClusterSizePi', 'fTPCsignalPi')
     utils.fill_th2_hist(h2ClusSizeVsCosLam, df, 'fCosLambdaHe', 'fAvgClusterSizeHe')
 
+if 'fTrackedClSize' in df.columns:
+    utils.fill_th1_hist(hTrackedClSize, df, 'fTrackedClSize')
+
 if 'fFlags' in df.columns:
     utils.fill_th1_hist(hHeliumPIDHypo, df, 'fHePIDHypo')
     utils.fill_th1_hist(hPiPIDHypo, df, 'fPiPIDHypo')
@@ -271,6 +275,7 @@ if 'fFlags' in df.columns:
     h2MassPIDHypo.Write()
 
 hClusterSizeHe.Write()
+hTrackedClSize.Write()
 hClusterSizeHeCosLam.Write()
 hClusterSizePi.Write()
 h2NSigClusSizeHe.Write()

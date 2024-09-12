@@ -2,21 +2,16 @@ mc: False
 is_h4l: False
 input_files:
   [
-    "/data3/fmazzasc/hyp_run_3/pp2024/ag/new/AO2D.root",
-    "/data3/fmazzasc/hyp_run_3/pp2024/aj/new/AO2D.root",
-    "/data3/fmazzasc/hyp_run_3/pp2024/af/new/AO2D.root",
-    "/data3/fmazzasc/hyp_run_3/pp2024/al/new/AO2D.root"
+    "/data3/fmazzasc/hyp_run_3/pp2023/thinned/AO2D.root"
   ]
-output_dir: "../results/2024_analyse_tree/"
-output_file: "HypertritonResults_24sk"
+output_dir: "../results/2023_analyse_tree/"
+output_file: "HypertritonResults_23_thinned"
 selection:
   {
     "fDcaV0Daug": "abs(fDcaV0Daug) < 0.1",
     # "fDcaHe": "abs(fDcaHe) > 0.004",
     # "fTrackedClSize": "fTrackedClSize > 0",
     "fDcaPi": "abs(fDcaPi) > 0.05",
-    "fPt" : " fPt > 4.5 and fPt < 6",
-    "fTPCChi2He": "fTPCChi2He > 0.5",
     "fCosPA": "fCosPA > 0.99",
     "fNSigmaHe": "fNSigmaHe > -2",
     "fTPCsignalPi": "fTPCsignalPi < 1000.",
