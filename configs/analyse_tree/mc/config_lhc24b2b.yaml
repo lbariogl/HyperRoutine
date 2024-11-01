@@ -1,5 +1,5 @@
 mc: True
-is_h4l: False
+is_h4l: True
 input_files: ["/home/fmazzasc/AO2D_h3l.root"]
 output_dir: "../results/mc_analyse_tree/"
 output_file: "HypertritonResults_24b2b_h3l_nocal"
@@ -13,6 +13,6 @@ selection: {
 }
 
 is_matter: "both"
-calibrate_he_momentum: False
+calibrate_he_momentum: True
 skip_out_tree: True
 do_signal_extraction: False

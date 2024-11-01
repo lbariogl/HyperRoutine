@@ -26,6 +26,12 @@ def heBB(rigidity, mass):
     p4 = 0.8225
     p5 = 2.363
 
+    # p1 = -241.4902
+    # p2 = 0.374245
+    # p3 = 1.397847
+    # p4 = 1.0782504
+    # p5 = 2.048336
+
     betagamma = rigidity * 2 / mass
     beta = betagamma / np.sqrt(1 + betagamma**2)
     aa = beta**p4
@@ -33,10 +39,7 @@ def heBB(rigidity, mass):
     return (p2 - aa - bb) * p1 / aa
 
 tree_list = [
-    "/data3/fmazzasc/hyp_run_3/pp2024/ag/AO2D_custom.root",
-    "/data3/fmazzasc/hyp_run_3/pp2024/aj/AO2D_custom.root",
-    "/data3/fmazzasc/hyp_run_3/pp2024/af/AO2D_custom.root",
-    "/data3/fmazzasc/hyp_run_3/pp2024/al/AO2D_custom.root"
+"/data3/fmazzasc/hyp_run_3/pbpb/pass4/AO2D.root"
   ]    
 
 hdl = TreeHandler(tree_list, 'O2hypcands', folder_name='DF*')
@@ -45,7 +48,16 @@ utils.correct_and_convert_df(hdl, True, False, True)
 hdl.apply_preselections('fAvgClusterSizeHe > 6 and fNSigmaHe > -3 and fNTPCclusHe > 90 and fIsMatter==False')
 
 h2TPCSigClusSize = ROOT.TH2F('h2TPCSigMomHeTPC', r'; p_{TPC}; TPC signal', 50, 0.5, 5, 200, 0.5, 2000)
+h2NSigmaHe3vsPt = ROOT.TH2F('h2NSigmaHe3vsPt', r'; p_{TPC}; nSigma He3', 50, 0.5, 5, 200, -10, 10)
+h2NSigmaHe4vsPt = ROOT.TH2F('h2NSigmaHe4vsPt', r'; p_{TPC}; nSigma He4', 50, 0.5, 5, 200, -10, 10)
+h2NSigmaHe3vsPtBuiltin = ROOT.TH2F('h2NSigmaHe3vsPtBuiltin', r'; p_{TPC}; nSigma He3', 50, 0.5, 5, 200, -10, 10)
+
+
 utils.fill_th2_hist(h2TPCSigClusSize, hdl, 'fTPCmomHe', 'fTPCsignalHe')
+utils.fill_th2_hist(h2NSigmaHe3vsPt, hdl, 'fTPCmomHe', 'fNSigmaHe3')
+utils.fill_th2_hist(h2NSigmaHe4vsPt, hdl, 'fTPCmomHe', 'fNSigmaHe4')
+utils.fill_th2_hist(h2NSigmaHe3vsPtBuiltin, hdl, 'fTPCmomHe', 'fNSigmaHe')
+
 
 rigidity = np.linspace(0.5, 5, 100)
 bbHe3 = heBB(rigidity, 2.809)
@@ -92,7 +104,11 @@ grHe4_high.Draw('same')
 
 outfile = ROOT.TFile('he4_pid_calibration.root', 'recreate')
 h2TPCSigClusSize.Write()
+h2NSigmaHe3vsPt.Write()
+h2NSigmaHe4vsPt.Write()
+h2NSigmaHe3vsPtBuiltin.Write()
 c.Write()
+
 outfile.Close()
 
 

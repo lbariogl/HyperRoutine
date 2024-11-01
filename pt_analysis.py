@@ -410,6 +410,7 @@ cFinalSpectrum.SaveAs(f'{output_dir_name}/cFinalSpectrum.pdf')
 
 final_stat.Write()
 final_syst.Write()
+final_syst_rms.Write()
 fit_fun_stat.Write()
 yield_dist.Write()
 yield_prob.Write()

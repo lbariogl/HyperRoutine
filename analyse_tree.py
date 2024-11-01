@@ -30,6 +30,17 @@ config_file = open(args.config_file, 'r')
 config = yaml.full_load(config_file)
 mc = config['mc']
 input_files_name = config['input_files']
+
+if 'input_analysis_results_file' not in config:
+    input_analysis_results_file = ''
+else:
+    input_analysis_results_file = config['input_analysis_results_file']
+
+if 'is_trigger' not in config:
+    is_trigger = False
+else:
+    is_trigger = config['is_trigger']
+
 output_dir_name = config['output_dir']
 output_file_name = config['output_file']
 selections = config['selection']
@@ -55,19 +66,23 @@ mass_low_limit = 3.87 if is_h4l else 2.96
 mass_high_limit = 3.98 if is_h4l else 3.04
 
 ############# Create histograms #############
-hCosPA = ROOT.TH1F('hCosPA', r';cos(#theta_{PA})', 50, 0.95, 1)
+hCosPA = ROOT.TH1F('hCosPA', r';cos(#theta_{PA})', 500, 0.95, 1)
 hNTPCclus = ROOT.TH1F('hNTPCclus', r';n TPC clusters', 80, 79.5, 159.5)
-h2NTPCclusPt = ROOT.TH2F('h2NTPCclusPt', r';#it{p}_{T} (GeV/#it{c}); n TPC clusters', 50, 0, 5, 80, 79.5, 159.5)
+h2NTPCclusPt = ROOT.TH2F('h2NTPCclusPt', r';#it{p}_{T} (GeV/#it{c}); n TPC clusters', 50, 0, 10, 80, 79.5, 159.5)
 
 hMass3LH = ROOT.TH1F('h_3lh_mass', r'; m({}^{3}_{#Lambda}H) (GeV/#it{c})', 40, 2.96, 3.04)
 hMass4LH = ROOT.TH1F('h_4lh_mass', r';  m({}^{4}_{#Lambda}H) (GeV/#it{c^{2}})', 32, 3.87, 3.98)
 h2Mass3LHVvsMass4LH = ROOT.TH2F('h2Mass3LHVvsMass4LH', r'; m({}^{3}_{#Lambda}H) (GeV/#it{c}); m({}^{4}_{#Lambda}H) (GeV/#it{c})', 40, 2.96, 3.04, 32, 3.87, 3.98)
-hPtRec = ROOT.TH1F('hPtRec', r';#it{p}_{T} (GeV/#it{c})', 50, 0, 5)
+hPtRec = ROOT.TH1F('hPtRec', r';#it{p}_{T} (GeV/#it{c})', 100, 0, 10)
 hCtRec = ROOT.TH1F('hCtRec', r';#it{c#tau} (cm)', 50, 0, 40)
 hRadius = ROOT.TH1F('hRadius', r';Radius (cm)', 100, 0, 40)
 hDecLen = ROOT.TH1F('hDecLen', r';Decay length (cm)', 100, 0, 40)
 hNSigHe = ROOT.TH1F('hNSigmaHe', r';n_{#sigma}^{TPC}({}^{3}He)', 50, -3, 3)
-h2NSigHe3VsMom = ROOT.TH2F('h2NSigHe3VsMom', r';{}^{3}He #it{p}_{T} (GeV/#it{c});n_{#sigma}^{TPC}({}^{3}He)', 50, -5, 5, 50, -3, 3)
+h2NSigHe3VsMom = ROOT.TH2F('h2NSigHe3VsMom', r';{}^{3}He #it{p}_{T} (GeV/#it{c});n_{#sigma}^{TPC}({}^{3}He)', 50, -10, 10, 50, -3, 3)
+h2NSigHe4VsMom = ROOT.TH2F('h2NSigHe4VsMom', r';{}^{4}He #it{p}_{T} (GeV/#it{c});n_{#sigma}^{TPC}({}^{4}He)', 50, -10, 10, 50, -3, 3)
+h2Mass3HLvsPt = ROOT.TH2F('h2Mass3HLvsPt', r';#it{p}_{T} (GeV/#it{c}); m({}^{3}_{#Lambda}H) (GeV/#it{c})', 100, 0, 10, 50, 2.96, 3.04)
+h2Mass4LHvsPt = ROOT.TH2F('h2Mass4LHvsPt', r';#it{p}_{T} (GeV/#it{c}); m({}^{4}_{#Lambda}H) (GeV/#it{c})', 100, 0, 10, 50, 3.87, 3.98)
+h2TPCSigHe3VsMom = ROOT.TH2F('h2TPCSigHe3VsMom', r';{}^{3}He #it{p}_{T} (GeV/#it{c});TPC signal', 50, 0, 7, 100, 0.5, 1000)
 hClusterSizeHe = ROOT.TH1F('hClusterSizeHe', r';#LT Cluster size #GT', 15, 0.5, 15.5)
 hTrackedClSize = ROOT.TH1F('hTrackedClSize', r';#LT Cluster size #GT', 15, 0.5, 15.5)
 hClusterSizeHeCosLam = ROOT.TH1F('hClusterSizeHeCosLam', r';#LT Cluster size #GT x cos(#lambda)', 15, 0.5, 15.5)
@@ -86,11 +101,12 @@ h2MassCosPA = ROOT.TH2F('h2MassCosPA', r';cos(#theta_{PA}); m({}^{3}_{#Lambda}H)
 h2MassDecLen = ROOT.TH2F('h2MassDecLen', r';Decay length (cm); m({}^{3}_{#Lambda}H) (GeV/#it{c})', 100, 0, 40, 50, mass_low_limit, mass_high_limit)
 h2MassDCADaughters = ROOT.TH2F('h2MassDCADaughters', r';DCA daughters (cm); m({}^{3}_{#Lambda}H) (GeV/#it{c})', 200, 0, 0.3, 50, mass_low_limit, mass_high_limit)
 h2MassDCAHePv = ROOT.TH2F('h2MassDCAHe', r';DCA He3 PVs (cm); m({}^{3}_{#Lambda}H) (GeV/#it{c})', 400, -2,2, 50, mass_low_limit, mass_high_limit)
+h2MassDCAPiPv = ROOT.TH2F('h2MassDCAPi', r';DCA #pi PVs (cm); m({}^{3}_{#Lambda}H) (GeV/#it{c})', 400, -20,20, 50, mass_low_limit, mass_high_limit)
 h2MassPt = ROOT.TH2F('h2MassPt', r';#it{p}_{T} (GeV/#it{c}); m({}^{3}_{#Lambda}H) (GeV/#it{c})', 50, 0, 7, 50, mass_low_limit, mass_high_limit)
 h2MassPIDHypo = ROOT.TH2F('h2MassPIDHypo', r';Hypothesis; m({}^{3}_{#Lambda}H) (GeV/#it{c})', 16, 0.5, 16.5, 50, mass_low_limit, mass_high_limit)
 h2Mass4LHnSigmaHe = ROOT.TH2F('h2Mass4LHnSigmaHe', r';n_{#sigma}^{TPC}({}^{3}He); m({}^{4}_{#Lambda}H) (GeV/#it{c})', 50, -4, 4, 30, 3.89, 3.97)
 # for MC only
-hPtGen = ROOT.TH1F('hPtGen', r';#it{p}_{T}^{gen} (GeV/#it{c})', 50, 0, 5)
+hPtGen = ROOT.TH1F('hPtGen', r';#it{p}_{T}^{gen} (GeV/#it{c})', 100, 0, 10)
 hCtGen = ROOT.TH1F('hCtGen', r';#it{c}#tau (cm)', 50, 0, 40)
 hResolutionPt = ROOT.TH1F('hResolutionPt', r';(#it{p}_{T}^{rec} - #it{p}_{T}^{gen}) / #it{p}_{T}^{gen}', 50, -0.2, 0.2)
 hResolutionPtvsPt = ROOT.TH2F('hResolutionPtvsPt', r';#it{p}_{T}^{gen} (GeV/#it{c});(#it{p}_{T}^{rec} - #it{p}_{T}^{gen}) / #it{p}_{T}^{gen}', 50, 0, 5, 50, -0.2, 0.2)
@@ -118,12 +134,12 @@ tree_hdl = TreeHandler(input_files_name, tree_name, folder_name='DF*')
 # tree_hdl = TreeHandler(input_files_name, tree_name)
 
 df = tree_hdl.get_data_frame()
-utils.correct_and_convert_df(df, calibrate_he_momentum, mc, is_h4l)
+df = utils.correct_and_convert_df(df, calibrate_he_momentum, mc, is_h4l)
 
 
 ############# Apply pre-selections to MC #############
 if mc:
-    mc_pre_sels = 'fGenCt < 28.5 or fGenCt > 28.6'
+    mc_pre_sels = ''
     spectra_file = ROOT.TFile.Open('utils/heliumSpectraMB.root')
     he3_spectrum = spectra_file.Get('fCombineHeliumSpecLevyFit_0-100')
     spectra_file.Close()
@@ -133,13 +149,10 @@ if mc:
         mc_pre_sels += 'and fGenPt>0'
     elif is_matter == 'antimatter':
         mc_pre_sels += 'and fGenPt<0'
-    df.query('fGenCt < 28.5 or fGenCt > 28.6', inplace=True)
     ## fill histograms to be put at denominator of efficiency
     utils.fill_th1_hist(hPtGen, df, 'fAbsGenPt')
     utils.fill_th1_hist(hCtGen, df, 'fGenCt')
     ## now we select only the reconstructed particles
-    print(len(np.unique(df.round(decimals=5)['fGenCt'])))
-    print(len(df))
     df.query('fIsReco==True', inplace=True)
 
 ############# Apply pre-selections to data #############
@@ -178,9 +191,14 @@ utils.fill_th2_hist(h2MassCosPA, df, 'fCosPA', mass_string)
 utils.fill_th2_hist(h2MassDecLen, df, 'fDecLen', mass_string)
 utils.fill_th2_hist(h2MassDCADaughters, df, 'fDcaV0Daug', mass_string)
 utils.fill_th2_hist(h2MassDCAHePv, df, 'fDcaHe', mass_string)
+utils.fill_th2_hist(h2MassDCAPiPv, df, 'fDcaPi', mass_string)
 utils.fill_th2_hist(h2MassPt, df, 'fPt', mass_string)
 utils.fill_th2_hist(h2Mass4LHnSigmaHe, df, 'fNSigmaHe', mass_string)
 utils.fill_th2_hist(h2NSigHe3VsMom, df, 'fTPCSignMomHe3', 'fNSigmaHe')
+utils.fill_th2_hist(h2NSigHe4VsMom, df, 'fTPCSignMomHe3', 'fNSigmaHe4')
+utils.fill_th2_hist(h2TPCSigHe3VsMom, df, 'fTPCmomHe', 'fTPCsignalHe')
+utils.fill_th2_hist(h2Mass3HLvsPt, df, 'fPt', 'fMassH3L')
+utils.fill_th2_hist(h2Mass4LHvsPt, df, 'fPt', 'fMassH4L')
 
 df.eval('MomDiffHe3 = fTPCmomHe - fPHe3/2', inplace=True)
 utils.fill_th2_hist(hHeMomTPCMinusMomGlo, df, 'fGloSignMomHe3', 'MomDiffHe3')
@@ -259,13 +277,18 @@ h2MassCosPA.Write()
 h2MassDecLen.Write()
 h2MassDCADaughters.Write()
 h2MassDCAHePv.Write()
+h2MassDCAPiPv.Write()
 h2Mass4LHnSigmaHe.Write()
 h2MassPt.Write()
 h2NSigClusSizePi.Write()
 h2TPCSigClusSize.Write()
 h2NSigHe3VsMom.Write()
+h2TPCSigHe3VsMom.Write()
+h2NSigHe4VsMom.Write()
 hHeMomTPCMinusMomGlo.Write()
 h2Mass3LHVvsMass4LH.Write()
+h2Mass3HLvsPt.Write()
+h2Mass4LHvsPt.Write()
 
 if 'fFlags' in df.columns:
     hHeliumPIDHypo.Write()
@@ -318,10 +341,12 @@ if do_signal_extraction:
     signal_extraction.bkg_fit_func = "pol2"
     signal_extraction.signal_fit_func = "gaus"
     signal_extraction.n_bins_data = 30
-    signal_extraction.n_evts = 1e9
+    signal_extraction.n_evts = utils.getNEvents(input_analysis_results_file, is_trigger) if input_analysis_results_file != '' else 0
     signal_extraction.matter_type = is_matter
     signal_extraction.performance = False
     signal_extraction.is_3lh = not is_h4l
     signal_extraction.out_file =  sign_extr_dir
     signal_extraction.process_fit()
 f.Close()
+
+print("Number of events analysed: ", utils.getNEvents(input_analysis_results_file, is_trigger))

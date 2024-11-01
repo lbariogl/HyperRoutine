@@ -1,0 +1,32 @@
+mc: False
+is_h4l: False
+input_files:
+  [
+    "/data3/fmazzasc/hyp_run_3/pbpb/pass4/AO2D.root",
+  ]
+
+input_analysis_results_file:
+  [
+    "/data3/fmazzasc/hyp_run_3/pbpb/pass4/AnalysisResults.root",
+  ]
+
+output_dir: "../results/pbpb/"
+output_file: "HypertritonResults_pbpb_pass4"
+selection:
+  {
+    "fPt": "fPt > 2.",
+    "fCosPA": "fCosPA > 0.9999",
+    "fNSigmaHe": "fNSigmaHe > -2",
+    "fTPCsignalPi": "fTPCsignalPi < 600.",
+    "fNTPCclusHe": "fNTPCclusHe > 110",
+    "fTPCmomHe": "fTPCmomHe > 1",
+    "fAvgClusterSizeHe": "fAvgClusterSizeHe > 5.",
+    "fDcaHe": "abs(fDcaHe) > 0.01"
+    # "fCentralityFT0C" : "10 < fCentralityFT0C < 60",
+    # "fTracked": "fTracked == 1",
+  }
+
+is_matter: "both"
+calibrate_he_momentum: True
+skip_out_tree: True
+do_signal_extraction: True

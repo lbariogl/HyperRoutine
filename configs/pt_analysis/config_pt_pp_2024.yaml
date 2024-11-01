@@ -20,7 +20,6 @@ is_trigger: True
 
 output_dir: "../results/2024_pt_analysis/"
 output_file: "pt_analysis_antimat_2024_newcut"
-output_file_qa: "qa"
 
 pt_bins: [1.5, 2., 2.4, 2.7, 3, 3.5, 4., 5]
 calibrate_he_momentum : True
@@ -36,7 +35,7 @@ selection:
       "fEtaHe3" : "abs(fEtaHe3) < 0.9",
       "fEtaPi" : "abs(fEtaPi) < 0.9",
       # "fNTPCclusPi": "fNTPCclusPi > 70",
-      "fCosPA": "fCosPA > 0.99",
+      "fCosPA": "fCosPA > 0.995",
       "fNSigmaHe": "abs(fNSigmaHe) < 2.5",
       "fTPCsignalPi": "fTPCsignalPi < 1000."
     },
@@ -96,7 +95,7 @@ sigma_range_mc_to_data: [[1., 1.], [1, 1.], [1., 1.], [1., 1.], [1., 1.], [1., 1
 
 # absorption, event and signal loss corrections
 absorption_histo_file: "../results/absorption/absorption_histos_x1.5.root"
-event_loss: 1.0
+event_loss: 1.06
 signal_loss: 0.9
 
 do_syst: True
