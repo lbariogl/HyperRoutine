@@ -184,12 +184,27 @@ def create_pt_shift_histo(df):
     hShiftVsPtHe3.SetName('hShiftVsPtHe3')
     return h2MomResoVsPtHe3, hShiftVsPtHe3
 
-def heBB(rigidity, mass):
-    p1 = -321.34
-    p2 = 0.6539
-    p3 = 1.591
-    p4 = 0.8225
-    p5 = 2.363
+def heBB(rigidity, mass, isMC=False):
+
+    if isMC:
+        p1 = -611.592275784047
+        p2 = 1.7160058505736953
+        p3 = 3.2070341629338754
+        p4 = -0.7453309037015425
+        p5 = 4.107037208529488
+
+    else:
+        p1 = -321.34
+        p2 = 0.6539
+        p3 = 1.591
+        p4 = 0.8225
+        p5 = 2.363
+
+    # p1 = -241.4902
+    # p2 = 0.374245
+    # p3 = 1.397847
+    # p4 = 1.0782504
+    # p5 = 2.048336
 
     betagamma = rigidity * 2 / mass
     beta = betagamma / np.sqrt(1 + betagamma**2)
@@ -197,9 +212,14 @@ def heBB(rigidity, mass):
     bb = np.log(p3 + (1 / betagamma)**p5)
     return (p2 - aa - bb) * p1 / aa
 
-def computeNSigmaHe4(df):
-    expBB = heBB(df['fTPCmomHe'], 3.727)
-    nSigma = (df['fTPCsignalHe'] - expBB) / (0.08*df['fTPCsignalHe'])
+def computeNSigmaHe4(df, isMC=False):
+    expBB = heBB(df['fTPCmomHe'], 3.727, isMC)
+    nSigma = (df['fTPCsignalHe'] - expBB) / (0.09*df['fTPCsignalHe'])
+    return nSigma
+
+def computeNSigmaHe3(df, isMC=False):
+    expBB = heBB(df['fTPCmomHe'], 2.80839160743, isMC)
+    nSigma = (df['fTPCsignalHe'] - expBB) / (0.09*df['fTPCsignalHe'])
     return nSigma
 
 def getNEvents(an_files, is_trigger=False):
@@ -233,6 +253,10 @@ def correct_and_convert_df(df, calibrate_he3_pt = False, isMC=False, isH4L=False
     if 'fFlags' in df.columns:
         df['fHePIDHypo'] = np.right_shift(df['fFlags'], 4)
         df['fPiPIDHypo'] = np.bitwise_and(df['fFlags'], 0b1111)
+    
+    if not 'fTPCChi2He' in df.columns:
+        ## set dummy column to one
+        df['fTPCChi2He'] = 1
 
     # correct 3He momentum    
 
@@ -242,19 +266,18 @@ def correct_and_convert_df(df, calibrate_he3_pt = False, isMC=False, isH4L=False
 
         if (no_pid_mask.sum() == 0):
             print("PID in tracking not detected, using old momentum re-calibration")
-            df["fPtHe3"] += 2.98019e-02 + 7.66100e-01 * np.exp(-1.31641e+00 * df["fPtHe3"]) ### functional form given by mpuccio
+            df.loc[:, "fPtHe3"] = df["fPtHe3"] + 2.98019e-02 + 7.66100e-01 * np.exp(-1.31641e+00 * df["fPtHe3"]) ### functional form given by mpuccio
         else:
             print("PID in tracking detected, using new momentum re-calibration")
             df_Trit_PID = df.query('fHePIDHypo==6')
             df_else = df.query('fHePIDHypo!=6')
             ##pt_new = pt + kp0 + kp1 * pt + kp2 * pt^2 curveParams = {'kp0': -0.200281,'kp1': 0.103039,'kp2': -0.012325}, functional form given by G.A. Lucia
-            df_Trit_PID["fPtHe3"] += -0.1286 - 0.1269 * df_Trit_PID["fPtHe3"] + 0.06 * df_Trit_PID["fPtHe3"]**2
+            df_Trit_PID.loc[:, "fPtHe3"] = df_Trit_PID["fPtHe3"] + -0.1286 - 0.1269 * df_Trit_PID["fPtHe3"] + 0.06 * df_Trit_PID["fPtHe3"]**2
             df_new = pd.concat([df_Trit_PID, df_else])
+            
             ## assign the new dataframe to the original one
-            df[:] = df_new.values
-
-        
-    print(df)
+            df[:] = df_new
+    
     # 3He momentum
     df.eval('fPxHe3 = fPtHe3 * cos(fPhiHe3)', inplace=True)
     df.eval('fPyHe3 = fPtHe3 * sin(fPhiHe3)', inplace=True)
@@ -280,8 +303,8 @@ def correct_and_convert_df(df, calibrate_he3_pt = False, isMC=False, isH4L=False
     df.eval('fEta = arccosh(fP/fPt)', inplace=True)
     df.eval('fCosLambda = fPt/fP', inplace=True)
     df.eval('fCosLambdaHe = fPtHe3/fPHe3', inplace=True)
-
-    df['fNSigmaHe4'] = computeNSigmaHe4(df)
+    df['fNSigmaHe4'] = computeNSigmaHe4(df, isMC)
+    df['fNSigmaHe3'] = computeNSigmaHe3(df, isMC)
 
     # Variables of interest
     df.eval('fDecLen = sqrt(fXDecVtx**2 + fYDecVtx**2 + fZDecVtx**2)', inplace=True)
@@ -295,7 +318,6 @@ def correct_and_convert_df(df, calibrate_he3_pt = False, isMC=False, isH4L=False
     df.eval('fCosPA = (fPx * fXDecVtx + fPy * fYDecVtx + fPz * fZDecVtx) / (fP * fDecLen)', inplace=True)
     df.eval('fMassH3L = sqrt(fEn**2 - fP**2)', inplace=True)
     df.eval('fMassH4L = sqrt(fEn4**2 - fP**2)', inplace=True)
-    print(df.columns)
 
     ## signed TPC mom
     df.eval('fTPCSignMomHe3 = fTPCmomHe * (-1 + 2*fIsMatter)', inplace=True)
@@ -315,6 +337,8 @@ def correct_and_convert_df(df, calibrate_he3_pt = False, isMC=False, isH4L=False
             nHitsHe += np.right_shift(clSizesHe, 4*iLayer) & 0b1111 > 0
             nHitsPi += np.right_shift(clSizesPi, 4*iLayer) & 0b1111 > 0
 
+        nHitsHe += 1e-10
+        nHitsPi += 1e-10
         clSizeHeAvg /= nHitsHe
         clSizePiAvg /= nHitsPi
         df['fAvgClusterSizeHe'] = clSizeHeAvg

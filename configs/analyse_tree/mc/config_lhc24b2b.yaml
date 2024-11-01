@@ -1,8 +1,8 @@
 mc: True
-is_h4l: False
+is_h4l: True
 input_files: ["/home/fmazzasc/AO2D_h3l.root"]
 output_dir: "../results/mc_analyse_tree/"
-output_file: "HypertritonResults_24b2b_h3l"
+output_file: "HypertritonResults_24b2b_h3l_nocal"
 selection: {
       "fEtaHe3" : "abs(fEtaHe3) < 0.9",
       "fEtaPi" : "abs(fEtaPi) < 0.9",

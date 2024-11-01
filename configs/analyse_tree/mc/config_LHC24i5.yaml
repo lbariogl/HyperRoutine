@@ -1,0 +1,15 @@
+mc: True
+is_h4l: True
+input_files: ["/home/fmazzasc/new_mcs/AO2D_h4l.root"]
+input_analysis_results_file: ["/home/fmazzasc/new_mcs/AnalysisResults.root"]
+output_dir: "../results/"
+output_file: "HypertritonResults_LHC24i5"
+selection:
+  {
+    # "fIsSurvEvSel" : "fIsSurvEvSel==False"
+  }
+
+is_matter: "both"
+calibrate_he_momentum: False
+skip_out_tree: True
+do_signal_extraction: False

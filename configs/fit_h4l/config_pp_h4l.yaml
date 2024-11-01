@@ -1,0 +1,28 @@
+input_files_data:   [
+    "/data3/fmazzasc/hyp_run_3/pp2023/skimmed/AO2D.root",
+    "/data3/fmazzasc/hyp_run_3/pp2024/ag/AO2D.root",
+    "/data3/fmazzasc/hyp_run_3/pp2024/aj/AO2D.root",
+    "/data3/fmazzasc/hyp_run_3/pp2024/af/AO2D.root",
+    "/data3/fmazzasc/hyp_run_3/pp2024/al/AO2D.root"
+  ]
+input_files_mc_h3l: ["/data3/fmazzasc/hyp_run_3/mc/LHC24i5/AO2D_h3l.root"]
+input_files_mc_h4l: ["/data3/fmazzasc/hyp_run_3/mc/LHC24i5/AO2D_h4l.root"]
+
+output_dir: "../results/comb_fits/"
+output_file: "comb_fit_h4l_pp.root"
+selection:
+  {
+    "fPt": "fPt > 1.5",
+    "fCosPA": "fCosPA > 0.995",
+    "fNSigmaHe3": "fNSigmaHe3 > 0",
+    "fTPCsignalPi": "fTPCsignalPi < 600.",
+    "fNTPCclusHe": "fNTPCclusHe > 110",
+    "fTPCmomHe": "fTPCmomHe > 1",
+    "fAvgClusterSizeHe": "fAvgClusterSizeHe > 5.",
+    "fDcaHe": "abs(fDcaHe) > 0.01"
+  }
+
+colliding_system: "pp"
+is_matter: "antimatter"
+calibrate_he_momentum: True
+

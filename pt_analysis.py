@@ -169,16 +169,16 @@ spectra_maker.make_spectra()
 spectra_maker.make_histos()
 
 # define fit function mT exponential
-# he3_spectrum = ROOT.TF1('mtexpo', '[2]*x*exp(-TMath::Sqrt([0]*[0]+x*x)/[1])', 0.1, 6)
-# he3_spectrum.FixParameter(0, 2.99131)
-# he3_spectrum.SetParameter(1, 0.5199)
+he3_spectrum = ROOT.TF1('mtexpo', '[2]*x*exp(-TMath::Sqrt([0]*[0]+x*x)/[1])', 0.1, 6)
+he3_spectrum.FixParameter(0, 2.99131)
+he3_spectrum.SetParameter(1, 0.5199)
 
 #  Constrained Levy-Tsallis
-he3_spectrum.SetParLimits(2, 1e-08, 5e-04)
-he3_spectrum.SetParameter(0, he3_spectrum.GetParameter(0))
-he3_spectrum.FixParameter(1, he3_spectrum.GetParameter(1))
-he3_spectrum.FixParameter(2, he3_spectrum.GetParameter(2))
-he3_spectrum.FixParameter(3, 2.99131)
+# he3_spectrum.SetParLimits(2, 1e-08, 5e-04)
+# he3_spectrum.SetParameter(0, he3_spectrum.GetParameter(0))
+# he3_spectrum.FixParameter(1, he3_spectrum.GetParameter(1))
+# he3_spectrum.FixParameter(2, he3_spectrum.GetParameter(2))
+# he3_spectrum.FixParameter(3, 2.99131)
 
 # Unconstrained Levy-Tsallis
 # he3_spectrum.SetParLimits(0, 1e-08, 4e-08)
@@ -410,6 +410,7 @@ cFinalSpectrum.SaveAs(f'{output_dir_name}/cFinalSpectrum.pdf')
 
 final_stat.Write()
 final_syst.Write()
+final_syst_rms.Write()
 fit_fun_stat.Write()
 yield_dist.Write()
 yield_prob.Write()
