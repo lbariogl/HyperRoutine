@@ -3,22 +3,18 @@ import yaml
 from hipe4ml.tree_handler import TreeHandler
 
 import sys
-sys.path.append('utils')
+sys.path.append('../utils')
 import utils as utils
 
 ## ROOT batch mode
 ROOT.gROOT.SetBatch(False)
 
-config_file_mc = open('configs/data_vs_mc/config_mc.yaml', 'r')
-config_mc = yaml.full_load(config_file_mc)
-input_file_name_mc = config_mc['input_files']
 
-config_file_data = open('configs/data_vs_mc/config_antimatter.yaml', 'r')
-config_data = yaml.full_load(config_file_data)
-input_file_name_data = config_data['input_files']
+input_file_name_mc = '/data3/fmazzasc/hyp_run_3/mc/LHC25b9/AO2D.root'
+input_file_name_data = '/data3/fmazzasc/hyp_run_3/pp2024/full/AO2D.root'
 
 # MC
-tree_hdl_mc = TreeHandler(input_file_name_mc, 'O2mchypcands')
+tree_hdl_mc = TreeHandler(input_file_name_mc, 'O2mchypcands', folder_name='DF*')
 df_mc = tree_hdl_mc.get_data_frame()
 utils.correct_and_convert_df(df_mc)
 df_mc.eval('fP = fPt * cosh(fEta)', inplace=True)
@@ -26,27 +22,20 @@ df_mc.eval('fDecRad = sqrt(fXDecVtx**2 + fYDecVtx**2)', inplace=True)
 df_mc.eval('fDecLen = sqrt(fXDecVtx**2 + fYDecVtx**2 + fZDecVtx**2)', inplace=True)
 df_mc_filtered = df_mc.query(
     'fPt>1 and fCosPA>0.998 and fNSigmaHe>-2. and fTPCsignalPi<1000 and abs(fMassH3L - 2.9905) < 0.005 and fIsMatter == False')
-
-##apply pT rejection
-spectra_file = ROOT.TFile.Open('utils/heliumSpectraMB.root')
-he3_spectrum = spectra_file.Get('fCombineHeliumSpecLevyFit_0-100')
-spectra_file.Close()
 df_mc_filtered.eval("fAbsGenPt = abs(fGenPt)", inplace=True)
-utils.reweight_pt_spectrum(df_mc_filtered, 'fAbsGenPt', he3_spectrum)
-df_mc_filtered.query('rej==True', inplace=True)
 
 print(F'MC: {df_mc.shape[0]}')
 print(F'MC queried: {df_mc_filtered.shape[0]}')
 
 # Data
-tree_hdl_data = TreeHandler(input_file_name_data, 'O2datahypcands')
+tree_hdl_data = TreeHandler(input_file_name_data, 'O2hypcands', folder_name='DF*')
 df_data = tree_hdl_data.get_data_frame()
-utils.correct_and_convert_df(df_data)
+print(F'Data: {df_data.shape[0]}')
+utils.correct_and_convert_df(df_data,  isMC=False)
 df_data.eval('fP = fPt * cosh(fEta)', inplace=True)
 df_data.eval('fDecRad = sqrt(fXDecVtx**2 + fYDecVtx**2)', inplace=True)
-df_data.eval(
-    'fDecLen = sqrt(fXDecVtx**2 + fYDecVtx**2 + fZDecVtx**2)', inplace=True)
-df_data_filtered = df_data.query('fPt>1 and fNSigmaHe>-2. and fCosPA>0.998 and fTPCsignalPi<1000 and abs(fMassH3L - 2.992) < 0.006 and fIsMatter == False')
+df_data.eval('fDecLen = sqrt(fXDecVtx**2 + fYDecVtx**2 + fZDecVtx**2)', inplace=True)
+df_data_filtered = df_data.query('fTPCChi2He > 0.4 and fPt>1 and fNSigmaHe>-2. and fCosPA>0.998 and fTPCsignalPi<1000 and abs(fMassH3L - 2.992) < 0.006 and fIsMatter == False')
 
 # Data histograms
 hDataMassH3L = ROOT.TH1F(
@@ -117,7 +106,7 @@ canvas_dict = {'fMassH3L': cMassH3L,
                'fDecRad': cRadius,
                'fDecLen': cDecLen}
 
-output_file = ROOT.TFile('../results/data_vs_mc.root', 'recreate')
+output_file = ROOT.TFile('../../results/data_vs_mc.root', 'recreate')
 
 for var, canvas in canvas_dict.items():
     canvas.cd()

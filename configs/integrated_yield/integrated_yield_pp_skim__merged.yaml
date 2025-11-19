@@ -1,0 +1,7 @@
+input_file_spectrum: "../results/2024_bdt/final_yield_pp2024.root"
+histo_stat_name: "h_default_spectrum_stat"
+histo_syst_name: "h_default_spectrum_syst"
+output_file: "../results/2024_bdt/integrated_yield.root"
+branching_ratio_syst: 0.08
+absorption_syst: 0.03
+

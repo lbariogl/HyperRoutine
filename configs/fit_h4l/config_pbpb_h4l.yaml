@@ -6,15 +6,16 @@ output_dir: "../results/comb_fits/"
 output_file: "comb_fit_h4l_pbpb.root"
 selection:
   {
-    "fNSigmaHe4": "abs(fNSigmaHe4) < 2",
     "fPt": "fPt > 2.",
     "fCosPA": "fCosPA > 0.99999",
-    "fNSigmaHe3": "fNSigmaHe3 > 0.",
+    "fNSigmaHe": "abs(fNSigmaHe4) < 2",
     "fTPCsignalPi": "fTPCsignalPi < 600.",
     "fNTPCclusHe": "fNTPCclusHe > 110",
     "fTPCmomHe": "fTPCmomHe > 1",
     "fAvgClusterSizeHe": "fAvgClusterSizeHe > 5.",
     "fDcaHe": "abs(fDcaHe) > 0.01"
+    # "fCentralityFT0C" : "10 < fCentralityFT0C < 60",
+    # "fTracked": "fTracked == 1",
   }
 
 colliding_system: "PbPb"

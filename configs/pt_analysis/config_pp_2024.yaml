@@ -1,0 +1,137 @@
+input_files_data:
+  [
+    "/data3/fmazzasc/hyp_run_3/pp2024/svert/AO2D.root",
+
+  ]
+input_files_mc: [
+  "/data3/fmazzasc/hyp_run_3/mc/LHC25b9/AO2D.root",
+  ]
+coal_based_mc: False
+
+input_analysis_results_file:
+  [
+    "/data3/fmazzasc/hyp_run_3/pp2024/svert/AnalysisResults.root",
+
+  ]
+  
+output_dir: "../results/2024_pt_analysis/"
+output_file: "pt_analysis_antimat_2024_svert"
+
+
+# analysis settings
+calibrate_he_momentum : True
+# signal extraction
+bkg_fit_func: "pol2"
+signal_fit_func: "dscb"
+is_matter: "antimatter"
+n_bins_mass_data: 30
+n_bins_mass_mc: 80
+sigma_range_mc_to_data: [1.01, 1.1]
+
+# yield calculation
+is_trigger: True
+event_loss: 0.8
+signal_loss: 0.77
+absorption_histo_file: "../results/absorption/absorption_histos.root"
+
+# systematic uncertainties
+absorption_syst: 0.03
+br_syst: 0.1
+do_syst: True
+n_trials: 500
+
+23_24_eff_scaling: 0.986
+
+# binning for analysis of the pt spectra and systematic uncertainties
+pt_bins: [1.4, 1.7, 2., 2.3, 2.6, 3, 3.5, 4., 5]
+bin_structure:
+  [
+    {
+      "pt_bins": [[1.4, 1.7], [1.7, 2]],
+
+      "selections": {
+      "fEtaHe3" : "abs(fEtaHe3) < 0.9",
+      "fEtaPi" : "abs(fEtaPi) < 0.9",
+      "fCosPA": "fCosPA > 0.999",
+      "fDcaHe": "abs(fDcaHe) > 0.01",
+      "fNSigmaHe": "abs(fNSigmaHe) < 2.5",
+      "fTPCsignalPi": "fTPCsignalPi < 1000.",
+      "fNTPCclusPi": "fNTPCclusPi > 70",
+      "fTPCChi2He": "fTPCChi2He > 0.4"
+      },
+
+      "systematic_cuts": {
+          "fCosPA": {"cut_greater": True, "cut_abs": False, "cut_list": [0.999, 0.9999, 50]},
+          "fNSigmaHe": {"cut_greater": False, "cut_abs": True, "cut_list": [3., 2., 15]},
+          "fTPCsignalPi": {"cut_greater": False, "cut_abs": False, "cut_list": [1000, 1000, 1]},
+          "fNTPCclusPi": {"cut_greater": True, "cut_abs": False, "cut_list": [70, 80, 90, 3]},
+          "fNTPCclusHe": {"cut_greater": True, "cut_abs": False, "cut_list": [70, 80, 90, 3]},
+      },
+
+      "systematic_fit_func": {
+      bkg_fit_func: ["pol2"],
+      signal_fit_func: ["dscb"]
+      }
+    },
+
+    {
+      "pt_bins": [[2., 2.3], [2.3, 2.6], [2.6, 3], [3, 3.5], [3.5, 4]],
+
+      selections : {
+      "fEtaHe3" : "abs(fEtaHe3) < 0.9",
+      "fEtaPi" : "abs(fEtaPi) < 0.9",
+      "fCosPA": "fCosPA > 0.99",
+      "fDcaHe": "abs(fDcaHe) > 0.01",
+      "fNSigmaHe": "abs(fNSigmaHe) < 2.5",
+      "fTPCsignalPi": "fTPCsignalPi < 1000.",
+      "fNTPCclusPi": "fNTPCclusPi > 70",
+      "fTPCChi2He": "fTPCChi2He > 0.4"
+      },
+
+      "systematic_cuts": {
+          "fCosPA": {"cut_greater": True, "cut_abs": False, "cut_list": [0.985, 0.999, 50]},
+          "fNSigmaHe": {"cut_greater": False, "cut_abs": True, "cut_list": [3., 2., 15]},
+          "fTPCsignalPi": {"cut_greater": False, "cut_abs": False, "cut_list": [1000, 1000, 1]},
+      },
+
+      "systematic_fit_func": {
+      bkg_fit_func: ["pol2", "expo"],
+      signal_fit_func: ["dscb"]
+      }
+
+    }, 
+
+
+    {
+      "pt_bins": [[4, 5]],
+
+      selections : {
+      "fEtaHe3" : "abs(fEtaHe3) < 0.9",
+      "fEtaPi" : "abs(fEtaPi) < 0.9",
+      "fCosPA": "fCosPA > 0.995",
+      "fDcaHe": "abs(fDcaHe) > 0.01",
+      "fNSigmaHe": "abs(fNSigmaHe) < 2.5",
+      "fTPCsignalPi": "fTPCsignalPi < 1000.",
+      "fNTPCclusPi": "fNTPCclusPi > 70",
+      "fTPCChi2He": "fTPCChi2He > 0.4"
+      },
+
+      "systematic_cuts": {
+          "fCosPA": {"cut_greater": True, "cut_abs": False, "cut_list": [0.99, 0.999, 50]},
+          "fNSigmaHe": {"cut_greater": False, "cut_abs": True, "cut_list": [3., 2., 15]},
+          "fTPCsignalPi": {"cut_greater": False, "cut_abs": False, "cut_list": [1000, 1000, 1]},
+      },
+
+      "systematic_fit_func": {
+      bkg_fit_func: ["pol2", "expo"],
+      signal_fit_func: ["dscb"]
+      }
+
+    }, 
+
+
+
+  ]
+
+
+

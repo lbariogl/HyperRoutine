@@ -35,11 +35,11 @@ yield_hm = np.array([2.4e-07 / lambda_yield_hm], dtype=np.float64)
 
 print(yield_new, yield_trd, yield_hm)
 
-yield_new_stat = np.array([0.3e-08 / lambda_yield], dtype=np.float64)
+yield_new_stat = np.array([0.1e-08 / lambda_yield], dtype=np.float64)
 yield_trd_stat = np.array([0.7e-08 / lambda_yield], dtype=np.float64)
 yield_hm_stat = np.array([0.5e-07 / lambda_yield_hm], dtype=np.float64)
 
-yield_new_syst = np.array([0.2e-08 / lambda_yield], dtype=np.float64)
+yield_new_syst = np.array([0.3e-08 / lambda_yield], dtype=np.float64)
 yield_trd_syst = np.array([0.4e-08 / lambda_yield], dtype=np.float64)
 yield_hm_syst = np.array([0.3e-07 / lambda_yield_hm], dtype=np.float64)
 
@@ -146,21 +146,17 @@ frame.GetXaxis().SetLabelSize(0.04)
 frame.GetXaxis().SetTitle("#LTd#it{N}_{ch}/d#it{#eta}#GT_{|#it{#eta}|<0.5}")
 frame.GetYaxis().SetTitle("{}_{#Lambda}^{3}H/#Lambda")
 hp_2body.Draw('3 same')
-# hp_3body.Draw('3l same')
 
 gr_stat_new.Draw('Pz')
 gr_syst_new.Draw('P2')
 
-gr_stat_trd.Draw('Pz')
-gr_syst_trd.Draw('P2')
+# gr_stat_trd.Draw('Pz')
+# gr_syst_trd.Draw('P2')
 
-gr_stat_hm.Draw('Pz')
-gr_syst_hm.Draw('P2')
+# gr_stat_hm.Draw('Pz')
+# gr_syst_hm.Draw('P2')
 
 hp_ratio_csm_1.Draw('L same')
-# hp_ratio_csm_3.Draw('L same')
-
-
 
 leg = ROOT.TLegend(0.57, 0.3, 0.94, 0.47)
 leg.SetBorderSize(0)
@@ -169,13 +165,11 @@ leg.SetHeader("ALICE Preliminary")
 ## reduce space between symbols and text
 leg.SetMargin(0.1)
 leg.AddEntry(gr_stat_new, "Run 3, pp #sqrt{#it{s}} = 13.6 TeV", "P")
-leg.AddEntry(gr_stat_trd, "Run 2, pp #sqrt{#it{s}} = 13 TeV", "P")
+# leg.AddEntry(gr_stat_trd, "Run 2, pp #sqrt{#it{s}} = 13 TeV", "P")
 
 leg_theory = ROOT.TLegend(0.57, 0.15, 0.94, 0.26)
 leg_theory.AddEntry(hp_ratio_csm_1, "SHM, #it{Vc} = 1.6 d#it{V}/d#it{y}", "L")
 leg_theory.AddEntry(hp_2body, "Coalescence, 2-body", "F")
-# leg.AddEntry(hp_3body, "Coalescence, 3-body", "F")
-# leg.AddEntry(hp_ratio_csm_3, "SHM, #it{Vc} = 3d#it{V}/d#it{y}", "L")
 leg.Draw()
 leg_theory.Draw()
 
@@ -188,3 +182,4 @@ outfile.Close()
 
 cv_out.SaveAs("yield.pdf")
 cv_out.SaveAs("yield.png")
+

@@ -15,7 +15,7 @@ output_file: "HypertritonResults_pbpb_pass4"
 selection:
   {
     "fPt": "fPt > 2.",
-    "fCosPA": "fCosPA > 0.9999",
+    "fCosPA": "fCosPA > 0.99999",
     "fNSigmaHe": "fNSigmaHe > -2",
     "fTPCsignalPi": "fTPCsignalPi < 600.",
     "fNTPCclusHe": "fNTPCclusHe > 110",

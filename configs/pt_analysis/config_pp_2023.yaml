@@ -1,0 +1,100 @@
+input_files_data:
+  [
+    "/data3/fmazzasc/hyp_run_3/pp2023/skimmed/AO2D.root"
+  ]
+input_files_mc: [
+  "/data3/fmazzasc/hyp_run_3/mc/LHC24b2c/h3l/AO2D.root"
+  ]
+input_analysis_results_file:
+  [
+    "/data3/fmazzasc/hyp_run_3/pp2023/skimmed/AnalysisResults.root"
+  ]
+
+output_dir: "../results/2024_pt_analysis/"
+output_file: "pt_analysis_antimat_2023"
+
+
+# analysis settings
+calibrate_he_momentum : True
+
+# signal extraction
+bkg_fit_func: "pol2"
+signal_fit_func: "dscb"
+is_matter: "antimatter"
+n_bins_mass_data: 30
+n_bins_mass_mc: 80
+sigma_range_mc_to_data: [1.01, 1.4]
+
+# yield calculation
+is_trigger: True
+event_loss: 0.9
+signal_loss: 0.84
+absorption_histo_file: "../results/absorption/absorption_histos.root"
+
+# systematic uncertainties
+absorption_syst: 0.03
+do_syst: False
+n_trials: 1000
+
+# binning for analysis of the pt spectra and systematic uncertainties
+pt_bins: [1.5, 2., 2.5, 3.5, 5]
+bin_structure:
+  [
+    {
+      "pt_bins": [[1.5, 2.]],
+
+      "selections": {
+      "fEtaHe3" : "abs(fEtaHe3) < 0.9",
+      "fEtaPi" : "abs(fEtaPi) < 0.9",
+      "fCosPA": "fCosPA > 0.9995",
+      "fNSigmaHe": "abs(fNSigmaHe) < 2.5",
+      "fTPCsignalPi": "fTPCsignalPi < 1000.",
+      "fNTPCclusPi": "fNTPCclusPi > 70"
+      },
+
+      "systematic_cuts": {
+          "fCosPA": {"cut_greater": True, "cut_abs": False, "cut_list": [0.999, 0.9999, 50]},
+          "fNSigmaHe": {"cut_greater": False, "cut_abs": True, "cut_list": [3., 2., 15]},
+          "fTPCsignalPi": {"cut_greater": False, "cut_abs": False, "cut_list": [1000, 1000, 1]},
+      },
+
+      "systematic_fit_func": {
+      bkg_fit_func: ["pol2"],
+      signal_fit_func: ["dscb"]
+      }
+    },
+
+    {
+      "pt_bins": [[2., 2.5], [2.5, 3.5], [3.5, 5.]],
+
+      selections : {
+      "fEtaHe3" : "abs(fEtaHe3) < 0.9",
+      "fEtaPi" : "abs(fEtaPi) < 0.9",
+      "fCosPA": "fCosPA > 0.99",
+      "fNSigmaHe": "abs(fNSigmaHe) < 2.5",
+      "fTPCsignalPi": "fTPCsignalPi < 1000.",
+      "fNTPCclusPi": "fNTPCclusPi > 70"
+      },
+
+      "systematic_cuts": {
+          "fCosPA": {"cut_greater": True, "cut_abs": False, "cut_list": [0.985, 0.999, 50]},
+          "fNSigmaHe": {"cut_greater": False, "cut_abs": True, "cut_list": [3., 2., 15]},
+          "fTPCsignalPi": {"cut_greater": False, "cut_abs": False, "cut_list": [1000, 1000, 1]},
+      },
+
+      "systematic_fit_func": {
+      bkg_fit_func: ["pol2", "expo"],
+      signal_fit_func: ["dscb"]
+      }
+
+    }, 
+
+  ]
+
+
+
+
+
+
+
+

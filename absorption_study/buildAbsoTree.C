@@ -14,7 +14,7 @@
 #include <string>
 #include <sstream>
 
-void buildAbsoTree(std::string path = "/data3/fmazzasc/sim/xs_studies/he3_x5/")
+void buildAbsoTree(std::string path = "/data3/fmazzasc/sim/xs_studies/he3_x1.5_new/")
 {
   // Path to the directory with the files
   TSystemDirectory dir("MyDir", path.data());
@@ -31,7 +31,7 @@ void buildAbsoTree(std::string path = "/data3/fmazzasc/sim/xs_studies/he3_x5/")
       int dirnum = stoi(file.substr(2, file.size()));
       // if (dirnum > 10)
       //   continue;
-      dirs.push_back(path + file + "/" + "sgn_" + std::to_string(dirnum) + "_Kine.root");
+      dirs.push_back(path + file + "/" + "sgn_Kine.root");
       std::cout << dirs.back() << std::endl;
     }
   }
@@ -40,7 +40,7 @@ void buildAbsoTree(std::string path = "/data3/fmazzasc/sim/xs_studies/he3_x5/")
   float pt, eta, phi, absoX, absoY, absoZ;
   int process, pdg;
 
-  TFile *fout = new TFile("absorption_tree_x5.root", "recreate");
+  TFile *fout = new TFile("absorption_tree_x1.5.root", "recreate");
   TTree *t = new TTree("he3candidates", "he3candidates");
   t->Branch("pt", &pt, "pt/F");
   t->Branch("eta", &eta, "eta/F");

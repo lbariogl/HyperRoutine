@@ -36,6 +36,7 @@ class SpectraMaker:
         self.raw_counts_err = []
         self.chi2 = []
         self.efficiency = []
+        self.efficiency_err = []
 
         self.corrected_counts = []
         self.corrected_counts_err = []
@@ -109,9 +110,8 @@ class SpectraMaker:
 
             # compute efficiency
             eff = len(bin_mc_reco_hdl) / len(bin_mc_hdl)
-            print(mc_bin_sel)
-            print("bin low", bin[0], "bin high", bin[1], "efficiency", eff)
             self.efficiency.append(eff)
+            self.efficiency_err.append(np.sqrt(eff * (1 - eff) / len(bin_mc_hdl)))
 
             signal_extraction = SignalExtraction(bin_data_hdl, bin_mc_hdl_sign_extr)
 
@@ -192,6 +192,7 @@ class SpectraMaker:
             self.h_raw_counts.SetBinContent(ibin + 1, self.raw_counts[ibin]/bin_width)
             self.h_raw_counts.SetBinError(ibin + 1, self.raw_counts_err[ibin]/bin_width)
             self.h_efficiency.SetBinContent(ibin + 1, self.efficiency[ibin])
+            self.h_efficiency.SetBinError(ibin + 1, self.efficiency_err[ibin])
 
             absorption_corr = 1
             if self.h_absorption is not None:
@@ -206,7 +207,8 @@ class SpectraMaker:
                 signal_loss_corr = self.signal_loss
             
             local_corrected_counts = self.raw_counts[ibin] / self.efficiency[ibin] / absorption_corr / bin_width
-            local_corrected_counts_err = self.raw_counts_err[ibin] / self.efficiency[ibin] / absorption_corr / bin_width
+            rel_error = np.sqrt((self.raw_counts_err[ibin] / self.raw_counts[ibin])**2 + (self.efficiency_err[ibin] / self.efficiency[ibin])**2)
+            local_corrected_counts_err = local_corrected_counts * rel_error
 
             if self.var == 'fPt':
                 local_corrected_counts = local_corrected_counts / self.n_ev / self.branching_ratio / self.delta_rap / signal_loss_corr * event_loss_corr

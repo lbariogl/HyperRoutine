@@ -79,13 +79,13 @@ struct GPart
 double calcRadius(std::vector<MCTrack> *MCTracks, const MCTrack &motherTrack, int dauPDG);
 
 void DauTreeBuilder(int dau0PDG = 211, int dau1PDG = 1000020030, int mothPDG = 1010010030,
-                    bool debug = false, std::string path = "/data/fmazzasc/its_data/sim/hyp_gap_trig/relval_fix/", std::string outsuffix = "relval_fix")
+                    bool debug = false, std::string path = "/data3/fmazzasc/sim/hyp_sim/", std::string outsuffix = "no_mat")
 {
 
     if(outsuffix != "")
         outsuffix = "_" + outsuffix;
 
-    std::string outFileName = "../../match_res/DauTreeMC" + outsuffix + ".root";
+    std::string outFileName = "../../DauTreeMC" + outsuffix + ".root";
     std::string treeName = "DauTreeMC";
     TFile outFile = TFile(outFileName.data(), "recreate");
     TTree *DauTree = new TTree(treeName.data(), treeName.data());
@@ -125,9 +125,11 @@ void DauTreeBuilder(int dau0PDG = 211, int dau1PDG = 1000020030, int mothPDG = 1
     }
     int counter = 0;
     // first we load the geometry
+    LOG(info) << "Loading geometry...";
     o2::base::GeometryManager::loadGeometry(dirs[0] + "/o2sim_geometry.root");
     auto gman = o2::its::GeometryTGeo::Instance();
     gman->fillMatrixCache(o2::math_utils::bit2Mask(o2::math_utils::TransformType::T2L, o2::math_utils::TransformType::L2G));
+    LOG(info) << "Geometry loaded.";
 
     for (unsigned int i = 0; i < dirs.size(); i++)
     {
@@ -224,7 +226,6 @@ void DauTreeBuilder(int dau0PDG = 211, int dau1PDG = 1000020030, int mothPDG = 1
                 GPart dauPart;
                 auto &mcTrack = MCtracks->at(mcI);
                 auto mcPdg = mcTrack.GetPdgCode();
-                // LOG(info) << "Found " << pdg << " with mother " << mcTrack.getMotherTrackId();
 
                 if (abs(mcPdg) == dau0PDG || abs(mcPdg) == dau1PDG)
                 {
@@ -234,6 +235,8 @@ void DauTreeBuilder(int dau0PDG = 211, int dau1PDG = 1000020030, int mothPDG = 1
                     auto motherPDG = MCtracks->at(motherID).GetPdgCode();
                     if (abs(motherPDG) != mothPDG)
                         continue;
+                    
+                    LOG(info) << "Found daughter with PDG " << mcPdg << " from mother with PDG " << motherPDG << " in event " << n << " (global track ID " << mcI << ", mother ID " << motherID << ")";
 
                     auto &mothTrack = MCtracks->at(motherID);
                     dauPart.isSecDau = true;

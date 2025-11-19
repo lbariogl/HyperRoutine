@@ -1,0 +1,111 @@
+input_files_data:
+  [
+    "/data3/fmazzasc/hyp_run_3/pp2023/skimmed/AO2D.root",
+    "/data3/fmazzasc/hyp_run_3/pp2024/ag/AO2D.root",
+    "/data3/fmazzasc/hyp_run_3/pp2024/aj/AO2D.root",
+    "/data3/fmazzasc/hyp_run_3/pp2024/af/AO2D.root",
+    "/data3/fmazzasc/hyp_run_3/pp2024/al/AO2D.root",
+    "/data3/fmazzasc/hyp_run_3/pp2024/an/AO2D.root",
+    "/data3/fmazzasc/hyp_run_3/pp2024/am/AO2D.root",
+    "/data3/fmazzasc/hyp_run_3/pp2024/ao/AO2D.root",
+  ]
+input_files_mc: [
+  "/data3/fmazzasc/hyp_run_3/mc/LHC24b2b/AO2D_h3l.root"
+  ]
+input_analysis_results_file:
+  [
+    "/data3/fmazzasc/hyp_run_3/pp2023/skimmed/AnalysisResults.root",
+    "/data3/fmazzasc/hyp_run_3/pp2024/ag/AnalysisResults.root",
+    "/data3/fmazzasc/hyp_run_3/pp2024/aj/AnalysisResults.root",
+    "/data3/fmazzasc/hyp_run_3/pp2024/af/AnalysisResults.root",
+    "/data3/fmazzasc/hyp_run_3/pp2024/al/AnalysisResults.root",
+    "/data3/fmazzasc/hyp_run_3/pp2024/an/AnalysisResults.root",
+    "/data3/fmazzasc/hyp_run_3/pp2024/am/AnalysisResults.root",
+    "/data3/fmazzasc/hyp_run_3/pp2024/ao/AnalysisResults.root",
+  ]
+  
+output_dir: "../results/2024_pt_analysis/"
+output_file: "pt_analysis_antimat_merged_ivan"
+
+
+# analysis settings
+calibrate_he_momentum : True
+
+# signal extraction
+bkg_fit_func: "pol2"
+signal_fit_func: "dscb"
+is_matter: "antimatter"
+n_bins_mass_data: 30
+n_bins_mass_mc: 80
+sigma_range_mc_to_data: [1.01, 1.3]
+
+# yield calculation
+is_trigger: True
+coal_based_mc: False
+event_loss: 0.81
+signal_loss: 0.77
+absorption_histo_file: "../results/absorption/absorption_histos.root"
+
+# systematic uncertainties
+absorption_syst: 0.03
+br_syst: 0.08
+do_syst: False
+n_trials: 1000
+
+# binning for analysis of the pt spectra and systematic uncertainties
+pt_bins: [1.5, 2., 2.5, 3, 4., 5]
+bin_structure:
+  [
+    {
+      "pt_bins": [[1.5, 2]],
+      "selections": {
+      "fEtaHe3" : "abs(fEtaHe3) < 0.9",
+      "fEtaPi" : "abs(fEtaPi) < 0.9",
+      "fCosPA": "fCosPA > 0.995",
+      "fNSigmaHe": "abs(fNSigmaHe) < 2.5",
+      "fTPCsignalPi": "fTPCsignalPi < 1000.",
+      "fNTPCclusPi": "fNTPCclusPi > 70",
+      "fTPCChi2He": "fTPCChi2He > 0.4"
+      },
+
+      "systematic_cuts": {
+          "fCosPA": {"cut_greater": True, "cut_abs": False, "cut_list": [0.999, 0.9999, 50]},
+          "fNSigmaHe": {"cut_greater": False, "cut_abs": True, "cut_list": [3., 2., 15]},
+          "fTPCsignalPi": {"cut_greater": False, "cut_abs": False, "cut_list": [1000, 1000, 1]},
+      },
+
+      "systematic_fit_func": {
+      bkg_fit_func: ["pol2"],
+      signal_fit_func: ["dscb"]
+      }
+    },
+
+    {
+      "pt_bins": [[2, 2.5], [2.5, 3], [3, 4], [4, 5]],
+
+      selections : {
+      "fEtaHe3" : "abs(fEtaHe3) < 0.9",
+      "fEtaPi" : "abs(fEtaPi) < 0.9",
+      "fCosPA": "fCosPA > 0.99",
+      "fNSigmaHe": "abs(fNSigmaHe) < 2.5",
+      "fTPCsignalPi": "fTPCsignalPi < 1000.",
+      "fNTPCclusPi": "fNTPCclusPi > 70",
+      "fTPCChi2He": "fTPCChi2He > 0.4"
+      },
+
+      "systematic_cuts": {
+          "fCosPA": {"cut_greater": True, "cut_abs": False, "cut_list": [0.985, 0.999, 50]},
+          "fNSigmaHe": {"cut_greater": False, "cut_abs": True, "cut_list": [3., 2., 15]},
+          "fTPCsignalPi": {"cut_greater": False, "cut_abs": False, "cut_list": [1000, 1000, 1]},
+      },
+
+      "systematic_fit_func": {
+      bkg_fit_func: ["pol2", "expo"],
+      signal_fit_func: ["dscb"]
+      }
+
+    }, 
+  ]
+
+
+

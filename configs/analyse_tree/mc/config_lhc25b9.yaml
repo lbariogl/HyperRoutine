@@ -1,0 +1,18 @@
+mc: True
+is_h4l: False
+input_files: ["/data3/fmazzasc/hyp_run_3/mc/LHC25b9/AO2D.root"]
+output_dir: "../results/mc_analyse_tree/"
+output_file: "HypertritonResults_25b9_svert"
+selection: {
+      "fEtaHe3" : "abs(fEtaHe3) < 0.9",
+      "fEtaPi" : "abs(fEtaPi) < 0.9",
+      "fNSigmaHe": "fNSigmaHe > -2.5",
+      "fTPCsignalPi": "fTPCsignalPi < 1000.",
+      "fNTPCclusPi": "fNTPCclusPi > 70",
+      "fTPCChi2He": "fTPCChi2He > 0.2"
+}
+
+is_matter: "antimatter"
+calibrate_he_momentum: True
+skip_out_tree: True
+do_signal_extraction: False

@@ -1,0 +1,33 @@
+mc: False
+is_h4l: False
+is_trigger: True
+input_files:
+  [
+    "/data3/fmazzasc/hyp_run_3/pp2025/ah/AO2D.root",
+     "/data3/fmazzasc/hyp_run_3/pp2025/ac/AO2D.root",
+  ]
+input_analysis_results_file:
+  [
+    "/data3/fmazzasc/hyp_run_3/pp2025/ah/AnalysisResults.root",
+    "/data3/fmazzasc/hyp_run_3/pp2025/ac/AnalysisResults.root",
+  ]
+output_dir: "../results/2024_analyse_tree/"
+output_file: "HypertritonResults_25sk_chi2"
+selection:
+  {
+    # "fDcaV0Daug": "abs(fDcaV0Daug) < 0.1",
+    "fDcaHe": "abs(fDcaHe) > 0.005",
+    # "fTrackedClSize": "fTrackedClSize > 0",
+    "fDecLen": "abs(fDecLen) > 0.5",
+    "fTPCChi2He": "fTPCChi2He > 0.5",
+    "fCosPA": "fCosPA > 0.999",
+    "fNSigmaHe": "fNSigmaHe > -2",
+    # "fTPCsignalPi": "fTPCsignalPi < 1000.",
+    "fTPCmomHe": "fTPCmomHe > 0.5",
+    "fAvgClSizeCosLambda": "fAvgClSizeCosLambda > 5",
+
+  }
+is_matter: "antimatter"
+calibrate_he_momentum: True
+skip_out_tree: True
+do_signal_extraction: True

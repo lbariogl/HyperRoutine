@@ -1,0 +1,18 @@
+mc: True
+is_h4l: False
+input_files: ["/data3/fmazzasc/lhc25i3/AO2D.root"]
+output_dir: "../results/mc_analyse_tree/"
+output_file: "HypertritonResults_25i3"
+selection: {
+      "fEtaHe3" : "abs(fEtaHe3) < 0.9",
+      "fEtaPi" : "abs(fEtaPi) < 0.9",
+      "fNTPCclusPi": "fNTPCclusPi > 70",
+      "fCosPA": "fCosPA > 0.98",
+      "fNSigmaHe": "fNSigmaHe > -2.",
+      "fTPCsignalPi": "fTPCsignalPi < 1000."
+}
+
+is_matter: "both"
+calibrate_he_momentum: True
+skip_out_tree: True
+do_signal_extraction: False

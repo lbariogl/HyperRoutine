@@ -1,9 +1,13 @@
 input_files_data:   [
-    "/data3/fmazzasc/hyp_run_3/pp2023/skimmed/AO2D.root",
     "/data3/fmazzasc/hyp_run_3/pp2024/ag/AO2D.root",
     "/data3/fmazzasc/hyp_run_3/pp2024/aj/AO2D.root",
     "/data3/fmazzasc/hyp_run_3/pp2024/af/AO2D.root",
-    "/data3/fmazzasc/hyp_run_3/pp2024/al/AO2D.root"
+    "/data3/fmazzasc/hyp_run_3/pp2024/al/AO2D.root",
+    "/data3/fmazzasc/hyp_run_3/pp2024/an/AO2D.root",
+    "/data3/fmazzasc/hyp_run_3/pp2024/am/AO2D.root",
+    "/data3/fmazzasc/hyp_run_3/pp2024/ao/AO2D.root",
+    "/data3/fmazzasc/hyp_run_3/pp2023/skimmed/AO2D.root",
+
   ]
 input_files_mc_h3l: ["/data3/fmazzasc/hyp_run_3/mc/LHC24i5/AO2D_h3l.root"]
 input_files_mc_h4l: ["/data3/fmazzasc/hyp_run_3/mc/LHC24i5/AO2D_h4l.root"]
@@ -12,14 +16,22 @@ output_dir: "../results/comb_fits/"
 output_file: "comb_fit_h4l_pp.root"
 selection:
   {
-    "fPt": "fPt > 1.5",
-    "fCosPA": "fCosPA > 0.995",
-    "fNSigmaHe3": "fNSigmaHe3 > 0",
-    "fTPCsignalPi": "fTPCsignalPi < 600.",
-    "fNTPCclusHe": "fNTPCclusHe > 110",
-    "fTPCmomHe": "fTPCmomHe > 1",
-    "fAvgClusterSizeHe": "fAvgClusterSizeHe > 5.",
-    "fDcaHe": "abs(fDcaHe) > 0.01"
+    # "fPt": "fPt > 1.5 and fPt < 5",
+    # "fCosPA": "fCosPA > 0.99",
+    # "fNSigmaHe4": "abs(fNSigmaHe4) < 2.",
+    # "fTPCsignalPi": "fTPCsignalPi < 600.",
+    # "fNTPCclusHe": "fNTPCclusHe > 110",
+    # "fTPCmomHe": "fTPCmomHe > 1",
+    # "fAvgClusterSizeHe": "fAvgClusterSizeHe > 5.",
+    # "fTPCChi2He": "fTPCChi2He > 0.4",
+
+    "fTPCChi2He": "fTPCChi2He > 0.5",
+    "fCosPA": "fCosPA > 0.9995",
+    "fNSigmaHe": "fNSigmaHe > -2",
+    # "fTPCsignalPi": "fTPCsignalPi < 1000.",
+    "fTPCmomHe": "fTPCmomHe > 0.5",
+    "fAvgClSizeCosLambda": "fAvgClSizeCosLambda > 5",
+
   }
 
 colliding_system: "pp"

@@ -1,0 +1,86 @@
+## input/output files
+input_files_data:
+  [
+    "/data3/fmazzasc/hyp_run_3/pp2024/custom/cbt/AO2D.root",
+    # "/data3/fmazzasc/hyp_run_3/pp2025/ah/AO2D.root",
+    # "/data3/fmazzasc/hyp_run_3/pp2025/ac/AO2D.root"
+
+
+  ]
+input_files_mc: 
+  [
+  "/data3/fmazzasc/hyp_run_3/mc/custom/LHC25b9/AO2D.root",
+
+  ]
+additional_training_datasets_mc: 
+  [
+  "/data3/fmazzasc/hyp_run_3/mc/custom/LHC25i2/AO2D.root",
+  "/data3/fmazzasc/hyp_run_3/mc/custom/LHC25f1/AO2D.root",
+
+  ]
+input_analysis_results_file:
+  [
+    "/data3/fmazzasc/hyp_run_3/pp2024/custom/cbt/AnalysisResults.root",
+    # "/data3/fmazzasc/hyp_run_3/pp2025/ah/AnalysisResults.root",
+    # "/data3/fmazzasc/hyp_run_3/pp2025/ac/AnalysisResults.root"
+  ]
+output_dir: "../results/2024_bdt/"
+output_file_suffix: "pp2024"
+
+debug: True
+## analysis options
+do_training: False
+do_application: True
+do_yield: True
+
+# general settings
+calibrate_he_momentum : True
+coal_based_mc: True
+is_matter: "antimatter"
+pt_bins:  [1.4, 1.7, 2., 2.3, 2.6, 3, 3.5, 4., 5]
+bin_structure:
+  [
+    {
+      "pt_bins": [[1.4, 1.7], [1.7, 2], [2, 2.3], [2.3, 2.6], [2.6, 3], [3, 3.5], [3.5, 4], [4, 5]],
+      "bdt_eff_cut": 0.75,
+      "bdt_syst_range": 0.1,
+      bkg_fit_func: ["pol2", "expo"],
+      signal_fit_func: ["dscb"]
+    },
+  ]
+
+## training settings
+"preselections": {
+      "fEtaHe3" : "abs(fEtaHe3) < 0.9",
+      "fEtaPi" : "abs(fEtaPi) < 0.9",
+      "fNSigmaHe": "abs(fNSigmaHe) < 2.5",
+      "fTPCsignalPi": "fTPCsignalPi < 1000.",
+      "fNTPCclusPi": "fNTPCclusPi > 70",
+      "fTPCChi2He": "fTPCChi2He > 0.2"
+}
+train_bkg_fraction: 10
+random_state: 42
+n_cores: 32
+training_variables: ["fDcaHe", "fDcaPi", "fCosPA", "fCt"]
+models_dir: "../results/2024_bdt_models/"
+ml_plots_dir: "../results/2024_bdt_plots/"
+
+# signal extraction settings
+bkg_fit_func: "pol2"
+signal_fit_func: "dscb"
+n_bins_mass_data: 30
+n_bins_mass_mc: 80
+sigma_range_mc_to_data: [1.01, 1.1]
+
+# yield settings
+is_trigger: True
+event_loss: 0.76
+signal_loss: 0.77
+absorption_histo_file: "../results/absorption/absorption_histos.root"
+syst_multi_trials: 500
+absorption_syst: 0.03
+br_syst: 0.1
+
+
+
+
